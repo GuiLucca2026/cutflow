@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Plus, Bell, ChevronDown } from "lucide-react";
+import { Search, Plus, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CommandPalette } from "@/components/cutflow/command-palette";
 import { CreatePanel, type CreateTab } from "@/components/cutflow/create-panel";
+import { NotificationBell } from "@/components/cutflow/notification-bell";
 import { switchUser } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import type { Alert } from "@/lib/alerts";
 
 export function Topbar({
   currentUser,
@@ -25,6 +27,7 @@ export function Topbar({
   projects,
   title,
   linkedAccount,
+  alerts = [],
 }: {
   currentUser: { id: string; name: string; avatarColor: string; role: string };
   users: { id: string; name: string; avatarColor: string; role: string }[];
@@ -36,6 +39,9 @@ export function Topbar({
   // "Ver como" stand-in. Impersonating another profile shouldn't be
   // offered once someone is logged in for real.
   linkedAccount?: boolean;
+  // Fase 5: computed fresh in the layout from the same data every other
+  // screen reads (see src/lib/alerts.ts) — conflicts, overload, risk.
+  alerts?: Alert[];
 }) {
   const [paletteOpenSignal, setPaletteOpenSignal] = React.useState(0);
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -66,9 +72,7 @@ export function Topbar({
         <Plus className="h-4 w-4" /> Criar
       </Button>
 
-      <Button size="icon" variant="ghost" className="relative">
-        <Bell className="h-4 w-4" />
-      </Button>
+      <NotificationBell alerts={alerts} />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

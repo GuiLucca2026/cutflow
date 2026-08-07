@@ -2,9 +2,10 @@
 
 Planner de edição, revisão, aprovação e entrega para produtoras audiovisuais.
 Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow) + Fase 3
-(Planning)** do produto descrito no briefing, totalmente funcionais — não é
-um mockup: todo botão, formulário, drag-and-drop e mudança de status
-persiste de verdade em banco de dados relacional.
+(Planning) + Fase 5 (Intelligence)** do produto descrito no briefing,
+totalmente funcionais — não é um mockup: todo botão, formulário,
+drag-and-drop e mudança de status persiste de verdade em banco de dados
+relacional.
 
 ## Deploy rápido (Vercel)
 
@@ -20,7 +21,7 @@ persiste de verdade em banco de dados relacional.
 **Antes de usar**, rode `supabase-setup.sql` uma vez no editor SQL do
 Lovable — ver seção "Para colocar em produção" abaixo.
 
-## O que já funciona (Fase 1 + 2 + 3)
+## O que já funciona (Fase 1 + 2 + 3 + 5)
 
 - **Modelo de dados relacional completo**: clientes, projetos, vídeos, versões,
   revisões/alterações, checklist, comentários, links de projeto, log de
@@ -61,10 +62,15 @@ Lovable — ver seção "Para colocar em produção" abaixo.
 - **Calendário** (`/calendario`, spec Fase 3): visões mês / semana / dia /
   agenda com os prazos de edição, revisão e entrega de todos os vídeos
   ativos — clique num evento pra abrir a ficha do vídeo direto.
-- **Timeline / Gantt** (`/timeline`, spec Fase 3): vídeos agrupados por
-  projeto como barras ao longo do tempo, com **drag-and-drop real** — arraste
-  uma barra pra reagendar o vídeo inteiro (prazo interno, de revisão e de
-  entrega se movem juntos, preservando o espaçamento entre eles).
+- **Timeline / Gantt estilo editor de vídeo** (`/timeline`, spec Fase 3):
+  vídeos agrupados por projeto como barras ao longo do tempo (janela de ~225
+  dias carregada de uma vez, sem recarregar a página pra navegar), com
+  **drag-and-drop real** — arraste uma barra pra reagendar o vídeo inteiro
+  (prazo interno, de revisão e de entrega se movem juntos). Navegação como
+  numa timeline de edição de verdade: arraste o fundo pra fazer pan, roda do
+  mouse também navega no tempo, zoom in/out, botão "Hoje" centraliza a view
+  com scroll suave, coluna de nomes fixa (sticky) enquanto o tempo rola, e um
+  playhead marcando o dia de hoje.
 - **Planejar Semana** (`/minha-semana`, spec Fase 3 — a função-diferencial
   do briefing): pra cada editor, sugere automaticamente em qual dia
   trabalhar em qual vídeo pelos próximos 7 dias, combinando **Backward
@@ -72,18 +78,28 @@ Lovable — ver seção "Para colocar em produção" abaixo.
   com **Auto Schedule** (preenche a capacidade diária de cada dia útil) —
   ver `src/lib/planning.ts`. Um botão "Aplicar plano" grava o resultado
   como carga de trabalho real (aparece em Equipe).
+- **Central de alertas (sino no topo)** (spec Fase 5): detecção automática de
+  4 tipos de conflito/risco, recalculada a cada request (sem tabela própria,
+  sem cron) — ver `src/lib/alerts.ts`: vídeos atrasados, risco crítico de
+  prazo, **colisão de agenda** (2+ vídeos urgentes/altos do mesmo editor
+  vencendo no mesmo dia) e **sobrecarga** (dia em que um editor tem mais
+  horas agendadas do que sua capacidade diária). O sino mostra a contagem e
+  a lista, com link direto pra cada vídeo/editor; a página **Hoje** também
+  ganhou uma seção "Conflitos & Riscos" com o mesmo conteúdo, mais visível.
+- **Capacity Planning agregado da empresa** (spec Fase 5, em **Equipe**):
+  além do card por editor que já existia, agora tem uma visão do total da
+  equipe — % de capacidade usada em hoje/7/14/30 dias, e um gráfico dos
+  próximos 14 dias comparando horas agendadas vs. capacidade disponível da
+  empresa inteira dia a dia.
 
 ## O que fica para as próximas fases (conforme o roadmap do briefing)
 
-O menu lateral já mostra "Fase 3+" no item ainda não construído (Analytics),
+O menu lateral já mostra "Fase 6" no item ainda não construído (Analytics),
 para deixar claro o que é real hoje:
 
 - **Fase 4 — Calendar Sync**: Google Calendar (OAuth2 real precisa de um
   projeto no Google Cloud com credenciais suas), Apple Calendar via feeds
   `.ics` assináveis por editor.
-- **Fase 5 — Intelligence**: detecção de conflitos automatizada, Delivery
-  Risk já existe (ver ficha de vídeo) mas precisa de alertas proativos,
-  Capacity Planning agregado da empresa.
 - **Fase 6 — Analytics**: KPIs (on-time delivery, revision rate, client
   wait time, team utilization), relatórios de produtividade.
 - **Auth real / multi-tenant**: parcialmente feito — quem entra via o botão

@@ -1,10 +1,12 @@
 import { Sidebar } from "@/components/cutflow/sidebar";
 import { Topbar } from "@/components/cutflow/topbar";
 import { getCurrentUser, getAllUsers } from "@/lib/auth";
-import { listClients, listProjects } from "@/db/queries";
+import { listClients, listProjects, listVideos, listWorkloadEntries } from "@/db/queries";
+import { computeAlerts } from "@/lib/alerts";
 import { VideoDetailProvider } from "@/components/cutflow/video-detail-context";
 import { VideoDetailSheetHost } from "@/components/cutflow/video-detail-sheet";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
+import { addDays, format } from "date-fns";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   if (!(await hasSupabaseSession())) {
@@ -17,12 +19,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return <NoSessionScreen />;
   }
 
-  const [currentUser, users, clients, projects] = await Promise.all([
+  const [currentUser, users, clients, projects, videos] = await Promise.all([
     getCurrentUser(),
     getAllUsers(),
     listClients(),
     listProjects(),
+    listVideos(),
   ]);
+  // Same window used by the Equipe capacity view — plenty of runway to
+  // catch overload alerts a few weeks out without over-fetching.
+  const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
+  const alerts = computeAlerts({ videos, workloadEntries, users });
 
   return (
     <VideoDetailProvider>
@@ -35,6 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             clients={clients.map((c) => ({ id: c.id, name: c.name }))}
             projects={projects.map((p) => ({ id: p.id, name: p.name, clientId: p.clientId }))}
             linkedAccount={!!currentUser.supabaseUserId}
+            alerts={alerts}
           />
           <main className="flex-1 p-5 lg:p-7 max-w-[1600px] w-full mx-auto">{children}</main>
         </div>

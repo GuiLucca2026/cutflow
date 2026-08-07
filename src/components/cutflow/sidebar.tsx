@@ -63,16 +63,16 @@ export function Sidebar() {
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
-              {item.soon && <span className="text-[9px] uppercase tracking-wide text-cf-text-dim/60">Fase 3+</span>}
+              {item.soon && <span className="text-[9px] uppercase tracking-wide text-cf-text-dim/60">Fase 6</span>}
             </Link>
           );
         })}
       </nav>
       <div className="p-3 border-t border-cf-border">
         <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3
+          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3+5
           <br />
-          Foundation, Workflow & Planning ativos
+          Foundation, Workflow, Planning & Intelligence ativos
         </div>
       </div>
     </aside>

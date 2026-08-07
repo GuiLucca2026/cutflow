@@ -1,10 +1,11 @@
-import { listVideos } from "@/db/queries";
+import { listVideos, listUsers, listWorkloadEntries } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { isOverdue, isWaitingClient, isEditing, isDone, computeDeliveryRisk } from "@/lib/domain";
+import { computeAlerts } from "@/lib/alerts";
 import { fmtDateFull, fmtDateWeekday, fmtWaitingSince } from "@/lib/format";
-import { isToday, isWithinInterval, addDays, differenceInCalendarDays } from "date-fns";
-import { AlertTriangle, Clock, Send, Users, Percent, Activity, Sparkles } from "lucide-react";
+import { isToday, isWithinInterval, addDays, differenceInCalendarDays, format } from "date-fns";
+import { AlertTriangle, TriangleAlert, Info, Clock, Send, Users, Percent, Activity, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -33,8 +34,10 @@ function StatCard({ label, value, icon: Icon, tone = "default", href }: { label:
 }
 
 export default async function HojePage() {
-  const [videos, user] = await Promise.all([listVideos(), getCurrentUser()]);
+  const [videos, user, users] = await Promise.all([listVideos(), getCurrentUser(), listUsers()]);
   const active = videos.filter((v) => !isDone(v.status));
+  const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
+  const alerts = computeAlerts({ videos, workloadEntries, users });
 
   const now = new Date();
   const todayDeliveries = active.filter((v) => isToday(new Date(v.finalDeadline)));
@@ -102,6 +105,35 @@ export default async function HojePage() {
         <StatCard label="Entregas na semana" value={weekDeliveries.length} icon={Sparkles} tone="good" />
         <StatCard label="Operation Health" value={`${health}%`} icon={Percent} tone={health >= 80 ? "good" : health >= 60 ? "warn" : "danger"} />
       </div>
+
+      {alerts.length > 0 && (
+        <Section title="Conflitos & Riscos" subtitle="Detectado automaticamente — colisões de agenda, sobrecarga e risco de prazo" count={alerts.length} tone="danger">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+            {alerts.map((a) => (
+              <Link
+                key={a.id}
+                href={a.href}
+                className={cn(
+                  "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-lime/40 transition-colors",
+                  a.severity === "CRITICO" ? "border-red-500/30" : a.severity === "ALTO" ? "border-amber-500/30" : "border-cf-border"
+                )}
+              >
+                {a.severity === "CRITICO" ? (
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+                ) : a.severity === "ALTO" ? (
+                  <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+                ) : (
+                  <Info className="h-4 w-4 shrink-0 mt-0.5 text-cf-text-dim" />
+                )}
+                <div className="min-w-0">
+                  <div className="text-sm font-medium leading-snug">{a.title}</div>
+                  <div className="text-xs text-cf-text-dim leading-snug mt-0.5">{a.detail}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title="Hoje" subtitle="Trabalhos com prazo, revisão ou entrega hoje" count={todayDeliveries.length + todayReviews.length}>
         {todayDeliveries.length + todayReviews.length === 0 ? (
