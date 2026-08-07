@@ -30,16 +30,20 @@ export function MobileNav() {
       >
         <Menu className="h-4.5 w-4.5" />
       </button>
-      <SheetContent side="left" className="w-72 sm:max-w-xs p-0">
+      <SheetContent
+        side="left"
+        className="cf-sheet-dark w-72 sm:max-w-xs p-0 text-cf-side-text border-none"
+        style={{ background: "var(--cf-side-bg)" }}
+      >
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">Navegação principal do G2 FLOW</SheetDescription>
-        <div className="px-5 py-5 border-b border-cf-border">
-          <BrandWordmark size="sm" />
+        <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--cf-side-border)" }}>
+          <BrandWordmark size="sm" dark />
         </div>
         <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-3 space-y-4">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
-              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-text-dim/60">{group.label}</div>
+              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-side-text/50">{group.label}</div>
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -49,8 +53,10 @@ export function MobileNav() {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                        active ? "bg-cf-lime text-cf-on-accent font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-all",
+                        active
+                          ? "cf-side-active text-cf-side-text-active font-semibold"
+                          : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-side-text-active"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />

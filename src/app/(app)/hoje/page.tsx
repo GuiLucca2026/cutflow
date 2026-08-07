@@ -1,6 +1,7 @@
 import { listVideos, listUsers, listWorkloadEntries } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
+import { Greeting } from "@/components/cutflow/greeting";
 import { isOverdue, isWaitingClient, isEditing, isDone, computeDeliveryRisk } from "@/lib/domain";
 import { computeAlerts } from "@/lib/alerts";
 import { fmtDateFull, fmtDateWeekday, fmtWaitingSince } from "@/lib/format";
@@ -85,7 +86,7 @@ export default async function HojePage() {
     <div className="space-y-8 cf-fade-in pb-16">
       <div>
         <div className="text-xs uppercase tracking-widest text-cf-text-dim">{todayLabel}</div>
-        <h1 className="font-display text-4xl tracking-wide mt-1">Bom dia, {firstName}.</h1>
+        <Greeting firstName={firstName} className="font-display text-4xl tracking-wide mt-1" />
         <p className="text-cf-text-dim mt-1">
           {todayDeliveries.length} {todayDeliveries.length === 1 ? "entrega" : "entregas"} hoje
           {attentionCount > 0 && (

@@ -12,8 +12,12 @@ export function StatusBadge({ status, className }: { status: string; className?:
 
 export function PriorityBadge({ priority, className }: { priority: string; className?: string }) {
   const meta = PRIORITY_META[priority] ?? PRIORITY_META.NORMAL;
+  // Chip sólido (fundo colorido cheio, texto branco) — igual aos chips
+  // ALTA/MÉDIA/BAIXA da referência, mais firme que o resto dos badges
+  // (que ficam com tom suave) já que prioridade é a informação que mais
+  // precisa saltar aos olhos num card.
   return (
-    <Badge color={meta.color} bg={meta.bg} className={className}>
+    <Badge color={meta.color} solid className={className}>
       {meta.label}
     </Badge>
   );

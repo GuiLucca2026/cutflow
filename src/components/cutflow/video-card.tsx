@@ -3,7 +3,7 @@
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
 import { Avatar } from "@/components/ui/avatar";
-import { computeDeliveryRisk, isOverdue } from "@/lib/domain";
+import { computeDeliveryRisk, isOverdue, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours } from "@/lib/format";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,12 +26,14 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const { open } = useVideoDetail();
   const overdue = isOverdue(video.finalDeadline, video.status);
   const risk = computeDeliveryRisk(video);
+  const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
 
   return (
     <button
       onClick={() => open(video.id)}
+      style={{ borderLeft: `3px solid ${overdue ? "#DC2626" : statusColor}` }}
       className={cn(
-        "w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20",
+        "w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer",
         overdue ? "border-red-500/40" : "border-cf-border"
       )}
     >

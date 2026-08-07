@@ -9,14 +9,17 @@ import { BrandWordmark } from "@/components/cutflow/brand-mark";
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-cf-border bg-cf-surface h-screen sticky top-0">
+    <aside
+      className="hidden lg:flex w-60 shrink-0 flex-col h-screen sticky top-0 text-cf-side-text"
+      style={{ background: "var(--cf-side-bg)", borderRight: "1px solid var(--cf-side-border)" }}
+    >
       <div className="px-5 py-5">
-        <BrandWordmark size="sm" />
+        <BrandWordmark size="sm" dark />
       </div>
       <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-2 space-y-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-text-dim/60">{group.label}</div>
+            <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-side-text/50">{group.label}</div>
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -26,8 +29,10 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                      active ? "bg-cf-lime text-cf-on-accent font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
+                      active
+                        ? "cf-side-active text-cf-side-text-active font-semibold"
+                        : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-side-text-active"
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -39,9 +44,12 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="p-3 border-t border-cf-border">
-        <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">G2 FLOW</span> · Fase 1+2+3+4+5+6
+      <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
+        <div
+          className="rounded-lg px-3 py-2.5 text-[11px] text-cf-side-text/80 leading-relaxed"
+          style={{ background: "var(--cf-side-surface)", border: "1px solid var(--cf-side-border)" }}
+        >
+          <span className="font-semibold" style={{ color: "#A78BFA" }}>G2 FLOW</span> · Fase 1+2+3+4+5+6
           <br />
           Foundation, Workflow, Planning, Calendar Sync, Intelligence & Analytics ativos
         </div>

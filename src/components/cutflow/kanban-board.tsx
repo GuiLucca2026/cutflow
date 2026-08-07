@@ -91,14 +91,20 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-xl border bg-cf-surface/60 transition-colors",
+        "flex w-72 shrink-0 flex-col rounded-xl border bg-cf-surface/70 backdrop-blur-md transition-colors",
         isOver ? "border-cf-lime/60 bg-cf-surface" : "border-cf-border"
       )}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-cf-border sticky top-0">
-        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: meta.color }} />
-        <span className="text-sm font-semibold">{meta.label}</span>
-        <span className="ml-auto text-xs text-cf-text-dim">{videos.length}</span>
+      <div className="flex items-center gap-2 px-2.5 py-2.5 sticky top-0">
+        <span
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
+          style={{ background: meta.color, boxShadow: `0 3px 8px -2px ${meta.color}80` }}
+        >
+          {meta.label}
+        </span>
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-cf-surface-2 px-1.5 text-[11px] font-semibold text-cf-text-dim">
+          {videos.length}
+        </span>
       </div>
       <div className="flex-1 space-y-2 p-2 min-h-[120px] max-h-[calc(100vh-260px)] overflow-y-auto cf-scrollbar-thin">
         {videos.map((v) => (
@@ -113,6 +119,7 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
 function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen: (id: string) => void; dragging?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggableCard(video.id);
   const overdue = isOverdue(video.finalDeadline, video.status);
+  const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
 
   return (
     <div
@@ -120,9 +127,12 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
       {...listeners}
       {...attributes}
       onClick={() => !isDragging && onOpen(video.id)}
-      style={transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined}
+      style={{
+        ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
+        borderLeft: `3px solid ${overdue ? "#DC2626" : statusColor}`,
+      }}
       className={cn(
-        "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-shadow",
+        "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10",
         overdue ? "border-red-500/40" : "border-cf-border",
         (isDragging || dragging) && "opacity-60 shadow-xl"
       )}

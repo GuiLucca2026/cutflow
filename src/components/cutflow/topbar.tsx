@@ -58,7 +58,7 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-cf-border bg-cf-black/90 backdrop-blur px-5 py-3">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-cf-border bg-white/65 backdrop-blur-xl backdrop-saturate-150 px-5 py-3">
       <MobileNav />
       {title && <h1 className="font-display text-2xl tracking-wide mr-2 hidden sm:block">{title}</h1>}
 

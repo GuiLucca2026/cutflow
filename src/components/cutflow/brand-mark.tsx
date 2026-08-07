@@ -21,14 +21,27 @@ export function BrandIcon({ size = 32, className }: { size?: number; className?:
   );
 }
 
-export function BrandWordmark({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) {
+export function BrandWordmark({
+  size = "md",
+  className,
+  dark = false,
+}: {
+  size?: "sm" | "md" | "lg";
+  className?: string;
+  // Sidebar/menu mobile continuam escuros mesmo no resto do app claro (ver
+  // globals.css, tokens --cf-side-*) — "FLOW" em text-cf-text (quase preto)
+  // ficaria invisível lá. Este flag troca só a cor do texto, mantém o
+  // ícone (que já é branco sobre gradiente) igual nos dois casos.
+  dark?: boolean;
+}) {
   const iconSize = size === "lg" ? 44 : size === "sm" ? 26 : 32;
   const textClass = size === "lg" ? "text-4xl" : size === "sm" ? "text-xl" : "text-2xl";
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
       <BrandIcon size={iconSize} />
       <div className={cn("font-display leading-none tracking-tight", textClass)}>
-        <span style={{ color: "#7C3AED" }}>G2</span> <span className="text-cf-text">FLOW</span>
+        <span style={{ color: dark ? "#A78BFA" : "#7C3AED" }}>G2</span>{" "}
+        <span className={dark ? "text-white" : "text-cf-text"}>FLOW</span>
       </div>
     </div>
   );
