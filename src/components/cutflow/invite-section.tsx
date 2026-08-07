@@ -31,7 +31,7 @@ export type InviteData = {
   expiresAt: string;
 };
 
-export function InviteSection({ invites }: { invites: InviteData[] }) {
+export function InviteSection({ invites, error }: { invites: InviteData[]; error?: string | null }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   return (
@@ -41,12 +41,17 @@ export function InviteSection({ invites }: { invites: InviteData[] }) {
           <h2 className="font-display text-xl tracking-wide">Convites</h2>
           <p className="text-xs text-cf-text-dim">Gere um link pra alguém que não é admin da G2 criar login próprio no G2 FLOW.</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setDialogOpen(true)}>
+        <Button size="sm" className="gap-1.5" disabled={!!error} onClick={() => setDialogOpen(true)}>
           <UserPlus className="h-3.5 w-3.5" /> Convidar pessoa
         </Button>
       </div>
 
-      {invites.length === 0 ? (
+      {error ? (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
+          <p className="text-xs text-red-400">Não foi possível carregar os convites.</p>
+          <p className="text-[11px] text-cf-text-dim/70 font-mono mt-1 break-words">{error}</p>
+        </div>
+      ) : invites.length === 0 ? (
         <p className="text-xs text-cf-text-dim/70">Nenhum convite enviado ainda.</p>
       ) : (
         <div className="space-y-1.5">

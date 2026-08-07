@@ -16,7 +16,20 @@ function dstr(d: Date) {
 
 export default async function EquipePage() {
   const [users, videos, currentUser] = await Promise.all([listUsers(), listVideos(), getCurrentUser()]);
-  const invites = currentUser.role === "ADMIN" ? await listInvites() : [];
+  // Convites depende de uma tabela nova (cutflow_invites) que só existe
+  // depois de rodar o supabase-setup.sql mais recente — se ainda não rodou
+  // (ou o PostgREST ainda não recarregou o schema depois de rodar), isso
+  // não pode derrubar a página de Equipe inteira. Captura o erro e mostra
+  // ele mesmo, em vez de deixar o Next.js estourar um erro genérico.
+  let invites: Awaited<ReturnType<typeof listInvites>> = [];
+  let invitesError: string | null = null;
+  if (currentUser.role === "ADMIN") {
+    try {
+      invites = await listInvites();
+    } catch (e: any) {
+      invitesError = e?.message ?? String(e);
+    }
+  }
   const now = new Date();
 
   const ranges = [
@@ -99,7 +112,7 @@ export default async function EquipePage() {
         </div>
       </div>
 
-      {currentUser.role === "ADMIN" && <InviteSection invites={invites} />}
+      {currentUser.role === "ADMIN" && <InviteSection invites={invites} error={invitesError} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {editors.map((editor) => {
