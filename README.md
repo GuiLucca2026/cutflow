@@ -73,9 +73,11 @@ deixar claro o que é real hoje:
 - **Next.js 16** (App Router, Server Actions, Turbopack) + **React 19** +
   **TypeScript**
 - **Tailwind CSS v4** com tokens de marca do CUTFLOW (`#C6FF00` / `#111111`)
-- **Drizzle ORM + SQLite** (`better-sqlite3`) — banco relacional real,
-  rodando localmente sem depender de nenhuma conta externa. O schema foi
-  desenhado para migrar para Postgres/Supabase trocando só o dialect.
+- **Drizzle ORM + Postgres** (`postgres.js`) — banco relacional real, no
+  **mesmo projeto Supabase** que a G2 já usa para autenticação. As tabelas
+  do CUTFLOW ficam num schema Postgres próprio (`cutflow`), separado do
+  `public` da G2, então não existe risco de colidir com as tabelas do site
+  (a G2 já tem sua própria `videos`, por exemplo).
 - **dnd-kit** para drag-and-drop (Kanban)
 - **Radix UI** (primitivos sem estilo) + componentes próprios no estilo
   shadcn/ui, com a identidade visual do CUTFLOW
@@ -84,15 +86,23 @@ deixar claro o que é real hoje:
 
 ## Rodando o projeto localmente
 
+Precisa de um Postgres — pode ser o próprio projeto Supabase da G2, ou um
+Postgres local só para desenvolver (não afeta o de produção).
+
 ```bash
 npm install
-npm run db:push   # cria o banco SQLite a partir do schema (drizzle-kit push)
-npm run db:seed   # popula com os dados de demonstração
+cp .env.example .env.local   # preencha DATABASE_URL e as duas do Supabase
+npm run db:push   # cria as tabelas no schema "cutflow" (drizzle-kit push)
+npm run db:seed   # popula com os dados de demonstração (limpa e repopula)
 npm run dev        # http://localhost:3000
 ```
 
-O banco fica em `cutflow.db` (SQLite) na raiz do projeto. Para recomeçar do
-zero, rode `npm run db:seed` novamente — ele limpa e repopula tudo.
+`DATABASE_URL` é uma connection string Postgres normal
+(`postgresql://usuario:senha@host:porta/banco`). Pegando a do Supabase:
+painel do projeto → **Settings → Database → Connection string** → aba
+**URI**. Para uso em produção/serverless (Vercel), prefira a versão
+"**Transaction pooler**" (porta 6543) — o cliente já está configurado com
+`prepare: false`, que é o que esse modo exige.
 
 ## Integração com o painel admin da G2 (SSO real, já implementada)
 
@@ -138,16 +148,17 @@ variável, o resto do código já é agnóstico a isso (`src/lib/base-path.ts`).
    apontando (CNAME/A, conforme o provedor) para onde o CUTFLOW for
    hospedado (ex.: Vercel) — normalmente nas configurações de DNS de onde
    o domínio `gdoisfilmes.com.br` está registrado, não no Lovable.
-2. **Aplicar a migration** `supabase/migrations/..._cutflow_profiles` — na
-   verdade ela cria a tabela auxiliar `cutflow_profiles` (perfil estendido,
-   pensado para os campos que ainda vamos usar nas próximas fases); o
-   vínculo básico usuário↔perfil já funciona hoje via `users.supabase_user_id`
-   mesmo sem essa tabela. Aplique pelo painel do Supabase, CLI ou deixe o
-   Lovable sincronizar (a migration já está no PR do repositório da G2).
-3. **Configurar as variáveis de ambiente do CUTFLOW** — copie
-   `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` de
-   `.env.local` (já vêm preenchidas neste pacote com os valores do projeto
-   Supabase da G2 — a "anon key" é pública por natureza, protegida pelas
-   políticas de RLS, não é segredo) para o ambiente onde o CUTFLOW for
-   implantado (Vercel, etc.). `VITE_CUTFLOW_URL` no `.env` da G2 já está
-   apontando para `https://organizador.gdoisfilmes.com.br`.
+2. **Criar as tabelas do CUTFLOW no Postgres**: rode `npm run db:push`
+   uma vez apontando `DATABASE_URL` para o Postgres do projeto Supabase da
+   G2 — isso cria só o schema `cutflow` (13 tabelas), sem tocar em nada do
+   schema `public` que a G2 já usa. Não existe mais uma migration separada
+   pra rodar do lado do repositório da G2 (a `cutflow_profiles` que tinha
+   sido criada lá foi removida — o próprio `cutflow.users`, com a coluna
+   `supabase_user_id`, já cumpre esse papel).
+3. **Configurar as variáveis de ambiente do CUTFLOW** no ambiente onde ele
+   for implantado (Vercel, etc.): `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmos valores do `.env.local` deste
+   pacote — a "anon key" é pública por natureza, protegida pelas políticas
+   de RLS, não é segredo) e `DATABASE_URL` (a connection string do
+   Postgres, essa sim sensível — não vem preenchida aqui). `VITE_CUTFLOW_URL`
+   no `.env` da G2 já está apontando para `https://organizador.gdoisfilmes.com.br`.

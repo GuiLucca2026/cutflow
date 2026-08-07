@@ -1,14 +1,22 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
-import { relations, sql } from "drizzle-orm";
+import { pgSchema, text, integer, boolean, real, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
 // CUTFLOW — Production / Post-Production Operating System
 // Core relational schema (Phase 1: Foundation, Phase 2: Workflow)
-// Modeled 1:1 against the entity list in the product spec (section 45),
-// implemented on SQLite via Drizzle so the whole app runs with zero external
-// accounts. The shapes below map cleanly onto Postgres/Supabase later:
-// swap the dialect in drizzle.config.ts and db/index.ts, keep the schema.
+// Modeled 1:1 against the entity list in the product spec (section 45).
+//
+// Runs on Postgres, in its OWN schema ("cutflow") inside the same Supabase
+// project the G2 admin panel already uses for auth — separate from G2's
+// own "public" schema (which already has its own unrelated "videos" /
+// "services" tables) so there's zero risk of name collisions. Table shapes
+// were originally prototyped on SQLite; this is the Postgres port referred
+// to in the old comment here — dates are kept as plain ISO-8601 text
+// columns (not native timestamp) so every existing call site that already
+// does `new Date(row.someDate)` keeps working unchanged.
 // ---------------------------------------------------------------------------
+
+export const cutflow = pgSchema("cutflow");
 
 function id() {
   return text("id")
@@ -16,21 +24,21 @@ function id() {
     .$defaultFn(() => crypto.randomUUID());
 }
 
+function isoNow() {
+  return new Date().toISOString();
+}
+
 function timestamps() {
   return {
-    createdAt: text("created_at")
-      .notNull()
-      .default(sql`(current_timestamp)`),
-    updatedAt: text("updated_at")
-      .notNull()
-      .default(sql`(current_timestamp)`),
+    createdAt: text("created_at").notNull().$defaultFn(isoNow),
+    updatedAt: text("updated_at").notNull().$defaultFn(isoNow),
   };
 }
 
 // ---------------------------------------------------------------------------
 // USERS / TEAM
 // ---------------------------------------------------------------------------
-export const users = sqliteTable("users", {
+export const users = cutflow.table("users", {
   id: id(),
   // Links this row to a real Supabase Auth user (the same auth.users the G2
   // admin panel authenticates against). Set on first login via the /sso
@@ -47,14 +55,14 @@ export const users = sqliteTable("users", {
     .default("EDITOR"),
   dailyCapacityHours: real("daily_capacity_hours").notNull().default(8),
   workDays: text("work_days").notNull().default("1,2,3,4,5"), // 0=Sun..6=Sat
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  active: boolean("active").notNull().default(true),
   ...timestamps(),
 });
 
 // ---------------------------------------------------------------------------
 // CLIENTS
 // ---------------------------------------------------------------------------
-export const clients = sqliteTable("clients", {
+export const clients = cutflow.table("clients", {
   id: id(),
   name: text("name").notNull(),
   tradeName: text("trade_name"),
@@ -65,7 +73,7 @@ export const clients = sqliteTable("clients", {
   email: text("email"),
   notes: text("notes"),
   color: text("color").notNull().default("#C6FF00"),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  active: boolean("active").notNull().default(true),
   ...timestamps(),
 });
 
@@ -98,7 +106,7 @@ export const PROJECT_STATUSES = [
 
 export const PRIORITIES = ["BAIXA", "NORMAL", "ALTA", "URGENTE"] as const;
 
-export const projects = sqliteTable("projects", {
+export const projects = cutflow.table("projects", {
   id: id(),
   clientId: text("client_id")
     .notNull()
@@ -187,7 +195,7 @@ export const STATUS_PROGRESS_WEIGHT: Record<string, number> = {
   CANCELADO: 0,
 };
 
-export const videos = sqliteTable("videos", {
+export const videos = cutflow.table("videos", {
   id: id(),
   projectId: text("project_id")
     .notNull()
@@ -231,14 +239,14 @@ export const videos = sqliteTable("videos", {
 // ---------------------------------------------------------------------------
 // VIDEO VERSIONS
 // ---------------------------------------------------------------------------
-export const videoVersions = sqliteTable("video_versions", {
+export const videoVersions = cutflow.table("video_versions", {
   id: id(),
   videoId: text("video_id")
     .notNull()
     .references(() => videos.id, { onDelete: "cascade" }),
   label: text("label").notNull(), // V1, V2, FINAL, FINAL 2...
   fileUrl: text("file_url"),
-  sentAt: text("sent_at").notNull().default(sql`(current_timestamp)`),
+  sentAt: text("sent_at").notNull().$defaultFn(isoNow),
   sentById: text("sent_by_id").references(() => users.id),
   notes: text("notes"),
 });
@@ -246,7 +254,7 @@ export const videoVersions = sqliteTable("video_versions", {
 // ---------------------------------------------------------------------------
 // REVISIONS / ALTERATIONS requested by internal team or client
 // ---------------------------------------------------------------------------
-export const revisions = sqliteTable("revisions", {
+export const revisions = cutflow.table("revisions", {
   id: id(),
   videoId: text("video_id")
     .notNull()
@@ -267,20 +275,20 @@ export const revisions = sqliteTable("revisions", {
 // ---------------------------------------------------------------------------
 // CHECKLIST
 // ---------------------------------------------------------------------------
-export const checklistItems = sqliteTable("checklist_items", {
+export const checklistItems = cutflow.table("checklist_items", {
   id: id(),
   videoId: text("video_id")
     .notNull()
     .references(() => videos.id, { onDelete: "cascade" }),
   label: text("label").notNull(),
-  done: integer("done", { mode: "boolean" }).notNull().default(false),
+  done: boolean("done").notNull().default(false),
   order: integer("order").notNull().default(0),
 });
 
 // ---------------------------------------------------------------------------
 // COMMENTS
 // ---------------------------------------------------------------------------
-export const comments = sqliteTable("comments", {
+export const comments = cutflow.table("comments", {
   id: id(),
   videoId: text("video_id")
     .notNull()
@@ -294,20 +302,20 @@ export const comments = sqliteTable("comments", {
 // ---------------------------------------------------------------------------
 // ACTIVITY LOG — append-only history (spec section 18)
 // ---------------------------------------------------------------------------
-export const activityLogs = sqliteTable("activity_logs", {
+export const activityLogs = cutflow.table("activity_logs", {
   id: id(),
   entityType: text("entity_type", { enum: ["PROJECT", "VIDEO"] }).notNull(),
   entityId: text("entity_id").notNull(),
   userId: text("user_id").references(() => users.id),
   action: text("action").notNull(),
   detail: text("detail"),
-  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().$defaultFn(isoNow),
 });
 
 // ---------------------------------------------------------------------------
 // PROJECT LINKS (footage / edit / delivery / references)
 // ---------------------------------------------------------------------------
-export const projectLinks = sqliteTable("project_links", {
+export const projectLinks = cutflow.table("project_links", {
   id: id(),
   projectId: text("project_id")
     .notNull()
@@ -322,7 +330,7 @@ export const projectLinks = sqliteTable("project_links", {
 // ---------------------------------------------------------------------------
 // WORKLOAD ENTRIES — used by the workload/capacity views
 // ---------------------------------------------------------------------------
-export const workloadEntries = sqliteTable("workload_entries", {
+export const workloadEntries = cutflow.table("workload_entries", {
   id: id(),
   editorId: text("editor_id")
     .notNull()
@@ -335,27 +343,27 @@ export const workloadEntries = sqliteTable("workload_entries", {
 // ---------------------------------------------------------------------------
 // NOTIFICATIONS
 // ---------------------------------------------------------------------------
-export const notifications = sqliteTable("notifications", {
+export const notifications = cutflow.table("notifications", {
   id: id(),
   userId: text("user_id").references(() => users.id),
   type: text("type").notNull(),
   title: text("title").notNull(),
   body: text("body"),
-  read: integer("read", { mode: "boolean" }).notNull().default(false),
+  read: boolean("read").notNull().default(false),
   entityType: text("entity_type"),
   entityId: text("entity_id"),
-  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().$defaultFn(isoNow),
 });
 
 // ---------------------------------------------------------------------------
 // SAVED VIEWS
 // ---------------------------------------------------------------------------
-export const savedViews = sqliteTable("saved_views", {
+export const savedViews = cutflow.table("saved_views", {
   id: id(),
   userId: text("user_id").references(() => users.id),
   name: text("name").notNull(),
   filters: text("filters").notNull(), // JSON string
-  createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+  createdAt: text("created_at").notNull().$defaultFn(isoNow),
 });
 
 // ---------------------------------------------------------------------------

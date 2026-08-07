@@ -1,4 +1,4 @@
-import { db, sqlite } from "./index";
+import { db, sql as pgClient } from "./index";
 import {
   users,
   clients,
@@ -11,6 +11,8 @@ import {
   activityLogs,
   projectLinks,
   workloadEntries,
+  notifications,
+  savedViews,
   STATUS_PROGRESS_WEIGHT,
 } from "./schema";
 import { addDays, addHours, format, subDays } from "date-fns";
@@ -28,23 +30,24 @@ function dstr(d: Date) {
 
 const NOW = new Date();
 
-function main() {
+async function main() {
   console.log("Resetting database…");
-  sqlite.exec(`
-    DELETE FROM comments;
-    DELETE FROM checklist_items;
-    DELETE FROM revisions;
-    DELETE FROM video_versions;
-    DELETE FROM activity_logs;
-    DELETE FROM workload_entries;
-    DELETE FROM notifications;
-    DELETE FROM saved_views;
-    DELETE FROM project_links;
-    DELETE FROM videos;
-    DELETE FROM projects;
-    DELETE FROM clients;
-    DELETE FROM users;
-  `);
+  // Deleted in FK-safe order (children before parents). Plain Drizzle
+  // deletes, not raw SQL — keeps this dialect-agnostic and correctly
+  // scoped to the "cutflow" Postgres schema regardless of table order.
+  await db.delete(comments);
+  await db.delete(checklistItems);
+  await db.delete(revisions);
+  await db.delete(videoVersions);
+  await db.delete(activityLogs);
+  await db.delete(workloadEntries);
+  await db.delete(notifications);
+  await db.delete(savedViews);
+  await db.delete(projectLinks);
+  await db.delete(videos);
+  await db.delete(projects);
+  await db.delete(clients);
+  await db.delete(users);
 
   console.log("Seeding users…");
   const team = [
@@ -54,7 +57,7 @@ function main() {
     { name: "Pedro Alves", email: "pedro@cutflow.app", role: "PRODUTOR" as const, avatarColor: "#F97316", dailyCapacityHours: 6 },
   ];
   const teamRows = team.map((t) => ({ ...t, id: crypto.randomUUID() }));
-  db.insert(users).values(teamRows).run();
+  await db.insert(users).values(teamRows);
   const [gui, joao, maria, pedro] = teamRows;
 
   console.log("Seeding clients…");
@@ -66,7 +69,7 @@ function main() {
     { name: "Sabor de Raiz", tradeName: "Sabor de Raiz", company: "Sabor de Raiz Gastronomia Ltda", contactName: "Isabela Nunes", email: "isabela@sabderaiz.com.br", whatsapp: "+55 11 94444-5555", color: "#A78BFA" },
   ];
   const clientRows = clientDefs.map((c) => ({ ...c, id: crypto.randomUUID() }));
-  db.insert(clients).values(clientRows).run();
+  await db.insert(clients).values(clientRows);
   const [vortex, horizonte, novala, amanhecer, saborderaiz] = clientRows;
 
   console.log("Seeding projects + videos…");
@@ -90,7 +93,7 @@ function main() {
   const allProjects: { id: string }[] = [];
   const allVideos: { id: string; projectId: string }[] = [];
 
-  function createProject(opts: {
+  async function createProject(opts: {
     client: (typeof clientRows)[number];
     name: string;
     type: string;
@@ -111,7 +114,7 @@ function main() {
     const deadline = addDays(NOW, opts.deadlineOffset);
     const originalDeadline = addDays(NOW, opts.originalDeadlineOffset ?? opts.deadlineOffset);
 
-    db.insert(projects)
+    await db.insert(projects)
       .values({
         id: projectId,
         clientId: opts.client.id,
@@ -134,18 +137,18 @@ function main() {
         frameioUrl: opts.frameio ?? "https://app.frame.io/projects/demo",
         budget: opts.budget,
       })
-      .run();
+      ;
 
-    db.insert(projectLinks)
+    await db.insert(projectLinks)
       .values([
         { id: crypto.randomUUID(), projectId, category: "FOOTAGE", label: "Footage bruto", url: "https://drive.google.com/drive/folders/footage-demo" },
         { id: crypto.randomUUID(), projectId, category: "EDICAO", label: "Frame.io — Revisão", url: opts.frameio ?? "https://app.frame.io/projects/demo" },
         { id: crypto.randomUUID(), projectId, category: "ENTREGA", label: "Entrega final", url: "https://drive.google.com/drive/folders/entrega-demo" },
         { id: crypto.randomUUID(), projectId, category: "REFERENCIA", label: "Referências (Pinterest)", url: "https://pinterest.com/demo/referencias" },
       ])
-      .run();
+      ;
 
-    db.insert(activityLogs)
+    await db.insert(activityLogs)
       .values({
         id: crypto.randomUUID(),
         entityType: "PROJECT",
@@ -155,7 +158,7 @@ function main() {
         detail: `${opts.producer.name} criou o projeto "${opts.name}".`,
         createdAt: iso(subDays(deadline, 20 + (projActivitySeq++ % 5))),
       })
-      .run();
+      ;
 
     allProjects.push({ id: projectId });
 
@@ -167,7 +170,7 @@ function main() {
       const reviewDeadline = addDays(internalDeadline, 1);
       const plannedStart = v.startedDaysAgo ? subDays(NOW, v.startedDaysAgo) : addDays(internalDeadline, -2);
 
-      db.insert(videos)
+      await db.insert(videos)
         .values({
           id: videoId,
           projectId,
@@ -195,7 +198,7 @@ function main() {
           frameioUrl: opts.frameio ?? "https://app.frame.io/projects/demo",
           driveUrl: opts.drive ?? "https://drive.google.com/drive/folders/demo",
         })
-        .run();
+        ;
 
       allVideos.push({ id: videoId, projectId });
 
@@ -216,7 +219,7 @@ function main() {
       const doneCount = Math.round(
         (STATUS_PROGRESS_WEIGHT[v.status] / 100) * checklistLabels.length
       );
-      db.insert(checklistItems)
+      await db.insert(checklistItems)
         .values(
           checklistLabels.map((label, i) => ({
             id: crypto.randomUUID(),
@@ -226,13 +229,13 @@ function main() {
             order: i,
           }))
         )
-        .run();
+        ;
 
       // Versions
       if (v.revisionCount > 0 || !["BACKLOG", "AGUARDANDO_MATERIAL", "PRONTO_PARA_EDITAR"].includes(v.status)) {
         const versionsToCreate = Math.max(1, v.revisionCount);
         for (let i = 1; i <= versionsToCreate; i++) {
-          db.insert(videoVersions)
+          await db.insert(videoVersions)
             .values({
               id: crypto.randomUUID(),
               videoId,
@@ -242,13 +245,13 @@ function main() {
               sentById: v.editor.id,
               notes: i === 1 ? "Primeiro corte enviado para revisão." : `Ajustes da rodada ${i - 1} aplicados.`,
             })
-            .run();
+            ;
         }
       }
 
       // Revisions/alterations for videos currently in an alteration loop
       if (["ALTERACAO_SOLICITADA", "EM_ALTERACAO", "AGUARDANDO_FEEDBACK", "AGUARDANDO_APROVACAO"].includes(v.status)) {
-        db.insert(revisions)
+        await db.insert(revisions)
           .values({
             id: crypto.randomUUID(),
             videoId,
@@ -266,12 +269,12 @@ function main() {
             versionLabel: `V${Math.max(1, v.revisionCount)}`,
             status: v.status === "EM_ALTERACAO" ? "EM_ANDAMENTO" : "ABERTA",
           })
-          .run();
+          ;
       }
 
       // Comments
       if (!["BACKLOG", "AGUARDANDO_MATERIAL"].includes(v.status)) {
-        db.insert(comments)
+        await db.insert(comments)
           .values([
             {
               id: crypto.randomUUID(),
@@ -293,11 +296,11 @@ function main() {
                 ]
               : []),
           ])
-          .run();
+          ;
       }
 
       // Activity log
-      db.insert(activityLogs)
+      await db.insert(activityLogs)
         .values({
           id: crypto.randomUUID(),
           entityType: "VIDEO",
@@ -307,7 +310,7 @@ function main() {
           detail: `Vídeo movido para ${v.status.replaceAll("_", " ")}.`,
           createdAt: iso(subDays(NOW, 1)),
         })
-        .run();
+        ;
 
       // Workload entries (spread estimated hours over the last few days for
       // in-progress items, and over the next few days for upcoming ones)
@@ -315,7 +318,7 @@ function main() {
         const hoursLeft = Math.max(1, v.estimatedHours - v.actualHours);
         const chunks = Math.min(3, Math.ceil(hoursLeft / 4));
         for (let i = 0; i < chunks; i++) {
-          db.insert(workloadEntries)
+          await db.insert(workloadEntries)
             .values({
               id: crypto.randomUUID(),
               editorId: v.editor.id,
@@ -323,14 +326,14 @@ function main() {
               date: dstr(addDays(NOW, i)),
               hours: Math.min(4, hoursLeft - i * 4 > 0 ? hoursLeft - i * 4 : 2),
             })
-            .run();
+            ;
         }
       }
     }
   }
 
   // ---- Client: Vortex Sportwear — Campanha Running de Verão -------------
-  createProject({
+  await createProject({
     client: vortex,
     name: "Campanha Running Verão 2026",
     type: "Publicidade",
@@ -355,7 +358,7 @@ function main() {
   });
 
   // ---- Client: Construtora Horizonte — Institucional 2026 ----------------
-  createProject({
+  await createProject({
     client: horizonte,
     name: "Institucional Horizonte 2026",
     type: "Institucional",
@@ -375,7 +378,7 @@ function main() {
   });
 
   // ---- Client: Têxtil Nova Lã — Coleção Inverno ---------------------------
-  createProject({
+  await createProject({
     client: novala,
     name: "Coleção Inverno — Lookbook em Vídeo",
     type: "Fashion Film",
@@ -396,7 +399,7 @@ function main() {
   });
 
   // ---- Client: Corrida Amanhecer — Aftermovie -----------------------------
-  createProject({
+  await createProject({
     client: amanhecer,
     name: "Aftermovie Corrida Amanhecer 2026",
     type: "Evento",
@@ -417,7 +420,7 @@ function main() {
   });
 
   // ---- Client: Sabor de Raiz — Conteúdo mensal ----------------------------
-  createProject({
+  await createProject({
     client: saborderaiz,
     name: "Conteúdo Mensal — Agosto",
     type: "Conteúdo mensal",
@@ -437,7 +440,7 @@ function main() {
   });
 
   // ---- Client: Vortex — Conteúdo institucional atrasado (para mostrar risco)
-  createProject({
+  await createProject({
     client: vortex,
     name: "Vídeo Institucional — Fábrica",
     type: "Institucional",
@@ -457,7 +460,7 @@ function main() {
   });
 
   // ---- Client: Amanhecer — Live cobertura -------------------------------
-  createProject({
+  await createProject({
     client: amanhecer,
     name: "Live Cobertura — Largada",
     type: "Live",
@@ -475,7 +478,7 @@ function main() {
   });
 
   // ---- Client: Nova Lã — Produto e-commerce -----------------------------
-  createProject({
+  await createProject({
     client: novala,
     name: "Vídeos de Produto — E-commerce",
     type: "Produto",
@@ -496,4 +499,13 @@ function main() {
   console.log(`Seed completo: ${clientRows.length} clientes, ${allProjects.length} projetos, ${allVideos.length} vídeos.`);
 }
 
-main();
+main()
+  .then(async () => {
+    await pgClient.end();
+    process.exit(0);
+  })
+  .catch(async (err) => {
+    console.error(err);
+    await pgClient.end();
+    process.exit(1);
+  });

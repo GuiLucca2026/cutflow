@@ -1,19 +1,22 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import path from "path";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
-const DB_PATH = process.env.CUTFLOW_DB_PATH || path.join(process.cwd(), "cutflow.db");
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL não configurada. Aponte para o Postgres do mesmo projeto Supabase usado pelo login (ver README.md)."
+  );
+}
 
-// A single shared connection across hot reloads in dev.
-const globalForDb = globalThis as unknown as { __cutflowSqlite?: Database.Database };
+// A single shared connection across hot reloads in dev. `prepare: false` is
+// required when connecting through Supabase's pooled connection (pgbouncer
+// in transaction mode, port 6543) — see README.md.
+const globalForDb = globalThis as unknown as { __cutflowSql?: ReturnType<typeof postgres> };
 
-const sqlite =
-  globalForDb.__cutflowSqlite ??
-  (globalForDb.__cutflowSqlite = new Database(DB_PATH));
+const client =
+  globalForDb.__cutflowSql ??
+  (globalForDb.__cutflowSql = postgres(connectionString, { prepare: false }));
 
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-export const db = drizzle(sqlite, { schema });
-export { sqlite };
+export const db = drizzle(client, { schema });
+export { client as sql };

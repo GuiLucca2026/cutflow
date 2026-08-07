@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { clients, projects, videos } from "@/db/schema";
-import { like, or, sql } from "drizzle-orm";
+import { ilike, or } from "drizzle-orm";
 
 // Global search (spec section 29): clients, projects, videos in one query.
 export async function GET(req: NextRequest) {
@@ -13,16 +13,16 @@ export async function GET(req: NextRequest) {
 
   const [clientRows, projectRows, videoRows] = await Promise.all([
     db.query.clients.findMany({
-      where: or(like(clients.name, like_), like(clients.tradeName, like_), like(clients.company, like_)),
+      where: or(ilike(clients.name, like_), ilike(clients.tradeName, like_), ilike(clients.company, like_)),
       limit: 5,
     }),
     db.query.projects.findMany({
-      where: like(projects.name, like_),
+      where: ilike(projects.name, like_),
       with: { client: true },
       limit: 5,
     }),
     db.query.videos.findMany({
-      where: like(videos.name, like_),
+      where: ilike(videos.name, like_),
       with: { project: { with: { client: true } } },
       limit: 8,
     }),

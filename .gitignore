@@ -41,7 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# sqlite (local dev database — cutflow.db itself ships seeded with demo data)
+# local sqlite leftovers (project now runs on Postgres — see README.md)
+*.db
 *.db-shm
 *.db-wal
 
