@@ -106,7 +106,7 @@ export async function getVideo(id: string) {
   const supabase = await getSupabase();
   const select =
     "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), " +
-    "checklist:cutflow_checklist_items(*), versions:cutflow_video_versions(*), " +
+    "checklist:cutflow_checklist_items(*, completedBy:cutflow_users!completed_by_id(*)), versions:cutflow_video_versions(*), " +
     "revisions:cutflow_revisions(*, assignedTo:cutflow_users!assigned_to_id(*), requestedBy:cutflow_users!requested_by_id(*)), " +
     "comments:cutflow_comments(*, author:cutflow_users!author_id(*))";
   const { data, error } = await supabase.from(TABLES.videos).select(select).eq("id", id).maybeSingle();

@@ -293,6 +293,11 @@ export type ChecklistItem = {
   label: string;
   done: boolean;
   order: number;
+  // Quem marcou o item como feito, e quando — null enquanto o item está
+  // em aberto (ou depois de ser reaberto: a atribuição não persiste, já
+  // que "quem fez" deixa de ser verdade assim que desmarca).
+  completedById: string | null;
+  completedAt: string | null;
 };
 
 export type Comment = {

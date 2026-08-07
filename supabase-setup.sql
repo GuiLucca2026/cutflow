@@ -142,6 +142,11 @@ create table if not exists public.cutflow_checklist_items (
   "order" integer not null default 0
 );
 
+-- Quem marcou cada item do checklist como concluído (e quando) — antes não
+-- ficava registrado, então não dava pra saber quem fez qual parte do vídeo.
+alter table public.cutflow_checklist_items add column if not exists completed_by_id text references public.cutflow_users(id);
+alter table public.cutflow_checklist_items add column if not exists completed_at text;
+
 create table if not exists public.cutflow_comments (
   id text primary key,
   video_id text not null references public.cutflow_videos(id) on delete cascade,

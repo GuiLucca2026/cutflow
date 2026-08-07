@@ -218,20 +218,33 @@ function VideoDetailBody({
             <TabsTrigger value="atividade">Atividade</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="checklist" className="space-y-2">
+          <TabsContent value="checklist" className="space-y-1">
             {video.checklist.map((item: any) => (
-              <label key={item.id} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-cf-surface-2 cursor-pointer">
-                <Checkbox
-                  checked={item.done}
-                  onCheckedChange={(v) =>
-                    startTransition(async () => {
-                      await toggleChecklistItem(item.id, !!v);
-                      onMutate();
-                    })
-                  }
-                />
-                <span className={item.done ? "text-cf-text-dim line-through" : "text-cf-text"}>{item.label}</span>
-              </label>
+              <div key={item.id} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-cf-surface-2">
+                <label className="flex flex-1 min-w-0 items-center gap-2.5 cursor-pointer">
+                  <Checkbox
+                    checked={item.done}
+                    onCheckedChange={(v) =>
+                      startTransition(async () => {
+                        await toggleChecklistItem(item.id, !!v);
+                        onMutate();
+                      })
+                    }
+                  />
+                  <span className={item.done ? "text-cf-text-dim line-through truncate" : "text-cf-text truncate"}>{item.label}</span>
+                </label>
+                {/* Quem marcou esse item — some junto quando reaberto, já
+                    que a atribuição só vale enquanto estiver feito. */}
+                {item.done && item.completedBy && (
+                  <div
+                    className="flex shrink-0 items-center gap-1.5 pl-2"
+                    title={`Concluído por ${item.completedBy.name}${item.completedAt ? " · " + fmtRelative(item.completedAt) : ""}`}
+                  >
+                    <Avatar name={item.completedBy.name} color={item.completedBy.avatarColor} size={18} />
+                    <span className="hidden sm:inline text-[11px] text-cf-text-dim">{item.completedBy.name.split(" ")[0]}</span>
+                  </div>
+                )}
+              </div>
             ))}
           </TabsContent>
 

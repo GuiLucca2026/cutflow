@@ -139,11 +139,35 @@ export async function updateVideoField(
 // ---------------------------------------------------------------------------
 export async function toggleChecklistItem(itemId: string, done: boolean) {
   const supabase = await getSupabase();
-  const { data: item } = await supabase.from(TABLES.checklistItems).select("video_id, label").eq("id", itemId).maybeSingle();
+  const { data: item } = await supabase
+    .from(TABLES.checklistItems)
+    .select("video_id, label, video:cutflow_videos(project_id, name)")
+    .eq("id", itemId)
+    .maybeSingle();
   if (!item) return;
-  await supabase.from(TABLES.checklistItems).update({ done }).eq("id", itemId);
-  await logActivity("VIDEO", item.video_id, done ? "Item do checklist concluído" : "Item do checklist reaberto", item.label);
-  revalidateEverywhere();
+
+  const user = await getCurrentUser();
+  // Guarda quem marcou o item (e quando) — some junto se for reaberto,
+  // já que "quem fez" deixa de valer assim que volta a ficar pendente.
+  await supabase
+    .from(TABLES.checklistItems)
+    .update(toRow({ done, completedById: done ? user.id : null, completedAt: done ? nowISO() : null }))
+    .eq("id", itemId);
+
+  const video = Array.isArray(item.video) ? item.video[0] : item.video;
+  const action = done ? "Item do checklist concluído" : "Item do checklist reaberto";
+  await logActivity("VIDEO", item.video_id, action, item.label);
+  // Some no vídeo E no projeto (spec do usuário: "incluído no projeto
+  // junto") — quem olha só a aba do projeto também precisa ver quem fez
+  // qual parte, sem ter que abrir cada vídeo um por um. Vídeo avulso (sem
+  // projeto) não tem pra onde propagar isso.
+  if (video?.project_id) {
+    await logActivity("PROJECT", video.project_id, action, `${video.name} — ${item.label}`);
+  }
+  // Sem revalidateEverywhere aqui de propósito: nada fora desta aba mostra
+  // o checklist, então isso só custaria uma re-renderização cara (o
+  // layout + a página de fundo inteiros) por nada — era exatamente essa a
+  // causa da lentidão ao marcar um item.
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +188,8 @@ export async function addComment(videoId: string, body: string) {
     })
   );
   await logActivity("VIDEO", videoId, "Comentário adicionado");
-  revalidateEverywhere();
+  // Comentário só aparece dentro da própria aba — mesma lógica do
+  // checklist, sem revalidateEverywhere.
 }
 
 // ---------------------------------------------------------------------------
@@ -253,7 +278,8 @@ export async function addVideoVersion(videoId: string, label: string, notes?: st
   );
   await supabase.from(TABLES.videos).update(toRow({ currentVersion: label, updatedAt: nowISO() })).eq("id", videoId);
   await logActivity("VIDEO", videoId, "Nova versão enviada", label);
-  revalidateEverywhere();
+  // currentVersion não aparece em nenhum card/coluna fora da aba — mesma
+  // lógica do checklist e do comentário, sem revalidateEverywhere.
 }
 
 // ---------------------------------------------------------------------------

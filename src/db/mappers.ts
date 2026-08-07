@@ -163,9 +163,18 @@ export function mapRevision(r: any): (Revision & Record<string, any>) | null {
   };
 }
 
-export function mapChecklistItem(r: any): ChecklistItem | null {
+export function mapChecklistItem(r: any): (ChecklistItem & Record<string, any>) | null {
   if (!r) return null;
-  return { id: r.id, videoId: r.video_id, label: r.label, done: r.done, order: r.order };
+  return {
+    id: r.id,
+    videoId: r.video_id,
+    label: r.label,
+    done: r.done,
+    order: r.order,
+    completedById: r.completed_by_id ?? null,
+    completedAt: r.completed_at ?? null,
+    ...(r.completedBy !== undefined ? { completedBy: mapUser(r.completedBy) } : {}),
+  };
 }
 
 export function mapComment(r: any): (Comment & Record<string, any>) | null {
@@ -308,6 +317,8 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   entityType: "entity_type",
   entityId: "entity_id",
   userId: "user_id",
+  completedById: "completed_by_id",
+  completedAt: "completed_at",
 };
 
 export function toRow<T extends Record<string, any>>(obj: T): Record<string, any> {
