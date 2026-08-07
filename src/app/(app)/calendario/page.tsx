@@ -106,7 +106,7 @@ export default async function CalendarioPage({
               href={hrefFor(v.key, refDate)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                view === v.key ? "bg-cf-lime text-cf-black" : "text-cf-text-dim hover:text-cf-text"
+                view === v.key ? "bg-cf-lime text-cf-on-accent" : "text-cf-text-dim hover:text-cf-text"
               )}
             >
               {v.label}
@@ -180,7 +180,7 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
                   href={`/calendario?view=day&date=${key}`}
                   className={cn(
                     "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px]",
-                    isTodayFn(day) ? "bg-cf-lime text-cf-black font-semibold" : "text-cf-text-dim hover:text-cf-text"
+                    isTodayFn(day) ? "bg-cf-lime text-cf-on-accent font-semibold" : "text-cf-text-dim hover:text-cf-text"
                   )}
                 >
                   {format(day, "d")}

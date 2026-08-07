@@ -133,8 +133,8 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
       </div>
       <div className="flex items-center gap-1.5 mt-2">
         <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />
-        {overdue && <AlertTriangle className="h-3 w-3 text-red-400" />}
-        <span className={cn("ml-auto text-[11px]", overdue ? "text-red-400 font-semibold" : "text-cf-text-dim")}>
+        {overdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
+        <span className={cn("ml-auto text-[11px]", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
           {fmtDateWeekday(video.finalDeadline)}
         </span>
       </div>

@@ -9,31 +9,33 @@ export const STATUS_META: Record<
   { label: string; color: string; bg: string; order: number; group: "backlog" | "editing" | "review" | "client" | "done" }
 > = {
   // Cores pensadas por grupo (backlog/editing/review/client/done), não por
-  // status isolado — antes 3 famílias de cor cobriam os 18 status (o mesmo
-  // azul em "pronto pra editar" — início do pipeline — e "enviado ao
-  // cliente"/"exportando"/"upload" — quase no fim; o mesmo lime da marca em
-  // "editando" e "aprovado"), então dava pra confundir o estágio de um
-  // vídeo só de bater o olho na cor. "Aguardando X" continua toda em âmbar
-  // de propósito — é uma família só porque o significado é sempre o mesmo
+  // status isolado, e recalibradas pro conceito claro+roxo (texto mais
+  // escuro/saturado, fundo bem clarinho — o inverso do tema escuro, onde
+  // era texto vivo sobre fundo quase preto). "Editando" usa a cor da marca
+  // de propósito (igual o conceito trata "Edição" como a cor principal);
+  // "Aprovado" e "Entregue" ficam em famílias PRÓPRIAS (verde e
+  // grafite/preto) pra nunca se confundir com "isso é clicável" — mesmo
+  // motivo que já tinha separado o cf-success do cf-lime antes. "Aguardando
+  // X" continua toda em âmbar de propósito: o significado é sempre o mesmo
   // ("parado esperando alguém"), o rótulo já diz esperando o quê.
-  BACKLOG: { label: "Backlog", color: "#9A9C9F", bg: "#2B2B2B", order: 0, group: "backlog" },
-  AGUARDANDO_MATERIAL: { label: "Aguardando material", color: "#F59E0B", bg: "#3A2E13", order: 1, group: "backlog" },
-  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#22D3EE", bg: "#0D2E33", order: 2, group: "backlog" },
-  EDITANDO: { label: "Editando", color: "#C6FF00", bg: "#232B0A", order: 3, group: "editing" },
-  EDICAO_PAUSADA: { label: "Edição pausada", color: "#F59E0B", bg: "#3A2E13", order: 4, group: "editing" },
-  REVISAO_INTERNA: { label: "Revisão interna", color: "#A78BFA", bg: "#251E3A", order: 5, group: "review" },
-  CORRECAO_INTERNA: { label: "Correção interna", color: "#F472B6", bg: "#3A1E2C", order: 6, group: "review" },
-  ENVIADO_AO_CLIENTE: { label: "Enviado ao cliente", color: "#38BDF8", bg: "#132A38", order: 7, group: "client" },
-  AGUARDANDO_FEEDBACK: { label: "Aguardando feedback", color: "#F59E0B", bg: "#3A2E13", order: 8, group: "client" },
-  ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#FB923C", bg: "#3A2410", order: 9, group: "client" },
-  EM_ALTERACAO: { label: "Em alteração", color: "#FB923C", bg: "#3A2410", order: 10, group: "editing" },
-  AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#F59E0B", bg: "#3A2E13", order: 11, group: "client" },
-  APROVADO: { label: "Aprovado", color: "#34D399", bg: "#12271F", order: 12, group: "done" },
-  EXPORTANDO: { label: "Exportando", color: "#38BDF8", bg: "#132A38", order: 13, group: "done" },
-  UPLOAD_ENVIO: { label: "Upload / envio", color: "#38BDF8", bg: "#132A38", order: 14, group: "done" },
-  ENTREGUE: { label: "Entregue", color: "#4ADE80", bg: "#122A18", order: 15, group: "done" },
-  ARQUIVADO: { label: "Arquivado", color: "#6B6B6B", bg: "#232323", order: 16, group: "done" },
-  CANCELADO: { label: "Cancelado", color: "#EF4444", bg: "#301414", order: 17, group: "done" },
+  BACKLOG: { label: "Backlog", color: "#6B7280", bg: "#F1F2F4", order: 0, group: "backlog" },
+  AGUARDANDO_MATERIAL: { label: "Aguardando material", color: "#B45309", bg: "#FEF3C7", order: 1, group: "backlog" },
+  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#0F766E", bg: "#CCFBF1", order: 2, group: "backlog" },
+  EDITANDO: { label: "Editando", color: "#7C3AED", bg: "#EDE9FE", order: 3, group: "editing" },
+  EDICAO_PAUSADA: { label: "Edição pausada", color: "#B45309", bg: "#FEF3C7", order: 4, group: "editing" },
+  REVISAO_INTERNA: { label: "Revisão interna", color: "#7E22CE", bg: "#F3E8FF", order: 5, group: "review" },
+  CORRECAO_INTERNA: { label: "Correção interna", color: "#BE185D", bg: "#FCE7F3", order: 6, group: "review" },
+  ENVIADO_AO_CLIENTE: { label: "Enviado ao cliente", color: "#1D4ED8", bg: "#DBEAFE", order: 7, group: "client" },
+  AGUARDANDO_FEEDBACK: { label: "Aguardando feedback", color: "#B45309", bg: "#FEF3C7", order: 8, group: "client" },
+  ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#E11D48", bg: "#FFE4E6", order: 9, group: "client" },
+  EM_ALTERACAO: { label: "Em alteração", color: "#E11D48", bg: "#FFE4E6", order: 10, group: "editing" },
+  AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#B45309", bg: "#FEF3C7", order: 11, group: "client" },
+  APROVADO: { label: "Aprovado", color: "#16A34A", bg: "#DCFCE7", order: 12, group: "done" },
+  EXPORTANDO: { label: "Exportando", color: "#1D4ED8", bg: "#DBEAFE", order: 13, group: "done" },
+  UPLOAD_ENVIO: { label: "Upload / envio", color: "#1D4ED8", bg: "#DBEAFE", order: 14, group: "done" },
+  ENTREGUE: { label: "Entregue", color: "#0F172A", bg: "#F1F5F9", order: 15, group: "done" },
+  ARQUIVADO: { label: "Arquivado", color: "#6B7280", bg: "#F1F2F4", order: 16, group: "done" },
+  CANCELADO: { label: "Cancelado", color: "#DC2626", bg: "#FEE2E2", order: 17, group: "done" },
 };
 
 export const KANBAN_STATUSES: string[] = [
@@ -52,10 +54,10 @@ export const KANBAN_STATUSES: string[] = [
 ];
 
 export const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  BAIXA: { label: "Baixa", color: "#9A9C9F", bg: "#232323" },
-  NORMAL: { label: "Normal", color: "#38BDF8", bg: "#132A38" },
-  ALTA: { label: "Alta", color: "#FB923C", bg: "#3A2410" },
-  URGENTE: { label: "Urgente", color: "#EF4444", bg: "#301414" },
+  BAIXA: { label: "Baixa", color: "#6B7280", bg: "#F1F2F4" },
+  NORMAL: { label: "Normal", color: "#1D4ED8", bg: "#DBEAFE" },
+  ALTA: { label: "Alta", color: "#C2410C", bg: "#FFEDD5" },
+  URGENTE: { label: "Urgente", color: "#DC2626", bg: "#FEE2E2" },
 };
 
 export const ROLE_META: Record<string, { label: string }> = {
@@ -91,10 +93,10 @@ export function hoursUntil(dateStr: string) {
 export type RiskLevel = "BAIXO" | "MODERADO" | "ALTO" | "CRITICO";
 
 export const RISK_META: Record<RiskLevel, { label: string; color: string; emoji: string }> = {
-  BAIXO: { label: "Baixo", color: "#4ADE80", emoji: "🟢" },
-  MODERADO: { label: "Moderado", color: "#F59E0B", emoji: "🟡" },
-  ALTO: { label: "Alto", color: "#FB923C", emoji: "🟠" },
-  CRITICO: { label: "Crítico", color: "#EF4444", emoji: "🔴" },
+  BAIXO: { label: "Baixo", color: "#16A34A", emoji: "🟢" },
+  MODERADO: { label: "Moderado", color: "#B45309", emoji: "🟡" },
+  ALTO: { label: "Alto", color: "#C2410C", emoji: "🟠" },
+  CRITICO: { label: "Crítico", color: "#DC2626", emoji: "🔴" },
 };
 
 /**

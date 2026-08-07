@@ -6,7 +6,7 @@ import { initials } from "@/lib/domain";
 
 export function Avatar({
   name,
-  color = "#C6FF00",
+  color = "#7C3AED",
   src,
   size = 28,
   className,

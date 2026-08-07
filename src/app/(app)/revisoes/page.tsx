@@ -44,7 +44,7 @@ export default async function RevisoesPage() {
                     <div className="text-sm font-medium truncate">{v.project?.client?.name} — {v.name}</div>
                     <div className="text-xs text-cf-text-dim truncate">{v.project?.name}</div>
                   </div>
-                  <div className="text-xs text-amber-400 font-semibold whitespace-nowrap">Aguardando há {fmtWaitingSince(v.updatedAt)}</div>
+                  <div className="text-xs text-amber-600 font-semibold whitespace-nowrap">Aguardando há {fmtWaitingSince(v.updatedAt)}</div>
                 </div>
               ))}
             </div>

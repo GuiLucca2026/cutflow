@@ -8,6 +8,7 @@ import { VideoDetailProvider } from "@/components/cutflow/video-detail-context";
 import { VideoDetailSheetHost } from "@/components/cutflow/video-detail-sheet";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { addDays, format } from "date-fns";
+import { BrandWordmark } from "@/components/cutflow/brand-mark";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   if (!(await hasSupabaseSession())) {
@@ -71,7 +72,9 @@ function NoSessionScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
       <div className="max-w-sm text-center space-y-3">
-        <h1 className="font-display text-3xl tracking-wide">G2 FLOW</h1>
+        <div className="flex justify-center mb-2">
+          <BrandWordmark size="lg" />
+        </div>
         <p className="text-cf-text-dim text-sm">
           Este link não pode ser aberto diretamente. Se você é admin da G2,
           acesse o G2 FLOW pelo botão{" "}

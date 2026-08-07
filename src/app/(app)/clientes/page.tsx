@@ -46,7 +46,7 @@ export default async function ClientesPage() {
 function Stat({ label, value, tone }: { label: string; value: number; tone?: "danger" }) {
   return (
     <div className="rounded-lg bg-cf-surface-2 py-2">
-      <div className={`font-display text-xl ${tone === "danger" && value > 0 ? "text-red-400" : ""}`}>{value}</div>
+      <div className={`font-display text-xl ${tone === "danger" && value > 0 ? "text-red-600" : ""}`}>{value}</div>
       <div className="text-[10px] uppercase tracking-wide text-cf-text-dim">{label}</div>
     </div>
   );

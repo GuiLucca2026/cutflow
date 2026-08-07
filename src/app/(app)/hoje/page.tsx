@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic";
 function StatCard({ label, value, icon: Icon, tone = "default", href }: { label: string; value: string | number; icon: any; tone?: "default" | "danger" | "warn" | "good"; href?: string }) {
   const toneMap = {
     default: "text-cf-text border-cf-border",
-    danger: "text-red-400 border-red-500/30",
-    warn: "text-amber-400 border-amber-500/30",
+    danger: "text-red-600 border-red-500/30",
+    warn: "text-amber-600 border-amber-500/30",
     good: "text-cf-success border-cf-success/30",
   };
   const body = (
@@ -91,7 +91,7 @@ export default async function HojePage() {
           {attentionCount > 0 && (
             <>
               {" "}
-              · <span className="text-amber-400 font-medium">{attentionCount} {attentionCount === 1 ? "vídeo precisa" : "vídeos precisam"} de atenção</span>
+              · <span className="text-amber-600 font-medium">{attentionCount} {attentionCount === 1 ? "vídeo precisa" : "vídeos precisam"} de atenção</span>
             </>
           )}
         </p>
@@ -119,9 +119,9 @@ export default async function HojePage() {
                 )}
               >
                 {a.severity === "CRITICO" ? (
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-400" />
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
                 ) : a.severity === "ALTO" ? (
-                  <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-400" />
+                  <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
                 ) : (
                   <Info className="h-4 w-4 shrink-0 mt-0.5 text-cf-text-dim" />
                 )}
@@ -192,7 +192,7 @@ function Section({ title, subtitle, count, tone, children }: { title: string; su
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-3">
-        <h2 className={cn("font-display text-2xl tracking-wide", tone === "danger" && "text-red-400")}>{title}</h2>
+        <h2 className={cn("font-display text-2xl tracking-wide", tone === "danger" && "text-red-600")}>{title}</h2>
         {typeof count === "number" && <span className="text-cf-text-dim text-sm">{count}</span>}
       </div>
       {subtitle && <p className="text-xs text-cf-text-dim -mt-2 mb-3">{subtitle}</p>}
@@ -222,7 +222,7 @@ function WaitingRow({ video }: { video: any }) {
         <div className="text-sm font-medium truncate">{video.project?.client?.name} — {video.name}</div>
         <div className="text-xs text-cf-text-dim truncate">{video.project?.name}</div>
       </div>
-      <div className="text-xs text-amber-400 font-semibold whitespace-nowrap">
+      <div className="text-xs text-amber-600 font-semibold whitespace-nowrap">
         Aguardando há {fmtWaitingSince(video.updatedAt)}
       </div>
     </div>

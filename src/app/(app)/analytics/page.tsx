@@ -168,8 +168,8 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 function KpiCard({ label, value, detail, icon: Icon, tone = "default" }: { label: string; value: string; detail: string; icon: any; tone?: "default" | "danger" | "warn" | "good" }) {
   const toneMap = {
     default: "text-cf-text border-cf-border",
-    danger: "text-red-400 border-red-500/30",
-    warn: "text-amber-400 border-amber-500/30",
+    danger: "text-red-600 border-red-500/30",
+    warn: "text-amber-600 border-amber-500/30",
     good: "text-cf-success border-cf-success/30",
   };
   return (

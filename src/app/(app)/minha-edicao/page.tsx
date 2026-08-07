@@ -50,7 +50,7 @@ function Group({ title, videos, emptyText, tone }: { title: string; videos: any[
   return (
     <section>
       <div className="flex items-baseline gap-2 mb-3">
-        <h2 className={`font-display text-2xl tracking-wide ${tone === "danger" ? "text-red-400" : ""}`}>{title}</h2>
+        <h2 className={`font-display text-2xl tracking-wide ${tone === "danger" ? "text-red-600" : ""}`}>{title}</h2>
         <span className="text-cf-text-dim text-sm">{videos.length}</span>
       </div>
       {videos.length === 0 ? (

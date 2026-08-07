@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { AcceptInviteForm } from "@/components/cutflow/accept-invite-form";
+import { BrandWordmark } from "@/components/cutflow/brand-mark";
 
 // Public page — same reasoning as /api/ics/[token]: whoever opens this
 // link has no session yet, so the lookup goes through a SECURITY DEFINER
@@ -24,8 +25,8 @@ export default async function ConvitePage({ params }: { params: Promise<{ token:
   return (
     <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
-          <h1 className="font-display text-3xl tracking-wide">G2 FLOW</h1>
+        <div className="flex justify-center mb-6">
+          <BrandWordmark size="lg" />
         </div>
 
         {!invite ? (

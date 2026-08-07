@@ -7,6 +7,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { NAV_GROUPS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+import { BrandWordmark } from "@/components/cutflow/brand-mark";
 
 // Sidebar some inteiramente abaixo do breakpoint `lg` (ver sidebar.tsx),
 // e até aqui não havia NENHUM jeito de trocar de página em tela pequena —
@@ -32,9 +33,8 @@ export function MobileNav() {
       <SheetContent side="left" className="w-72 sm:max-w-xs p-0">
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">Navegação principal do G2 FLOW</SheetDescription>
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-cf-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cf-lime text-cf-black font-display text-base">G2</div>
-          <div className="font-display text-2xl tracking-wide leading-none">G2 FLOW</div>
+        <div className="px-5 py-5 border-b border-cf-border">
+          <BrandWordmark size="sm" />
         </div>
         <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-3 space-y-4">
           {NAV_GROUPS.map((group) => (
@@ -50,7 +50,7 @@ export function MobileNav() {
                       href={item.href}
                       className={cn(
                         "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                        active ? "bg-cf-lime text-cf-black font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
+                        active ? "bg-cf-lime text-cf-on-accent font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />

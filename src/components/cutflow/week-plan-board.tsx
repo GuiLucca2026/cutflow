@@ -33,7 +33,7 @@ export function WeekPlanBoard({ days, unallocatedHours }: { days: PlanDay[]; una
   return (
     <div className="space-y-4">
       {unallocatedHours > 0.05 && (
-        <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-xs text-orange-300">
+        <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 px-3 py-2 text-xs text-orange-600">
           {fmtHours(unallocatedHours)} não couberam nos próximos dias respeitando sua capacidade diária — considere pedir
           ajuda ou renegociar algum prazo.
         </div>
@@ -56,7 +56,7 @@ export function WeekPlanBoard({ days, unallocatedHours }: { days: PlanDay[]; una
               {day.isWorkDay ? (
                 <>
                   <Progress value={pct} indicatorClassName={over ? "bg-red-500" : undefined} className="mb-1" />
-                  <div className={cn("text-[10px] mb-2", over ? "text-red-400 font-semibold" : "text-cf-text-dim")}>
+                  <div className={cn("text-[10px] mb-2", over ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
                     {fmtHours(day.allocatedHours)} / {fmtHours(day.capacityHours)}
                   </div>
                   <div className="space-y-1.5 flex-1">
@@ -85,7 +85,7 @@ export function WeekPlanBoard({ days, unallocatedHours }: { days: PlanDay[]; una
       <button
         onClick={apply}
         disabled={pending || applied}
-        className="rounded-lg bg-cf-lime text-cf-black font-semibold text-sm px-4 py-2 disabled:opacity-50 hover:brightness-95 transition"
+        className="rounded-lg bg-cf-lime text-cf-on-accent font-semibold text-sm px-4 py-2 disabled:opacity-50 hover:brightness-95 transition"
       >
         {applied ? "Plano aplicado ✓" : pending ? "Aplicando..." : "Aplicar plano na minha carga de trabalho"}
       </button>

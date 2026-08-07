@@ -68,7 +68,7 @@ export default async function ProjectDetailPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-cf-border text-sm">
-          <span className={overdue ? "flex items-center gap-1 text-red-400 font-semibold" : "flex items-center gap-1"}>
+          <span className={overdue ? "flex items-center gap-1 text-red-600 font-semibold" : "flex items-center gap-1"}>
             {overdue && <AlertTriangle className="h-4 w-4" />}
             Prazo: {fmtDateFull(project.deadline)}
           </span>

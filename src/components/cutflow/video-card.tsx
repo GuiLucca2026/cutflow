@@ -53,7 +53,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
 
       {!compact && (
         <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-cf-border text-xs text-cf-text-dim">
-          <span className={cn("flex items-center gap-1", overdue && "text-red-400 font-semibold")}>
+          <span className={cn("flex items-center gap-1", overdue && "text-red-600 font-semibold")}>
             {overdue && <AlertTriangle className="h-3 w-3" />}
             Entrega: {fmtDateWeekday(video.finalDeadline)}
           </span>

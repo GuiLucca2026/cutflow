@@ -15,10 +15,10 @@ import { withBasePath } from "@/lib/base-path";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  PENDENTE: { label: "Pendente", color: "#38BDF8" },
-  ACEITO: { label: "Aceito", color: "#34D399" },
-  EXPIRADO: { label: "Expirado", color: "#9A9C9F" },
-  REVOGADO: { label: "Revogado", color: "#EF4444" },
+  PENDENTE: { label: "Pendente", color: "#1D4ED8" },
+  ACEITO: { label: "Aceito", color: "#22C55E" },
+  EXPIRADO: { label: "Expirado", color: "#6B7280" },
+  REVOGADO: { label: "Revogado", color: "#DC2626" },
 };
 
 export type InviteData = {
@@ -48,7 +48,7 @@ export function InviteSection({ invites, error }: { invites: InviteData[]; error
 
       {error ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2">
-          <p className="text-xs text-red-400">Não foi possível carregar os convites.</p>
+          <p className="text-xs text-red-600">Não foi possível carregar os convites.</p>
           <p className="text-[11px] text-cf-text-dim/70 font-mono mt-1 break-words">{error}</p>
         </div>
       ) : invites.length === 0 ? (
@@ -95,7 +95,7 @@ function InviteRow({ invite }: { invite: InviteData }) {
         </div>
         <div className="text-[11px] text-cf-text-dim">{ROLE_META[invite.role]?.label ?? invite.role}</div>
       </div>
-      <span className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0" style={{ color: effectiveMeta.color, backgroundColor: `${effectiveMeta.color}1a` }}>
+      <span className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5 shrink-0" style={{ color: effectiveMeta.color, backgroundColor: `${effectiveMeta.color}26` }}>
         {effectiveMeta.label}
       </span>
       {effectiveStatus === "PENDENTE" && (
@@ -103,7 +103,7 @@ function InviteRow({ invite }: { invite: InviteData }) {
           <Button size="icon" variant="ghost" onClick={copyLink} title="Copiar link">
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" disabled={pending} onClick={revoke} title="Revogar convite" className="text-red-400">
+          <Button size="icon" variant="ghost" disabled={pending} onClick={revoke} title="Revogar convite" className="text-red-600">
             <Ban className="h-3.5 w-3.5" />
           </Button>
         </div>

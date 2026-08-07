@@ -58,8 +58,8 @@ export default async function ProjetosPage() {
 
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-cf-border">
                 <div className="text-xs text-cf-text-dim flex items-center gap-1">
-                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
-                  <span className={overdue ? "text-red-400 font-semibold" : ""}>Prazo: {fmtDateWeekday(p.deadline)}</span>
+                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}
+                  <span className={overdue ? "text-red-600 font-semibold" : ""}>Prazo: {fmtDateWeekday(p.deadline)}</span>
                 </div>
                 {editors.length > 0 && (
                   <AvatarStack people={editors.map((v: any) => ({ name: v.editor?.name ?? "?", color: v.editor?.avatarColor }))} />

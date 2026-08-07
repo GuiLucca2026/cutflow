@@ -101,7 +101,7 @@ export function AcceptInviteForm({
         <Input id="invite-confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
       </div>
 
-      {error && <p className="text-red-400 text-xs">{error}</p>}
+      {error && <p className="text-red-600 text-xs">{error}</p>}
 
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Criando conta…" : "Criar conta e entrar"}

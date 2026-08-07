@@ -137,7 +137,7 @@ function VideoDetailBody({
           <PriorityBadge priority={video.priority} />
           {!["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(video.status) && <RiskBadge risk={risk} />}
           {overdue && (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-400">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
               <AlertTriangle className="h-3.5 w-3.5" /> Atrasado
             </span>
           )}
@@ -196,7 +196,7 @@ function VideoDetailBody({
           <DateRow label="Prazo do cliente" value={video.clientDeadline} />
           <DateRow label="Prazo final" value={video.finalDeadline} highlight />
           {video.originalFinalDeadline !== video.finalDeadline && (
-            <div className="text-xs text-amber-400/90 pt-1 border-t border-cf-border mt-1">
+            <div className="text-xs text-amber-600/90 pt-1 border-t border-cf-border mt-1">
               Prazo original: {fmtDateFull(video.originalFinalDeadline)}
             </div>
           )}

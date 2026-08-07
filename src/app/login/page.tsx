@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
+import { BrandWordmark } from "@/components/cutflow/brand-mark";
 
 // Login por e-mail/senha — o caminho de volta pra quem entrou via /convite
 // (gente que não é admin da G2 e por isso não tem o botão "Abrir G2 FLOW"
@@ -37,9 +38,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-6">
-          <h1 className="font-display text-3xl tracking-wide">G2 FLOW</h1>
-          <p className="text-cf-text-dim text-sm mt-1">Entrar com e-mail e senha</p>
+        <div className="flex flex-col items-center mb-6">
+          <BrandWordmark size="lg" />
+          <p className="text-cf-text-dim text-sm mt-2">Entrar com e-mail e senha</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -52,7 +53,7 @@ export default function LoginPage() {
             <Input id="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
 
-          {error && <p className="text-red-400 text-xs">{error}</p>}
+          {error && <p className="text-red-600 text-xs">{error}</p>}
 
           <Button type="submit" disabled={pending} className="w-full">
             {pending ? "Entrando…" : "Entrar"}

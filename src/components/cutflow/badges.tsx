@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { STATUS_META, PRIORITY_META, RISK_META, RiskLevel } from "@/lib/domain";
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
-  const meta = STATUS_META[status] ?? { label: status, color: "#9A9C9F", bg: "#232323" };
+  const meta = STATUS_META[status] ?? { label: status, color: "#6B7280", bg: "#F1F2F4" };
   return (
     <Badge color={meta.color} bg={meta.bg} className={className}>
       {meta.label}
@@ -21,8 +21,10 @@ export function PriorityBadge({ priority, className }: { priority: string; class
 
 export function RiskBadge({ risk, className }: { risk: RiskLevel; className?: string }) {
   const meta = RISK_META[risk];
+  // 26 (~15% alpha) em vez de 1a (~10%) — no fundo claro um tom tão sutil
+  // quase some; no escuro o mesmo valor "brilhava" por contraste.
   return (
-    <Badge color={meta.color} bg={`${meta.color}1a`} className={className}>
+    <Badge color={meta.color} bg={`${meta.color}26`} className={className}>
       <span>{meta.emoji}</span> {meta.label}
     </Badge>
   );

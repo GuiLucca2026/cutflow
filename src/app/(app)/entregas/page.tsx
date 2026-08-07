@@ -40,7 +40,7 @@ export default async function EntregasPage() {
       {groups.map((g) => (
         <section key={g.title}>
           <div className="flex items-baseline gap-2 mb-3">
-            <h2 className={`font-display text-2xl tracking-wide ${g.tone === "danger" ? "text-red-400" : g.dim ? "text-cf-text-dim" : ""}`}>
+            <h2 className={`font-display text-2xl tracking-wide ${g.tone === "danger" ? "text-red-600" : g.dim ? "text-cf-text-dim" : ""}`}>
               {g.title}
             </h2>
             <span className="text-cf-text-dim text-sm">{g.items.length}</span>

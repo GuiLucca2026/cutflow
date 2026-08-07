@@ -324,7 +324,7 @@ export async function createClient(formData: FormData) {
       contactName: String(formData.get("contactName") || "") || null,
       email: String(formData.get("email") || "") || null,
       whatsapp: String(formData.get("whatsapp") || "") || null,
-      color: String(formData.get("color") || "#C6FF00"),
+      color: String(formData.get("color") || "#7C3AED"),
       createdAt: nowISO(),
       updatedAt: nowISO(),
     })

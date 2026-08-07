@@ -1,24 +1,45 @@
 @import "tailwindcss";
 
+/* Identidade "G2 FLOW" (conceito claro + roxo) — substitui o tema escuro +
+   lime original. Os NOMES das variáveis ficaram os mesmos de propósito
+   (cf-lime, cf-black, cf-surface...) porque são usados como classes
+   Tailwind (bg-cf-lime, text-cf-black etc.) espalhadas pelo app inteiro —
+   trocar só o VALOR aqui já atualiza tudo de uma vez, sem precisar caçar
+   cada arquivo. Os nomes descrevem o papel histórico (fundo mais escuro,
+   marca originalmente lime), não o valor atual — ver comentário em cada
+   um. Única exceção: cf-black também era usado como cor de TEXTO sobre
+   preenchimentos da marca (botão, item ativo do menu) — isso não faz mais
+   sentido virando uma cor clara de fundo, então esse papel específico
+   virou o token novo --cf-on-accent (branco). Ver checkbox.tsx,
+   button.tsx, sidebar.tsx etc. (classe text-cf-on-accent).
+*/
 :root {
-  --cf-lime: #C6FF00;
-  --cf-lime-dim: #A8DB00;
-  /* Verde dedicado pra "sucesso/concluído" — separado do lime, que fica
-     reservado pra marca/ação primária (botão Criar, item ativo do menu,
-     links em hover). Antes os dois papéis dividiam a mesma cor: o check
-     de item concluído, a barra de progresso e o botão de ação usavam o
-     mesmo lime, então nada se destacava como "isso terminou" vs "isso é
-     clicável" — cores repetidas demais perto uma da outra, sem função
-     clara. Ver checkbox.tsx e domain.ts (status APROVADO). */
-  --cf-success: #34D399;
-  --cf-black: #111111;
-  --cf-surface: #17181A;
-  --cf-surface-2: #1E2023;
-  --cf-border: #2B2B2B;
-  --cf-gray: #6B6B6B;
-  --cf-gray-light: #EDEDED;
-  --cf-text: #F3F4F1;
-  --cf-text-dim: #9A9C9F;
+  /* Marca — roxo/violeta (era o lime). Ação primária, item ativo do menu,
+     logo, links em destaque. */
+  --cf-lime: #7C3AED;
+  --cf-lime-dim: #6D28D9;
+  /* Verde dedicado a "sucesso/concluído" — separado da marca de propósito,
+     pra "isso terminou" nunca ter a mesma cor de "isso é clicável" (ver
+     checkbox marcado, KPIs "bom" da Hoje/Analytics, status Aprovado). */
+  --cf-success: #22C55E;
+  /* Fundo da página/tela cheia (era o preto mais escuro) — agora um
+     cinza muito claro, levemente lavanda, pra os cards brancos (cf-surface)
+     se destacarem por cima, igual ao canvas atrás do quadro no conceito. */
+  --cf-black: #F5F5FA;
+  /* Fundo de card/painel — branco (era a superfície mais clara do escuro). */
+  --cf-surface: #FFFFFF;
+  /* Fundo de hover/nested (era ainda mais claro que cf-surface no escuro;
+     aqui é um cinza bem sutil, pra diferenciar de branco sem pesar). */
+  --cf-surface-2: #F1F1F6;
+  --cf-border: #E5E5EC;
+  --cf-gray: #8B8D98;
+  --cf-gray-light: #4B4D57;
+  --cf-text: #111319;
+  --cf-text-dim: #6B6D76;
+  /* Texto/ícone sobre um preenchimento saturado (botão primário, item de
+     menu ativo, badge de notificação) — branco, pro contraste continuar
+     bom agora que esses preenchimentos são cores vivas sobre fundo claro. */
+  --cf-on-accent: #FFFFFF;
 
   --background: var(--cf-black);
   --foreground: var(--cf-text);
@@ -38,7 +59,8 @@
   --color-cf-gray-light: var(--cf-gray-light);
   --color-cf-text: var(--cf-text);
   --color-cf-text-dim: var(--cf-text-dim);
-  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --color-cf-on-accent: var(--cf-on-accent);
+  --font-display: 'Sora', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -55,7 +77,8 @@ body {
 
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 ::-webkit-scrollbar {

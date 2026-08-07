@@ -11,9 +11,9 @@ import { fmtDateWeekday } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  AGENDADA: { label: "Agendada", color: "#38BDF8" },
-  CONCLUIDA: { label: "Concluída", color: "#C6FF00" },
-  CANCELADA: { label: "Cancelada", color: "#EF4444" },
+  AGENDADA: { label: "Agendada", color: "#1D4ED8" },
+  CONCLUIDA: { label: "Concluída", color: "#22C55E" },
+  CANCELADA: { label: "Cancelada", color: "#DC2626" },
 };
 
 export type CaptureData = {
@@ -97,11 +97,11 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
             </Button>
           )}
           {capture.status !== "CANCELADA" && (
-            <Button size="sm" variant="ghost" disabled={pending} onClick={() => setStatus("CANCELADA")} className="gap-1 text-amber-400">
+            <Button size="sm" variant="ghost" disabled={pending} onClick={() => setStatus("CANCELADA")} className="gap-1 text-amber-600">
               <XCircle className="h-3.5 w-3.5" /> Cancelar
             </Button>
           )}
-          <Button size="sm" variant="ghost" disabled={pending} onClick={remove} className="gap-1 text-red-400">
+          <Button size="sm" variant="ghost" disabled={pending} onClick={remove} className="gap-1 text-red-600">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

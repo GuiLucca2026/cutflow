@@ -6,9 +6,9 @@ import { fmtDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export const CAL_KIND_META: Record<"internal" | "review" | "delivery" | "captacao", { label: string; color: string }> = {
-  internal: { label: "Edição", color: "#38BDF8" },
+  internal: { label: "Edição", color: "#7C3AED" },
   review: { label: "Revisão", color: "#A78BFA" },
-  delivery: { label: "Entrega", color: "#C6FF00" },
+  delivery: { label: "Entrega", color: "#22C55E" },
   captacao: { label: "Captação", color: "#FB923C" },
 };
 

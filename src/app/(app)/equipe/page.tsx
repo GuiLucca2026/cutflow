@@ -79,7 +79,7 @@ export default async function EquipePage() {
           {companyRanges.map((r) => (
             <div key={r.label} className="rounded-lg border border-cf-border bg-cf-surface-2/40 p-3">
               <div className="text-xs text-cf-text-dim mb-1">{r.label}</div>
-              <div className={cn("font-display text-2xl leading-none", r.over ? "text-red-400" : "text-cf-text")}>{r.pct}%</div>
+              <div className={cn("font-display text-2xl leading-none", r.over ? "text-red-600" : "text-cf-text")}>{r.pct}%</div>
               <div className="text-[11px] text-cf-text-dim mt-1">
                 {fmtHours(r.scheduled)} / {fmtHours(r.capacity)} {r.over && "· sobrecarga"}
               </div>
@@ -143,7 +143,7 @@ export default async function EquipePage() {
                     <div key={r.label}>
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="text-cf-text-dim">{r.label}</span>
-                        <span className={cn("font-medium", over ? "text-red-400" : "text-cf-text-dim")}>
+                        <span className={cn("font-medium", over ? "text-red-600" : "text-cf-text-dim")}>
                           {fmtHours(scheduled)} / {fmtHours(capacity)} {over && "· sobrecarga"}
                         </span>
                       </div>

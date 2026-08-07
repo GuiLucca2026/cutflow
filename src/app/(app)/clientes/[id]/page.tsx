@@ -59,8 +59,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                   <Progress value={progress} />
                 </div>
                 <div className="mt-2 text-xs flex items-center gap-1">
-                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-400" />}
-                  <span className={overdue ? "text-red-400 font-semibold" : "text-cf-text-dim"}>Prazo: {fmtDateWeekday(p.deadline)}</span>
+                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}
+                  <span className={overdue ? "text-red-600 font-semibold" : "text-cf-text-dim"}>Prazo: {fmtDateWeekday(p.deadline)}</span>
                 </div>
               </Link>
             );

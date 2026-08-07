@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { BrandWordmark } from "@/components/cutflow/brand-mark";
 
 // Landing point for the "Abrir CUTFLOW" button in the G2 admin panel.
 // The G2 admin (AdminLayout.tsx) opens this page with the current
@@ -64,7 +65,8 @@ export default function SsoPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-cf-black text-cf-text px-6">
+      <BrandWordmark size="lg" />
       {error ? (
         <div className="max-w-sm text-center space-y-2">
           <p className="text-cf-text-dim text-sm">{error}</p>

@@ -26,7 +26,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
         <div className="flex items-center justify-center gap-2 pt-1">
           <button
             onClick={reset}
-            className="rounded-lg bg-cf-lime px-4 py-2 text-sm font-semibold text-cf-black hover:bg-cf-lime-dim transition-colors"
+            className="rounded-lg bg-cf-lime px-4 py-2 text-sm font-semibold text-cf-on-accent hover:bg-cf-lime-dim transition-colors"
           >
             Tentar de novo
           </button>

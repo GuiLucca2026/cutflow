@@ -280,7 +280,7 @@ function TimelineRow({
   const rawWidth = Math.max(dayWidth * 0.6, video.durationDays * dayWidth);
   const left = Math.max(0, Math.min(gridWidth - 4, rawLeft));
   const width = Math.max(dayWidth * 0.6, Math.min(gridWidth - left, rawWidth));
-  const meta = STATUS_META[video.status] ?? { color: "#9A9C9F", bg: "#232323" };
+  const meta = STATUS_META[video.status] ?? { color: "#6B7280", bg: "#F1F2F4" };
 
   return (
     <div className="flex border-b border-cf-border/40 h-9 items-center relative bg-cf-black">

@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 import type { Alert, AlertSeverity } from "@/lib/alerts";
 
 const SEVERITY_META: Record<AlertSeverity, { label: string; dot: string; text: string; icon: any }> = {
-  CRITICO: { label: "Crítico", dot: "bg-red-500", text: "text-red-400", icon: AlertTriangle },
-  ALTO: { label: "Alto", dot: "bg-amber-500", text: "text-amber-400", icon: TriangleAlert },
+  CRITICO: { label: "Crítico", dot: "bg-red-500", text: "text-red-600", icon: AlertTriangle },
+  ALTO: { label: "Alto", dot: "bg-amber-500", text: "text-amber-600", icon: TriangleAlert },
   MODERADO: { label: "Moderado", dot: "bg-cf-text-dim", text: "text-cf-text-dim", icon: Info },
 };
 
@@ -33,7 +33,7 @@ export function NotificationBell({ alerts }: { alerts: Alert[] }) {
           {count > 0 && (
             <span
               className={cn(
-                "absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-cf-black",
+                "absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-cf-on-accent",
                 criticalCount > 0 ? "bg-red-500" : "bg-amber-500"
               )}
             >
