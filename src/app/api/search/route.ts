@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/db";
-import { clients, projects, videos } from "@/db/schema";
-import { ilike, or } from "drizzle-orm";
+import { getSupabase } from "@/db";
+import { TABLES } from "@/db/schema";
+import { mapClient, mapProject, mapVideo } from "@/db/mappers";
 
 // Global search (spec section 29): clients, projects, videos in one query.
 export async function GET(req: NextRequest) {
@@ -9,29 +9,34 @@ export async function GET(req: NextRequest) {
   if (q.length < 1) {
     return NextResponse.json({ clients: [], projects: [], videos: [] });
   }
-  const like_ = `%${q}%`;
+  const supabase = await getSupabase();
+  const like = `%${q}%`;
 
-  const [clientRows, projectRows, videoRows] = await Promise.all([
-    db.query.clients.findMany({
-      where: or(ilike(clients.name, like_), ilike(clients.tradeName, like_), ilike(clients.company, like_)),
-      limit: 5,
-    }),
-    db.query.projects.findMany({
-      where: ilike(projects.name, like_),
-      with: { client: true },
-      limit: 5,
-    }),
-    db.query.videos.findMany({
-      where: ilike(videos.name, like_),
-      with: { project: { with: { client: true } } },
-      limit: 8,
-    }),
+  const [clientRes, projectRes, videoRes] = await Promise.all([
+    supabase
+      .from(TABLES.clients)
+      .select("*")
+      .or(`name.ilike.${like},trade_name.ilike.${like},company.ilike.${like}`)
+      .limit(5),
+    supabase.from(TABLES.projects).select("*, client:cutflow_clients(*)").ilike("name", like).limit(5),
+    supabase
+      .from(TABLES.videos)
+      .select("*, project:cutflow_projects(*, client:cutflow_clients(*))")
+      .ilike("name", like)
+      .limit(8),
   ]);
+  if (clientRes.error) throw clientRes.error;
+  if (projectRes.error) throw projectRes.error;
+  if (videoRes.error) throw videoRes.error;
+
+  const clientRows = clientRes.data.map((r) => mapClient(r)!);
+  const projectRows = projectRes.data.map((r) => mapProject(r)!);
+  const videoRows = videoRes.data.map((r) => mapVideo(r)!);
 
   return NextResponse.json({
-    clients: clientRows.map((c) => ({ id: c.id, name: c.name, tradeName: c.tradeName })),
-    projects: projectRows.map((p) => ({ id: p.id, name: p.name, clientName: p.client?.name })),
-    videos: videoRows.map((v) => ({
+    clients: clientRows.map((c) => ({ id: c!.id, name: c!.name, tradeName: c!.tradeName })),
+    projects: projectRows.map((p: any) => ({ id: p.id, name: p.name, clientName: p.client?.name })),
+    videos: videoRows.map((v: any) => ({
       id: v.id,
       name: v.name,
       projectId: v.projectId,

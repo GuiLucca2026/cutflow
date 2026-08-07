@@ -27,7 +27,7 @@ export default async function ProjectDetailPage({
   const progress = projectProgress(project.videos);
   const overdue = isOverdue(project.deadline, project.status);
   const editors = Array.from(
-    new Map(project.videos.filter((v) => v.editorId).map((v: any) => [v.editorId, v.editor])).values()
+    new Map(project.videos.filter((v: any) => v.editorId).map((v: any) => [v.editorId, v.editor])).values()
   );
 
   return (

@@ -1,107 +1,151 @@
-import { db } from "@/db";
+import { getSupabase } from "@/db";
+import { TABLES } from "@/db/schema";
 import {
-  clients,
-  projects,
-  videos,
-  users,
-  checklistItems,
-  videoVersions,
-  revisions,
-  comments,
-  activityLogs,
-  projectLinks,
-  workloadEntries,
-} from "@/db/schema";
-import { and, desc, eq, gte, lte, asc, sql } from "drizzle-orm";
+  mapClient,
+  mapUser,
+  mapProject,
+  mapVideo,
+  mapActivityLog,
+  mapWorkloadEntry,
+} from "@/db/mappers";
 
 export async function listClients() {
-  return db.query.clients.findMany({ orderBy: asc(clients.name) });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.clients).select("*").order("name");
+  if (error) throw error;
+  return data.map((r) => mapClient(r)!);
 }
 
 export async function getClient(id: string) {
-  return db.query.clients.findFirst({ where: eq(clients.id, id) });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.clients).select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return mapClient(data);
 }
 
 export async function listUsers() {
-  return db.query.users.findMany({ orderBy: asc(users.name) });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.users).select("*").order("name");
+  if (error) throw error;
+  return data.map((r) => mapUser(r)!);
 }
 
 export async function getUser(id: string) {
-  return db.query.users.findFirst({ where: eq(users.id, id) });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.users).select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return mapUser(data);
 }
 
 // ---------------------------------------------------------------------------
 // Projects
 // ---------------------------------------------------------------------------
+// cutflow_projects has TWO foreign keys into cutflow_users (producer_id,
+// lead_editor_id), and cutflow_videos has two more (editor_id,
+// approver_id) — PostgREST needs a hint (`!column_name`) to know which FK
+// to embed on, since it can't infer it from the alias alone.
+const PROJECT_SELECT =
+  "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
+
 export async function listProjects() {
-  const rows = await db.query.projects.findMany({
-    with: { client: true, producer: true, leadEditor: true, videos: { with: { editor: true } } },
-    orderBy: desc(projects.deadline),
-  });
-  return rows;
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.projects).select(PROJECT_SELECT).order("deadline", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => mapProject(r)!);
 }
 
 export async function getProject(id: string) {
-  return db.query.projects.findFirst({
-    where: eq(projects.id, id),
-    with: {
-      client: true,
-      producer: true,
-      leadEditor: true,
-      links: true,
-      videos: { with: { editor: true } },
-    },
-  });
+  const supabase = await getSupabase();
+  const select =
+    "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
+  const { data, error } = await supabase.from(TABLES.projects).select(select).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return mapProject(data);
+}
+
+export async function listProjectsByClient(clientId: string) {
+  const supabase = await getSupabase();
+  const select = "*, videos:cutflow_videos(*)";
+  const { data, error } = await supabase
+    .from(TABLES.projects)
+    .select(select)
+    .eq("client_id", clientId)
+    .order("deadline", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => mapProject(r)!);
 }
 
 export async function getProjectActivity(projectId: string) {
-  return db.query.activityLogs.findMany({
-    where: and(eq(activityLogs.entityType, "PROJECT"), eq(activityLogs.entityId, projectId)),
-    orderBy: desc(activityLogs.createdAt),
-  });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.activityLogs)
+    .select("*")
+    .eq("entity_type", "PROJECT")
+    .eq("entity_id", projectId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => mapActivityLog(r)!);
 }
 
 // ---------------------------------------------------------------------------
 // Videos
 // ---------------------------------------------------------------------------
+const VIDEO_SELECT =
+  "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*)";
+
 export async function listVideos() {
-  return db.query.videos.findMany({
-    with: { project: { with: { client: true } }, editor: true, approver: true },
-    orderBy: asc(videos.finalDeadline),
-  });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from(TABLES.videos).select(VIDEO_SELECT).order("final_deadline");
+  if (error) throw error;
+  return data.map((r) => mapVideo(r)!);
 }
 
 export async function getVideo(id: string) {
-  return db.query.videos.findFirst({
-    where: eq(videos.id, id),
-    with: {
-      project: { with: { client: true } },
-      editor: true,
-      approver: true,
-      checklist: { orderBy: asc(checklistItems.order) },
-      versions: { orderBy: desc(videoVersions.sentAt) },
-      revisions: { orderBy: desc(revisions.createdAt), with: { assignedTo: true, requestedBy: true } },
-      comments: { orderBy: desc(comments.createdAt), with: { author: true } },
-    },
-  });
+  const supabase = await getSupabase();
+  const select =
+    "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), " +
+    "checklist:cutflow_checklist_items(*), versions:cutflow_video_versions(*), " +
+    "revisions:cutflow_revisions(*, assignedTo:cutflow_users!assigned_to_id(*), requestedBy:cutflow_users!requested_by_id(*)), " +
+    "comments:cutflow_comments(*, author:cutflow_users!author_id(*))";
+  const { data, error } = await supabase.from(TABLES.videos).select(select).eq("id", id).maybeSingle();
+  if (error) throw error;
+  const video = mapVideo(data);
+  if (!video) return video;
+  // Nested/embedded resources come back unordered from PostgREST — sort
+  // client-side rather than depend on the foreignTable ordering option.
+  video.checklist?.sort((a: any, b: any) => a.order - b.order);
+  video.versions?.sort((a: any, b: any) => (a.sentAt < b.sentAt ? 1 : -1));
+  video.revisions?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
+  video.comments?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
+  return video;
 }
 
 export async function getVideoActivity(videoId: string) {
-  return db.query.activityLogs.findMany({
-    where: and(eq(activityLogs.entityType, "VIDEO"), eq(activityLogs.entityId, videoId)),
-    orderBy: desc(activityLogs.createdAt),
-    with: { user: true },
-  });
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.activityLogs)
+    .select("*, user:cutflow_users!user_id(*)")
+    .eq("entity_type", "VIDEO")
+    .eq("entity_id", videoId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => mapActivityLog(r)!);
 }
 
 // ---------------------------------------------------------------------------
 // Workload
 // ---------------------------------------------------------------------------
 export async function listWorkloadEntries(fromISO: string, toISO: string) {
-  return db.query.workloadEntries.findMany({
-    where: and(gte(workloadEntries.date, fromISO), lte(workloadEntries.date, toISO)),
-    with: { editor: true, video: { with: { project: { with: { client: true } } } } },
-  });
+  const supabase = await getSupabase();
+  const select =
+    "*, editor:cutflow_users!editor_id(*), video:cutflow_videos(*, project:cutflow_projects(*, client:cutflow_clients(*)))";
+  const { data, error } = await supabase
+    .from(TABLES.workloadEntries)
+    .select(select)
+    .gte("date", fromISO)
+    .lte("date", toISO);
+  if (error) throw error;
+  return data.map((r) => mapWorkloadEntry(r)!);
 }
 
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];

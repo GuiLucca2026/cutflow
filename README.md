@@ -73,11 +73,17 @@ deixar claro o que é real hoje:
 - **Next.js 16** (App Router, Server Actions, Turbopack) + **React 19** +
   **TypeScript**
 - **Tailwind CSS v4** com tokens de marca do CUTFLOW (`#C6FF00` / `#111111`)
-- **Drizzle ORM + Postgres** (`postgres.js`) — banco relacional real, no
-  **mesmo projeto Supabase** que a G2 já usa para autenticação. As tabelas
-  do CUTFLOW ficam num schema Postgres próprio (`cutflow`), separado do
-  `public` da G2, então não existe risco de colidir com as tabelas do site
-  (a G2 já tem sua própria `videos`, por exemplo).
+- **Supabase (via API REST/PostgREST)** — banco relacional real, no
+  **mesmo projeto Supabase** que a G2 já usa para autenticação, acessado
+  pela mesma API REST (URL pública + chave anônima) que o site da G2 já
+  usa — sem conexão direta ao Postgres. Isso porque o projeto da G2 roda
+  no modo "Lovable Cloud", que não expõe connection string nem acesso ao
+  painel do Supabase fora da própria interface do Lovable. As tabelas do
+  CUTFLOW ficam no schema `public` (mesmo da G2), com o prefixo
+  `cutflow_` para não colidir com nada que já existe (a G2 já tem sua
+  própria tabela `videos`, por exemplo — a do CUTFLOW é `cutflow_videos`,
+  totalmente separada), protegidas por Row Level Security (RLS) — ver
+  `supabase-setup.sql`.
 - **dnd-kit** para drag-and-drop (Kanban)
 - **Radix UI** (primitivos sem estilo) + componentes próprios no estilo
   shadcn/ui, com a identidade visual do CUTFLOW
@@ -86,23 +92,30 @@ deixar claro o que é real hoje:
 
 ## Rodando o projeto localmente
 
-Precisa de um Postgres — pode ser o próprio projeto Supabase da G2, ou um
-Postgres local só para desenvolver (não afeta o de produção).
+Precisa só de duas variáveis do mesmo projeto Supabase que a G2 já usa —
+nenhuma conexão direta com o banco é necessária.
 
 ```bash
 npm install
-cp .env.example .env.local   # preencha DATABASE_URL e as duas do Supabase
-npm run db:push   # cria as tabelas no schema "cutflow" (drizzle-kit push)
-npm run db:seed   # popula com os dados de demonstração (limpa e repopula)
+cp .env.example .env.local   # preencha as duas variáveis do Supabase (mesmos valores do .env da G2)
 npm run dev        # http://localhost:3000
 ```
 
-`DATABASE_URL` é uma connection string Postgres normal
-(`postgresql://usuario:senha@host:porta/banco`). Pegando a do Supabase:
-painel do projeto → **Settings → Database → Connection string** → aba
-**URI**. Para uso em produção/serverless (Vercel), prefira a versão
-"**Transaction pooler**" (porta 6543) — o cliente já está configurado com
-`prepare: false`, que é o que esse modo exige.
+**Antes do primeiro uso**, as tabelas do CUTFLOW precisam existir no banco
+— isso é feito **uma única vez**, colando `supabase-setup.sql` (na raiz
+deste repo) no editor SQL do Lovable: **Lovable → More → Cloud → SQL
+editor → colar o arquivo inteiro → Run**. Pode rodar mais de uma vez sem
+problema (usa `if not exists`).
+
+Para popular com dados de demonstração (opcional, só pra testar local):
+
+```bash
+SEED_USER_EMAIL="seu@email.com" SEED_USER_PASSWORD="sua-senha" npm run db:seed
+```
+
+O seed precisa logar como um usuário real (RLS só libera escrita pra quem
+está autenticado) — pode ser seu próprio login de admin da G2. Isso limpa
+e repopula só as tabelas `cutflow_*`, nunca toca nas tabelas da G2.
 
 ## Integração com o painel admin da G2 (SSO real, já implementada)
 
@@ -131,34 +144,29 @@ senha nova e sem link estático.
    fluxo da G2), o app cai de volta no seletor "Ver como" de sempre — o
    ambiente de desenvolvimento local não muda em nada.
 
-**Domínio: subdomínio, não subpath.** O ideal seria abrir em algo como
-`gdoisfilmes.com.br/admin/organizador`, mas o site da G2 é publicado
-direto pelo Lovable — hospedagem estática sem suporte a proxy/rewrite de
-subpath para um app externo. Por isso o CUTFLOW usa um **subdomínio**
-(`organizador.gdoisfilmes.com.br`): só precisa de um registro de DNS
-apontando para onde o CUTFLOW estiver hospedado, sem tocar em nada do
-Lovable. Se um dia isso mudar (ex.: colocar Cloudflare na frente do
-domínio como proxy), `next.config.ts` já tem `basePath` pronto para
-receber `/admin/organizador` via `NEXT_PUBLIC_BASE_PATH` — só trocar essa
-variável, o resto do código já é agnóstico a isso (`src/lib/base-path.ts`).
+**Domínio: qualquer URL funciona.** O handoff acontece via tokens no
+fragmento da URL (`CUTFLOW_URL/sso#at=...&rt=...`), não por cookie
+compartilhado — então o CUTFLOW não precisa estar no mesmo domínio nem
+subdomínio da G2. Ele pode (e deve) ser hospedado separadamente, por
+exemplo na Vercel, numa URL própria tipo `cutflow-g2.vercel.app` (ou um
+domínio customizado depois, se quiser). O botão "Abrir CUTFLOW" no painel
+da G2 só precisa apontar pra essa URL via `VITE_CUTFLOW_URL`.
 
 **Para colocar em produção, faltam 3 coisas** (nenhuma delas é código):
 
-1. **Registrar o subdomínio**: crie `organizador.gdoisfilmes.com.br`
-   apontando (CNAME/A, conforme o provedor) para onde o CUTFLOW for
-   hospedado (ex.: Vercel) — normalmente nas configurações de DNS de onde
-   o domínio `gdoisfilmes.com.br` está registrado, não no Lovable.
-2. **Criar as tabelas do CUTFLOW no Postgres**: rode `npm run db:push`
-   uma vez apontando `DATABASE_URL` para o Postgres do projeto Supabase da
-   G2 — isso cria só o schema `cutflow` (13 tabelas), sem tocar em nada do
-   schema `public` que a G2 já usa. Não existe mais uma migration separada
-   pra rodar do lado do repositório da G2 (a `cutflow_profiles` que tinha
-   sido criada lá foi removida — o próprio `cutflow.users`, com a coluna
-   `supabase_user_id`, já cumpre esse papel).
-3. **Configurar as variáveis de ambiente do CUTFLOW** no ambiente onde ele
-   for implantado (Vercel, etc.): `NEXT_PUBLIC_SUPABASE_URL`,
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmos valores do `.env.local` deste
-   pacote — a "anon key" é pública por natureza, protegida pelas políticas
-   de RLS, não é segredo) e `DATABASE_URL` (a connection string do
-   Postgres, essa sim sensível — não vem preenchida aqui). `VITE_CUTFLOW_URL`
-   no `.env` da G2 já está apontando para `https://organizador.gdoisfilmes.com.br`.
+1. **Criar as tabelas do CUTFLOW no Supabase**: cole o conteúdo de
+   `supabase-setup.sql` no editor SQL do Lovable (**More → Cloud → SQL
+   editor → Run**) — cria as 13 tabelas `cutflow_*` no schema `public`,
+   sem tocar em nada que a G2 já usa. Não existe mais uma migration
+   separada pra rodar do lado do repositório da G2 (a `cutflow_profiles`
+   que tinha sido criada lá foi removida — o próprio `cutflow_users`, com
+   a coluna `supabase_user_id`, já cumpre esse papel).
+2. **Fazer o deploy do CUTFLOW** (ex.: Vercel, importando este repositório)
+   configurando só duas variáveis de ambiente:
+   `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmos
+   valores do `.env.local` deste pacote / do `.env` da G2 — a "anon key" é
+   pública por natureza, protegida pelas políticas de RLS, não é segredo).
+   Não é preciso configurar nenhuma connection string de banco.
+3. **Atualizar `VITE_CUTFLOW_URL`** no `.env` do repositório da G2 para a
+   URL real que a Vercel (ou outro host) atribuir ao CUTFLOW depois do
+   deploy.

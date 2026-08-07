@@ -1,18 +1,12 @@
 import Link from "next/link";
-import { listProjects } from "@/db/queries";
-import { db } from "@/db";
-import { clients as clientsTable } from "@/db/schema";
-import { asc } from "drizzle-orm";
+import { listProjects, listClients } from "@/db/queries";
 import { isOverdue, isDone } from "@/lib/domain";
 import { Avatar } from "@/components/ui/avatar";
 
 export const dynamic = "force-dynamic";
 
 export default async function ClientesPage() {
-  const [clients, projects] = await Promise.all([
-    db.query.clients.findMany({ orderBy: asc(clientsTable.name) }),
-    listProjects(),
-  ]);
+  const [clients, projects] = await Promise.all([listClients(), listProjects()]);
 
   return (
     <div className="cf-fade-in space-y-5 pb-16">

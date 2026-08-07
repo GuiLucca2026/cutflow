@@ -1,8 +1,5 @@
 import { notFound } from "next/navigation";
-import { getClient } from "@/db/queries";
-import { db } from "@/db";
-import { projects as projectsTable } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { getClient, listProjectsByClient } from "@/db/queries";
 import { Avatar } from "@/components/ui/avatar";
 import { PriorityBadge } from "@/components/cutflow/badges";
 import { projectProgress, isOverdue } from "@/lib/domain";
@@ -18,11 +15,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const client = await getClient(id);
   if (!client) notFound();
 
-  const projects = await db.query.projects.findMany({
-    where: eq(projectsTable.clientId, id),
-    with: { videos: true },
-    orderBy: desc(projectsTable.deadline),
-  });
+  const projects = await listProjectsByClient(id);
 
   return (
     <div className="cf-fade-in space-y-5 pb-16">
