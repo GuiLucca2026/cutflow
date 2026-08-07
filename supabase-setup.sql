@@ -29,6 +29,9 @@ create table if not exists public.cutflow_users (
   updated_at text not null
 );
 
+-- Perfil: foto real (Supabase Storage) além da cor/iniciais que já existia.
+alter table public.cutflow_users add column if not exists avatar_url text;
+
 create table if not exists public.cutflow_clients (
   id text primary key,
   name text not null,
@@ -195,6 +198,24 @@ create table if not exists public.cutflow_saved_views (
   created_at text not null
 );
 
+-- Captação: sessão de filmagem/gravação, separada da edição do vídeo em si
+-- (spec Fase 4). project_id é opcional pelo mesmo motivo do "vídeo avulso":
+-- às vezes a captação é agendada antes de o projeto formal existir.
+create table if not exists public.cutflow_captures (
+  id text primary key,
+  project_id text references public.cutflow_projects(id) on delete cascade,
+  title text not null,
+  description text,
+  date text not null,
+  start_time text,
+  end_time text,
+  location text,
+  crew_ids text[] not null default '{}',
+  status text not null default 'AGENDADA',
+  created_at text not null,
+  updated_at text not null
+);
+
 -- ---------------------------------------------------------------------------
 -- RLS: qualquer usuário autenticado tem acesso total (ferramenta interna)
 -- ---------------------------------------------------------------------------
@@ -207,7 +228,8 @@ begin
       'cutflow_users', 'cutflow_clients', 'cutflow_projects', 'cutflow_videos',
       'cutflow_video_versions', 'cutflow_revisions', 'cutflow_checklist_items',
       'cutflow_comments', 'cutflow_activity_logs', 'cutflow_project_links',
-      'cutflow_workload_entries', 'cutflow_notifications', 'cutflow_saved_views'
+      'cutflow_workload_entries', 'cutflow_notifications', 'cutflow_saved_views',
+      'cutflow_captures'
     ])
   loop
     execute format('alter table public.%I enable row level security;', t);
@@ -218,3 +240,76 @@ begin
     );
   end loop;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Fase 4 — Calendar Sync: feed .ics público por editor
+-- ---------------------------------------------------------------------------
+-- Cada editor tem um token opaco (não é login, é só um "link secreto") pra
+-- assinar a própria agenda em qualquer app de calendário (Google, Apple,
+-- Outlook) sem precisar estar logado. A tabela continua protegida por RLS
+-- normalmente — o que abre uma exceção MUITO estreita é a função abaixo:
+-- roda com privilégio elevado ("security definer"), mas só devolve linhas
+-- de quem apresentar o token certo. Ninguém ganha acesso a nada só por
+-- saber que essa função existe.
+alter table public.cutflow_users add column if not exists ics_token text;
+update public.cutflow_users set ics_token = replace(gen_random_uuid()::text, '-', '') where ics_token is null;
+alter table public.cutflow_users alter column ics_token set default replace(gen_random_uuid()::text, '-', '');
+create unique index if not exists cutflow_users_ics_token_idx on public.cutflow_users(ics_token);
+
+create or replace function public.cutflow_ics_feed(p_token text)
+returns table (
+  video_id text,
+  name text,
+  status text,
+  priority text,
+  internal_deadline text,
+  review_deadline text,
+  final_deadline text,
+  editor_name text,
+  project_name text,
+  client_name text
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select
+    v.id, v.name, v.status, v.priority,
+    v.internal_deadline, v.review_deadline, v.final_deadline,
+    u.name, p.name, c.name
+  from public.cutflow_users u
+  join public.cutflow_videos v on v.editor_id = u.id
+  left join public.cutflow_projects p on p.id = v.project_id
+  left join public.cutflow_clients c on c.id = p.client_id
+  where u.ics_token = p_token
+    and v.status not in ('ARQUIVADO', 'CANCELADO');
+$$;
+
+grant execute on function public.cutflow_ics_feed(text) to anon;
+
+-- ---------------------------------------------------------------------------
+-- Foto de perfil: bucket público de Storage + políticas
+-- ---------------------------------------------------------------------------
+-- "public" aqui só significa que a URL da foto pode ser exibida sem login
+-- (como qualquer avatar de app) — continua exigindo estar autenticado pra
+-- enviar/trocar/apagar um arquivo.
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "cutflow_avatars_read" on storage.objects;
+create policy "cutflow_avatars_read" on storage.objects for select
+  using (bucket_id = 'avatars');
+
+drop policy if exists "cutflow_avatars_write" on storage.objects;
+create policy "cutflow_avatars_write" on storage.objects for insert to authenticated
+  with check (bucket_id = 'avatars');
+
+drop policy if exists "cutflow_avatars_update" on storage.objects;
+create policy "cutflow_avatars_update" on storage.objects for update to authenticated
+  using (bucket_id = 'avatars');
+
+drop policy if exists "cutflow_avatars_delete" on storage.objects;
+create policy "cutflow_avatars_delete" on storage.objects for delete to authenticated
+  using (bucket_id = 'avatars');

@@ -14,6 +14,7 @@ import type {
   ActivityLog,
   ProjectLink,
   WorkloadEntry,
+  Capture,
 } from "./schema";
 
 export function mapUser(r: any): User | null {
@@ -24,6 +25,8 @@ export function mapUser(r: any): User | null {
     name: r.name,
     email: r.email,
     avatarColor: r.avatar_color,
+    avatarUrl: r.avatar_url ?? null,
+    icsToken: r.ics_token ?? null,
     role: r.role,
     dailyCapacityHours: r.daily_capacity_hours,
     workDays: r.work_days,
@@ -197,6 +200,25 @@ export function mapProjectLink(r: any): ProjectLink | null {
   return { id: r.id, projectId: r.project_id, category: r.category, label: r.label, url: r.url };
 }
 
+export function mapCapture(r: any): (Capture & Record<string, any>) | null {
+  if (!r) return null;
+  return {
+    id: r.id,
+    projectId: r.project_id,
+    title: r.title,
+    description: r.description,
+    date: r.date,
+    startTime: r.start_time,
+    endTime: r.end_time,
+    location: r.location,
+    crewIds: r.crew_ids ?? [],
+    status: r.status,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    ...(r.project !== undefined ? { project: mapProject(r.project) } : {}),
+  };
+}
+
 export function mapWorkloadEntry(r: any): (WorkloadEntry & Record<string, any>) | null {
   if (!r) return null;
   return {
@@ -216,6 +238,11 @@ export function mapWorkloadEntry(r: any): (WorkloadEntry & Record<string, any>) 
 const CAMEL_TO_SNAKE: Record<string, string> = {
   supabaseUserId: "supabase_user_id",
   avatarColor: "avatar_color",
+  avatarUrl: "avatar_url",
+  icsToken: "ics_token",
+  startTime: "start_time",
+  endTime: "end_time",
+  crewIds: "crew_ids",
   dailyCapacityHours: "daily_capacity_hours",
   workDays: "work_days",
   createdAt: "created_at",

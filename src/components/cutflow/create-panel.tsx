@@ -10,11 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { createClient, createProject, createProjectQuick, createVideo } from "@/app/actions";
+import { createClient, createProject, createProjectQuick, createVideo, createCapture } from "@/app/actions";
 import { PROJECT_TYPES, VIDEO_FORMATS } from "@/db/schema";
 import { PRIORITY_META } from "@/lib/domain";
+import { cn } from "@/lib/utils";
 
-export type CreateTab = "video" | "projeto" | "cliente";
+export type CreateTab = "video" | "captacao" | "projeto" | "cliente";
 
 type ClientLite = { id: string; name: string };
 type ProjectLite = { id: string; name: string; clientId: string };
@@ -65,13 +66,15 @@ export function CreatePanel({
         <DialogHeader>
           <DialogTitle>Criar</DialogTitle>
           <DialogDescription>
-            Cadastre um cliente, um projeto, ou um vídeo — um vídeo pode ficar sem projeto por enquanto e ser vinculado depois.
+            Cadastre um cliente, um projeto, uma captação ou um vídeo — um vídeo pode ficar sem projeto por enquanto e
+            ser vinculado depois.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={(v) => onTabChange(v as CreateTab)}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="video">Vídeo</TabsTrigger>
+            <TabsTrigger value="captacao">Captação</TabsTrigger>
             <TabsTrigger value="projeto">Projeto</TabsTrigger>
             <TabsTrigger value="cliente">Cliente</TabsTrigger>
           </TabsList>
@@ -92,6 +95,17 @@ export function CreatePanel({
               onAddClient={addClient}
               onAddProject={addProject}
               onCreated={() => { toast.success("Vídeo criado."); finish(); }}
+            />
+          </TabsContent>
+
+          <TabsContent value="captacao">
+            <CaptureForm
+              projects={projects}
+              clients={clients}
+              users={users}
+              onAddClient={addClient}
+              onAddProject={addProject}
+              onCreated={() => { toast.success("Captação agendada."); finish(); }}
             />
           </TabsContent>
         </Tabs>
@@ -499,6 +513,124 @@ function VideoForm({
       </div>
       <DialogFooter>
         <Button type="submit" disabled={pending || !name.trim() || !finalDeadline}>{pending ? "Criando…" : "Criar vídeo"}</Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Captação
+// ---------------------------------------------------------------------------
+// Toggle-chip multi-select — simpler than a combobox for a team that's
+// realistically a handful of people, and makes who's already picked
+// obvious at a glance instead of hidden inside a closed dropdown.
+function CrewPicker({ users, value, onChange }: { users: UserLite[]; value: string[]; onChange: (ids: string[]) => void }) {
+  function toggle(id: string) {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {users.map((u) => {
+        const active = value.includes(u.id);
+        return (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => toggle(u.id)}
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-xs transition-colors",
+              active ? "border-cf-lime bg-cf-lime/10 text-cf-lime font-medium" : "border-cf-border text-cf-text-dim hover:text-cf-text"
+            )}
+          >
+            {u.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CaptureForm({
+  projects,
+  clients,
+  users,
+  onAddClient,
+  onAddProject,
+  onCreated,
+}: {
+  projects: ProjectLite[];
+  clients: ClientLite[];
+  users: UserLite[];
+  onAddClient: (c: ClientLite) => void;
+  onAddProject: (p: ProjectLite) => void;
+  onCreated: () => void;
+}) {
+  const [projectId, setProjectId] = React.useState("__none__");
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [date, setDate] = React.useState("");
+  const [startTime, setStartTime] = React.useState("");
+  const [endTime, setEndTime] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [crewIds, setCrewIds] = React.useState<string[]>([]);
+  const [pending, setPending] = React.useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !date || pending) return;
+    setPending(true);
+    const fd = new FormData();
+    if (projectId && projectId !== "__none__") fd.set("projectId", projectId);
+    fd.set("title", title.trim());
+    if (description) fd.set("description", description);
+    fd.set("date", date);
+    if (startTime) fd.set("startTime", startTime);
+    if (endTime) fd.set("endTime", endTime);
+    if (location) fd.set("location", location);
+    crewIds.forEach((id) => fd.append("crewIds", id));
+    const id = await createCapture(fd);
+    setPending(false);
+    if (id) onCreated();
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div className="space-y-1.5">
+        <Label>Projeto</Label>
+        <ProjectPicker projects={projects} clients={clients} value={projectId} onChange={setProjectId} onAddProject={onAddProject} onAddClient={onAddClient} />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cap-title">Título</Label>
+        <Input id="cap-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="Ex: Captação — Evento de lançamento" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="cap-date">Data</Label>
+          <Input id="cap-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cap-start">Início</Label>
+          <Input id="cap-start" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="cap-end">Fim</Label>
+          <Input id="cap-end" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cap-location">Informações / local</Label>
+        <Input id="cap-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Endereço, ponto de encontro, acesso…" />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="cap-description">Descrição</Label>
+        <Textarea id="cap-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Roteiro do dia, equipamento necessário, observações…" />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Equipe</Label>
+        <CrewPicker users={users} value={crewIds} onChange={setCrewIds} />
+      </div>
+      <DialogFooter>
+        <Button type="submit" disabled={pending || !title.trim() || !date}>{pending ? "Agendando…" : "Agendar captação"}</Button>
       </DialogFooter>
     </form>
   );

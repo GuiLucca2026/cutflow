@@ -7,6 +7,7 @@ import {
   mapVideo,
   mapActivityLog,
   mapWorkloadEntry,
+  mapCapture,
 } from "@/db/mappers";
 
 export async function listClients() {
@@ -146,6 +147,17 @@ export async function listWorkloadEntries(fromISO: string, toISO: string) {
     .lte("date", toISO);
   if (error) throw error;
   return data.map((r) => mapWorkloadEntry(r)!);
+}
+
+// ---------------------------------------------------------------------------
+// Captures (Fase 4 — shoot/capture sessions, separate from video editing)
+// ---------------------------------------------------------------------------
+export async function listCaptures() {
+  const supabase = await getSupabase();
+  const select = "*, project:cutflow_projects(*, client:cutflow_clients(*))";
+  const { data, error } = await supabase.from(TABLES.captures).select(select).order("date");
+  if (error) throw error;
+  return data.map((r) => mapCapture(r)!);
 }
 
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];

@@ -411,3 +411,90 @@ export async function createVideo(formData: FormData) {
   if (projectId) revalidatePath(`/projetos/${projectId}`);
   return id;
 }
+
+// ---------------------------------------------------------------------------
+// Captação (Fase 4 — shoot/capture sessions, separate from video editing)
+// ---------------------------------------------------------------------------
+export async function createCapture(formData: FormData) {
+  const title = String(formData.get("title") || "").trim();
+  const date = String(formData.get("date") || "");
+  if (!title || !date) return;
+
+  const projectId = String(formData.get("projectId") || "") || null;
+  const crewIds = formData.getAll("crewIds").map(String).filter(Boolean);
+
+  const supabase = await getSupabase();
+  const id = crypto.randomUUID();
+  await supabase.from(TABLES.captures).insert(
+    toRow({
+      id,
+      projectId,
+      title,
+      description: String(formData.get("description") || "") || null,
+      date,
+      startTime: String(formData.get("startTime") || "") || null,
+      endTime: String(formData.get("endTime") || "") || null,
+      location: String(formData.get("location") || "") || null,
+      crewIds,
+      status: "AGENDADA",
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
+    })
+  );
+
+  revalidatePath("/captacoes");
+  revalidatePath("/calendario");
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
+  return id;
+}
+
+export async function updateCaptureStatus(captureId: string, status: "AGENDADA" | "CONCLUIDA" | "CANCELADA") {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.captures).update(toRow({ status, updatedAt: nowISO() })).eq("id", captureId);
+  revalidatePath("/captacoes");
+  revalidatePath("/calendario");
+}
+
+export async function deleteCapture(captureId: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.captures).delete().eq("id", captureId);
+  revalidatePath("/captacoes");
+  revalidatePath("/calendario");
+}
+
+// ---------------------------------------------------------------------------
+// Perfil (nome, foto) — Storage upload em si acontece no browser (ver
+// components/cutflow/profile-dialog.tsx), esta action só grava o resultado.
+// ---------------------------------------------------------------------------
+export async function updateOwnProfile(formData: FormData) {
+  const user = await getCurrentUser();
+  const name = String(formData.get("name") || "").trim();
+  const avatarUrl = formData.get("avatarUrl");
+  if (!name) return;
+
+  const supabase = await getSupabase();
+  await supabase
+    .from(TABLES.users)
+    .update(
+      toRow({
+        name,
+        // Only touch avatarUrl if the form actually sent something — lets
+        // a name-only save leave the current photo alone.
+        ...(avatarUrl !== null ? { avatarUrl: String(avatarUrl) || null } : {}),
+        updatedAt: nowISO(),
+      })
+    )
+    .eq("id", user.id);
+
+  revalidateEverywhere();
+  revalidatePath("/equipe");
+}
+
+export async function regenerateIcsToken() {
+  const user = await getCurrentUser();
+  const supabase = await getSupabase();
+  const token = crypto.randomUUID().replace(/-/g, "");
+  await supabase.from(TABLES.users).update(toRow({ icsToken: token, updatedAt: nowISO() })).eq("id", user.id);
+  revalidatePath("/hoje");
+  return token;
+}

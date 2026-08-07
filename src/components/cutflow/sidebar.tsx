@@ -8,6 +8,7 @@ import {
   UserRound,
   FolderKanban,
   Clapperboard,
+  Camera,
   Calendar,
   CalendarClock,
   GanttChartSquare,
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/minha-semana", label: "Planejar Semana", icon: CalendarClock },
   { href: "/projetos", label: "Projetos", icon: FolderKanban },
   { href: "/videos", label: "Vídeos", icon: Clapperboard },
+  { href: "/captacoes", label: "Captações", icon: Camera },
   { href: "/kanban", label: "Kanban", icon: Kanban },
   { href: "/calendario", label: "Calendário", icon: Calendar },
   { href: "/timeline", label: "Timeline", icon: GanttChartSquare },
@@ -64,9 +66,9 @@ export function Sidebar() {
       </nav>
       <div className="p-3 border-t border-cf-border">
         <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">G2 FLOW</span> · Fase 1+2+3+5+6
+          <span className="text-cf-lime font-semibold">G2 FLOW</span> · Fase 1+2+3+4+5+6
           <br />
-          Foundation, Workflow, Planning, Intelligence & Analytics ativos
+          Foundation, Workflow, Planning, Calendar Sync, Intelligence & Analytics ativos
         </div>
       </div>
     </aside>

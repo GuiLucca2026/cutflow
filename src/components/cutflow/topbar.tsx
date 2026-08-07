@@ -15,6 +15,8 @@ import {
 import { CommandPalette } from "@/components/cutflow/command-palette";
 import { CreatePanel, type CreateTab } from "@/components/cutflow/create-panel";
 import { NotificationBell } from "@/components/cutflow/notification-bell";
+import { ProfileDialog } from "@/components/cutflow/profile-dialog";
+import { UserCog } from "lucide-react";
 import { switchUser } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +31,7 @@ export function Topbar({
   linkedAccount,
   alerts = [],
 }: {
-  currentUser: { id: string; name: string; avatarColor: string; role: string };
+  currentUser: { id: string; name: string; avatarColor: string; avatarUrl?: string | null; icsToken?: string | null; role: string };
   users: { id: string; name: string; avatarColor: string; role: string }[];
   clients: { id: string; name: string }[];
   projects: { id: string; name: string; clientId: string }[];
@@ -46,10 +48,11 @@ export function Topbar({
   const [paletteOpenSignal, setPaletteOpenSignal] = React.useState(0);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [createTab, setCreateTab] = React.useState<CreateTab>("video");
+  const [profileOpen, setProfileOpen] = React.useState(false);
   const router = useRouter();
 
-  function openCreate(type: "cliente" | "projeto" | "video") {
-    setCreateTab(type === "cliente" ? "cliente" : type === "projeto" ? "projeto" : "video");
+  function openCreate(type: CreateTab) {
+    setCreateTab(type);
     setCreateOpen(true);
   }
 
@@ -77,7 +80,7 @@ export function Topbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-lg pl-1 pr-2 py-1 hover:bg-cf-surface-2 transition-colors">
-            <Avatar name={currentUser.name} color={currentUser.avatarColor} size={30} />
+            <Avatar name={currentUser.name} color={currentUser.avatarColor} src={currentUser.avatarUrl} size={30} />
             <div className="hidden md:flex flex-col items-start leading-tight">
               <span className="text-sm font-medium">{currentUser.name.split(" ")[0]}</span>
               <span className="text-[10px] text-cf-text-dim">{currentUser.role}</span>
@@ -89,6 +92,10 @@ export function Topbar({
           {linkedAccount ? (
             <>
               <DropdownMenuLabel className="text-cf-text-dim text-xs">Conectado via G2 Admin</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setProfileOpen(true)} className="gap-2">
+                <UserCog className="h-3.5 w-3.5" /> Editar perfil
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={async () => {
@@ -120,6 +127,10 @@ export function Topbar({
                   {u.id === currentUser.id && <span className="ml-auto text-cf-lime text-xs">●</span>}
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => setProfileOpen(true)} className="gap-2">
+                <UserCog className="h-3.5 w-3.5" /> Editar perfil
+              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -134,6 +145,18 @@ export function Topbar({
         clients={clients}
         users={users}
         projects={projects}
+      />
+      <ProfileDialog
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        user={{
+          id: currentUser.id,
+          name: currentUser.name,
+          avatarColor: currentUser.avatarColor,
+          avatarUrl: currentUser.avatarUrl ?? null,
+          icsToken: currentUser.icsToken ?? null,
+          linkedAccount: !!linkedAccount,
+        }}
       />
     </header>
   );

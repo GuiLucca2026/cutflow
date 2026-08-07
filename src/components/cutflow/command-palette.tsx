@@ -20,7 +20,7 @@ type SearchResult = {
   videos: { id: string; name: string; projectId: string; projectName?: string; clientName?: string; status: string }[];
 };
 
-export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | "projeto" | "video") => void }) {
+export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | "projeto" | "video" | "captacao") => void }) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult>({ clients: [], projects: [], videos: [] });
@@ -56,7 +56,7 @@ export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | 
     router.push(href);
   }
 
-  function quickAdd(type: "cliente" | "projeto" | "video") {
+  function quickAdd(type: "cliente" | "projeto" | "video" | "captacao") {
     setOpen(false);
     setQuery("");
     onQuickAdd(type);
@@ -77,6 +77,7 @@ export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | 
               <CommandItem onSelect={() => go("/kanban")}><Kanban className="h-4 w-4" /> Kanban</CommandItem>
               <CommandItem onSelect={() => go("/calendario")}><Calendar className="h-4 w-4" /> Calendário</CommandItem>
               <CommandItem onSelect={() => go("/timeline")}><GanttChartSquare className="h-4 w-4" /> Timeline</CommandItem>
+              <CommandItem onSelect={() => go("/captacoes")}><Clapperboard className="h-4 w-4" /> Captações</CommandItem>
               <CommandItem onSelect={() => go("/entregas")}><Send className="h-4 w-4" /> Entregas</CommandItem>
               <CommandItem onSelect={() => go("/revisoes")}><MessageSquareWarning className="h-4 w-4" /> Revisões</CommandItem>
               <CommandItem onSelect={() => go("/analytics")}><BarChart3 className="h-4 w-4" /> Analytics</CommandItem>
@@ -85,6 +86,7 @@ export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | 
             <CommandGroup heading="Criar">
               <CommandItem onSelect={() => quickAdd("projeto")}><Plus className="h-4 w-4" /> Criar projeto</CommandItem>
               <CommandItem onSelect={() => quickAdd("video")}><Plus className="h-4 w-4" /> Criar vídeo</CommandItem>
+              <CommandItem onSelect={() => quickAdd("captacao")}><Plus className="h-4 w-4" /> Agendar captação</CommandItem>
               <CommandItem onSelect={() => quickAdd("cliente")}><Plus className="h-4 w-4" /> Criar cliente</CommandItem>
             </CommandGroup>
           </>

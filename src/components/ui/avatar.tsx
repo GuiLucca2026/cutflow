@@ -5,14 +5,31 @@ import { initials } from "@/lib/domain";
 export function Avatar({
   name,
   color = "#C6FF00",
+  src,
   size = 28,
   className,
 }: {
   name: string;
   color?: string;
+  // Optional real profile photo URL — falls back to initials-on-color when
+  // absent (or if the image fails to load).
+  src?: string | null;
   size?: number;
   className?: string;
 }) {
+  const [errored, setErrored] = React.useState(false);
+  if (src && !errored) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={name}
+        onError={() => setErrored(true)}
+        className={cn("rounded-full object-cover shrink-0 border border-cf-border", className)}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   return (
     <div
       className={cn("flex items-center justify-center rounded-full font-semibold shrink-0", className)}

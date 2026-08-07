@@ -4,7 +4,8 @@ _(nome interno do repositório/código continua "cutflow" — só a marca visív
 
 Planner de edição, revisão, aprovação e entrega para produtoras audiovisuais.
 Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow) + Fase 3
-(Planning) + Fase 5 (Intelligence) + Fase 6 (Analytics)** do produto
+(Planning) + Fase 4 (Calendar Sync, feed .ics) + Fase 5 (Intelligence) +
+Fase 6 (Analytics)**, mais Captação e Perfil (nome/foto), do produto
 descrito no briefing, totalmente funcionais — não é um mockup: todo botão,
 formulário, drag-and-drop e mudança de status persiste de verdade em banco
 de dados relacional.
@@ -101,12 +102,32 @@ Lovable — ver seção "Para colocar em produção" abaixo.
   vídeo, ranking por cliente); **tempo de espera do cliente** (retrato de
   agora, ranking por cliente); **utilização da equipe** (agregada e por
   editor). Filtros por período, cliente e editor.
+- **Calendar Sync — feed .ics por editor** (spec Fase 4): cada pessoa tem um
+  link pessoal (`Editar perfil` no menu do avatar) pra assinar a própria
+  agenda direto no Google Calendar, Apple Calendar ou Outlook — sem app
+  externo, sem OAuth, atualiza sozinha porque é uma URL "assinada", não um
+  arquivo importado uma vez. Servido por `src/app/api/ics/[token]/route.ts`
+  + `src/lib/ics.ts`; o link em si só funciona porque a função SQL
+  `cutflow_ics_feed()` (ver `supabase-setup.sql`) devolve dados sem exigir
+  login, mas só pra quem apresentar o token certo — RLS nas tabelas
+  continua bloqueando qualquer outro acesso anônimo normalmente. Google
+  Calendar via OAuth2 completo (sincronização de mão dupla) fica pra depois
+  — precisaria de um projeto seu no Google Cloud com credenciais.
+- **Captação** (`/captacoes`): sessões de filmagem/gravação, separadas da
+  edição do vídeo em si — com descrição, data, horário de início/fim,
+  local/informações e equipe (multi-seleção de pessoas da equipe). Aparece
+  no Calendário junto com os prazos de edição/revisão/entrega, e tem uma
+  aba própria no painel "Criar". Um vídeo pode ser criado sem projeto
+  (avulso); uma captação também pode.
+- **Perfil** (`Editar perfil`, no menu do avatar): trocar o nome e a foto
+  (upload real pro Supabase Storage, bucket `avatars`) — antes só existia a
+  cor/iniciais.
 
 ## O que fica para as próximas fases (conforme o roadmap do briefing)
 
-- **Fase 4 — Calendar Sync**: Google Calendar (OAuth2 real precisa de um
-  projeto no Google Cloud com credenciais suas), Apple Calendar via feeds
-  `.ics` assináveis por editor.
+- **Google Calendar via OAuth2** (parte da Fase 4): sincronização de mão
+  dupla de verdade, além do feed .ics somente-leitura que já existe —
+  precisa de um projeto no Google Cloud com credenciais suas.
 - **Auth real / multi-tenant**: parcialmente feito — quem entra via o botão
   do painel da G2 já usa Supabase Auth de verdade (ver seção de integração
   abaixo). O seletor "Ver como" continua existindo só como fallback de

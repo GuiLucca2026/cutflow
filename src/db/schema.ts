@@ -30,7 +30,10 @@ export const TABLES = {
   workloadEntries: "cutflow_workload_entries",
   notifications: "cutflow_notifications",
   savedViews: "cutflow_saved_views",
+  captures: "cutflow_captures",
 } as const;
+
+export const CAPTURE_STATUSES = ["AGENDADA", "CONCLUIDA", "CANCELADA"] as const;
 
 export const PROJECT_TYPES = [
   "Institucional",
@@ -128,6 +131,15 @@ export type User = {
   name: string;
   email: string;
   avatarColor: string;
+  // Optional real profile photo (Supabase Storage public URL) — falls back
+  // to the initials-on-color Avatar when null.
+  avatarUrl: string | null;
+  // Opaque per-user token for the .ics calendar subscription feed (Fase 4 —
+  // Calendar Sync). Never exposed to anyone but its owner; see
+  // src/app/api/ics/[token]/route.ts and the cutflow_ics_feed() SQL
+  // function (supabase-setup.sql), which is the only thing allowed to read
+  // by token instead of by authenticated session.
+  icsToken: string | null;
   role: "ADMIN" | "PRODUTOR" | "EDITOR" | "ASSISTENTE" | "FREELANCER" | "VISUALIZADOR";
   dailyCapacityHours: number;
   workDays: string;
@@ -217,6 +229,26 @@ export type VideoVersion = {
   sentAt: string;
   sentById: string | null;
   notes: string | null;
+};
+
+// A capture/shoot session — distinct from a Video: this is the "filming
+// day" part of production, before there's any footage to edit. Nullable
+// projectId mirrors the "vídeo avulso" pattern: a shoot can be scheduled
+// before the project it belongs to even exists.
+export type Capture = {
+  id: string;
+  projectId: string | null;
+  title: string;
+  description: string | null;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  location: string | null;
+  // References into cutflow_users.id — who's expected on set.
+  crewIds: string[];
+  status: (typeof CAPTURE_STATUSES)[number];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Revision = {

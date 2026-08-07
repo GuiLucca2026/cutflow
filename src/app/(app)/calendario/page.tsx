@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listVideos } from "@/db/queries";
+import { listVideos, listCaptures } from "@/db/queries";
 import { monthGrid, weekDays, dayKey, parseDayParam } from "@/lib/calendar";
 import { CalendarEventChip, CalendarEventRow, CAL_KIND_META, type CalEventData } from "@/components/cutflow/calendar-event";
 import { fmtDateFull } from "@/lib/format";
@@ -28,12 +28,12 @@ export default async function CalendarioPage({
   const view: View = (VIEWS.some((v) => v.key === sp.view) ? sp.view : "month") as View;
   const refDate = parseDayParam(sp.date);
 
-  const videos = await listVideos();
+  const [videos, captures] = await Promise.all([listVideos(), listCaptures()]);
 
   const events: CalEventData[] = [];
   for (const v of videos) {
     if (["ARQUIVADO", "CANCELADO"].includes(v.status)) continue;
-    const video: CalEventData["video"] = {
+    const video = {
       name: v.name,
       status: v.status,
       editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,
@@ -44,6 +44,20 @@ export default async function CalendarioPage({
     events.push({ id: `${v.id}-delivery`, videoId: v.id, kind: "delivery", date: v.finalDeadline, video });
     if (v.internalDeadline) events.push({ id: `${v.id}-internal`, videoId: v.id, kind: "internal", date: v.internalDeadline, video });
     if (v.reviewDeadline) events.push({ id: `${v.id}-review`, videoId: v.id, kind: "review", date: v.reviewDeadline, video });
+  }
+  for (const c of captures) {
+    if (c.status === "CANCELADA") continue;
+    events.push({
+      id: `${c.id}-captacao`,
+      captureId: c.id,
+      kind: "captacao",
+      date: c.startTime ? `${c.date}T${c.startTime}` : c.date,
+      capture: {
+        title: c.title,
+        location: c.location,
+        project: c.project ? { name: c.project.name, client: c.project.client ? { name: c.project.client.name, color: c.project.client.color } : null } : null,
+      },
+    });
   }
 
   const byDay = new Map<string, CalEventData[]>();
