@@ -70,10 +70,10 @@ function NoSessionScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
       <div className="max-w-sm text-center space-y-3">
-        <h1 className="font-display text-3xl tracking-wide">CUTFLOW</h1>
+        <h1 className="font-display text-3xl tracking-wide">G2 FLOW</h1>
         <p className="text-cf-text-dim text-sm">
-          Este link não pode ser aberto diretamente. Acesse o CUTFLOW pelo
-          botão <strong className="text-cf-text">“Abrir CUTFLOW”</strong> no
+          Este link não pode ser aberto diretamente. Acesse o G2 FLOW pelo
+          botão <strong className="text-cf-text">“Abrir G2 FLOW”</strong> no
           painel admin da G2 — ele já entra com o seu usuário automaticamente.
         </p>
       </div>

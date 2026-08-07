@@ -30,7 +30,7 @@ export default function SsoPage() {
     window.history.replaceState(null, "", window.location.pathname);
 
     if (!access_token || !refresh_token) {
-      setError("Link de acesso inválido ou expirado. Volte ao painel admin da G2 e clique em “Abrir CUTFLOW” novamente.");
+      setError("Link de acesso inválido ou expirado. Volte ao painel admin da G2 e clique em “Abrir G2 FLOW” novamente.");
       return;
     }
 
@@ -38,7 +38,7 @@ export default function SsoPage() {
     try {
       supabase = createClient();
     } catch {
-      setError("CUTFLOW ainda não está configurado para o login único (variáveis do Supabase ausentes).");
+      setError("G2 FLOW ainda não está configurado para o login único (variáveis do Supabase ausentes).");
       return;
     }
 
@@ -58,7 +58,7 @@ export default function SsoPage() {
       ) : (
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 rounded-full border-2 border-cf-lime border-t-transparent animate-spin" />
-          <p className="text-cf-text-dim text-sm">Conectando com o CUTFLOW…</p>
+          <p className="text-cf-text-dim text-sm">Conectando com o G2 FLOW…</p>
         </div>
       )}
     </div>

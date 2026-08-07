@@ -1,4 +1,6 @@
-# CUTFLOW — Production / Post-Production Operating System
+# G2 FLOW — Production / Post-Production Operating System
+
+_(nome interno do repositório/código continua "cutflow" — só a marca visível no produto virou G2 FLOW)_
 
 Planner de edição, revisão, aprovação e entrega para produtoras audiovisuais.
 Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow) + Fase 3
@@ -118,21 +120,21 @@ Lovable — ver seção "Para colocar em produção" abaixo.
 
 - **Next.js 16** (App Router, Server Actions, Turbopack) + **React 19** +
   **TypeScript**
-- **Tailwind CSS v4** com tokens de marca do CUTFLOW (`#C6FF00` / `#111111`)
+- **Tailwind CSS v4** com tokens de marca do G2 FLOW (`#C6FF00` / `#111111`)
 - **Supabase (via API REST/PostgREST)** — banco relacional real, no
   **mesmo projeto Supabase** que a G2 já usa para autenticação, acessado
   pela mesma API REST (URL pública + chave anônima) que o site da G2 já
   usa — sem conexão direta ao Postgres. Isso porque o projeto da G2 roda
   no modo "Lovable Cloud", que não expõe connection string nem acesso ao
   painel do Supabase fora da própria interface do Lovable. As tabelas do
-  CUTFLOW ficam no schema `public` (mesmo da G2), com o prefixo
+  G2 FLOW ficam no schema `public` (mesmo da G2), com o prefixo
   `cutflow_` para não colidir com nada que já existe (a G2 já tem sua
-  própria tabela `videos`, por exemplo — a do CUTFLOW é `cutflow_videos`,
+  própria tabela `videos`, por exemplo — a do G2 FLOW é `cutflow_videos`,
   totalmente separada), protegidas por Row Level Security (RLS) — ver
   `supabase-setup.sql`.
 - **dnd-kit** para drag-and-drop (Kanban)
 - **Radix UI** (primitivos sem estilo) + componentes próprios no estilo
-  shadcn/ui, com a identidade visual do CUTFLOW
+  shadcn/ui, com a identidade visual do G2 FLOW
 - **Bebas Neue** (títulos) + **Inter** (interface), self-hosted via
   `@fontsource` — sem dependência de rede em runtime
 
@@ -147,7 +149,7 @@ cp .env.example .env.local   # preencha as duas variáveis do Supabase (mesmos v
 npm run dev        # http://localhost:3000
 ```
 
-**Antes do primeiro uso**, as tabelas do CUTFLOW precisam existir no banco
+**Antes do primeiro uso**, as tabelas do G2 FLOW precisam existir no banco
 — isso é feito **uma única vez**, colando `supabase-setup.sql` (na raiz
 deste repo) no editor SQL do Lovable: **Lovable → More → Cloud → SQL
 editor → colar o arquivo inteiro → Run**. Pode rodar mais de uma vez sem
@@ -165,13 +167,13 @@ e repopula só as tabelas `cutflow_*`, nunca toca nas tabelas da G2.
 
 ## Integração com o painel admin da G2 (SSO real, já implementada)
 
-O CUTFLOW já está preparado para abrir direto do painel admin da G2, logado
+O G2 FLOW já está preparado para abrir direto do painel admin da G2, logado
 automaticamente como o usuário que estiver com a sessão aberta lá — sem
 senha nova e sem link estático.
 
 **Como funciona:**
 
-1. O painel admin da G2 (`AdminLayout.tsx`) ganhou um botão "Abrir CUTFLOW".
+1. O painel admin da G2 (`AdminLayout.tsx`) ganhou um botão "Abrir G2 FLOW".
    Ao clicar, ele pega a sessão Supabase que já existe no navegador (o
    admin já está logado) e abre `CUTFLOW_URL/sso#at=...&rt=...` — os
    tokens vão no fragmento da URL (depois do `#`), que nunca é enviado ao
@@ -185,34 +187,34 @@ senha nova e sem link estático.
    token a cada request). No primeiro acesso de cada pessoa, uma linha é
    criada automaticamente em `users` (coluna nova `supabase_user_id`) — é
    assim que cada usuário do G2 ganha seu próprio perfil separado no
-   CUTFLOW, sem nenhum cadastro manual.
+   G2 FLOW, sem nenhum cadastro manual.
 4. Sem sessão do Supabase (rodando `npm run dev` localmente, fora do
    fluxo da G2), o app cai de volta no seletor "Ver como" de sempre — o
    ambiente de desenvolvimento local não muda em nada.
 
 **Domínio: qualquer URL funciona.** O handoff acontece via tokens no
 fragmento da URL (`CUTFLOW_URL/sso#at=...&rt=...`), não por cookie
-compartilhado — então o CUTFLOW não precisa estar no mesmo domínio nem
+compartilhado — então o G2 FLOW não precisa estar no mesmo domínio nem
 subdomínio da G2. Ele pode (e deve) ser hospedado separadamente, por
 exemplo na Vercel, numa URL própria tipo `cutflow-g2.vercel.app` (ou um
-domínio customizado depois, se quiser). O botão "Abrir CUTFLOW" no painel
+domínio customizado depois, se quiser). O botão "Abrir G2 FLOW" no painel
 da G2 só precisa apontar pra essa URL via `VITE_CUTFLOW_URL`.
 
 **Para colocar em produção, faltam 3 coisas** (nenhuma delas é código):
 
-1. **Criar as tabelas do CUTFLOW no Supabase**: cole o conteúdo de
+1. **Criar as tabelas do G2 FLOW no Supabase**: cole o conteúdo de
    `supabase-setup.sql` no editor SQL do Lovable (**More → Cloud → SQL
    editor → Run**) — cria as 13 tabelas `cutflow_*` no schema `public`,
    sem tocar em nada que a G2 já usa. Não existe mais uma migration
    separada pra rodar do lado do repositório da G2 (a `cutflow_profiles`
    que tinha sido criada lá foi removida — o próprio `cutflow_users`, com
    a coluna `supabase_user_id`, já cumpre esse papel).
-2. **Fazer o deploy do CUTFLOW** (ex.: Vercel, importando este repositório)
+2. **Fazer o deploy do G2 FLOW** (ex.: Vercel, importando este repositório)
    configurando só duas variáveis de ambiente:
    `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmos
    valores do `.env.local` deste pacote / do `.env` da G2 — a "anon key" é
    pública por natureza, protegida pelas políticas de RLS, não é segredo).
    Não é preciso configurar nenhuma connection string de banco.
 3. **Atualizar `VITE_CUTFLOW_URL`** no `.env` do repositório da G2 para a
-   URL real que a Vercel (ou outro host) atribuir ao CUTFLOW depois do
+   URL real que a Vercel (ou outro host) atribuir ao G2 FLOW depois do
    deploy.

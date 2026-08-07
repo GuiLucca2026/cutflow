@@ -8,7 +8,7 @@ import "@fontsource/bebas-neue";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CUTFLOW — Planner de Edição",
+  title: "G2 FLOW — Planner de Edição",
   description: "Production / Post-Production Operating System",
 };
 

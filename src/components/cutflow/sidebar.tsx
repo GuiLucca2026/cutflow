@@ -40,8 +40,8 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-cf-border bg-cf-black h-screen sticky top-0">
       <div className="flex items-center gap-2 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cf-lime text-cf-black font-display text-lg">C</div>
-        <div className="font-display text-2xl tracking-wide leading-none">CUTFLOW</div>
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-cf-lime text-cf-black font-display text-base">G2</div>
+        <div className="font-display text-2xl tracking-wide leading-none">G2 FLOW</div>
       </div>
       <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-2 space-y-0.5">
         {NAV.map((item) => {
@@ -64,7 +64,7 @@ export function Sidebar() {
       </nav>
       <div className="p-3 border-t border-cf-border">
         <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3+5+6
+          <span className="text-cf-lime font-semibold">G2 FLOW</span> · Fase 1+2+3+5+6
           <br />
           Foundation, Workflow, Planning, Intelligence & Analytics ativos
         </div>
