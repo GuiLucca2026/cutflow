@@ -32,7 +32,7 @@ const NAV = [
   { href: "/entregas", label: "Entregas", icon: Send },
   { href: "/equipe", label: "Equipe", icon: Users },
   { href: "/clientes", label: "Clientes", icon: Building2 },
-  { href: "/analytics", label: "Analytics", icon: BarChart3, soon: true },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export function Sidebar() {
@@ -50,29 +50,23 @@ export function Sidebar() {
           return (
             <Link
               key={item.href}
-              href={item.soon ? "#" : item.href}
-              aria-disabled={item.soon}
+              href={item.href}
               className={cn(
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
-                active
-                  ? "bg-cf-lime text-cf-black font-semibold"
-                  : item.soon
-                  ? "text-cf-text-dim/50 cursor-default"
-                  : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
+                active ? "bg-cf-lime text-cf-black font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="flex-1">{item.label}</span>
-              {item.soon && <span className="text-[9px] uppercase tracking-wide text-cf-text-dim/60">Fase 6</span>}
             </Link>
           );
         })}
       </nav>
       <div className="p-3 border-t border-cf-border">
         <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3+5
+          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3+5+6
           <br />
-          Foundation, Workflow, Planning & Intelligence ativos
+          Foundation, Workflow, Planning, Intelligence & Analytics ativos
         </div>
       </div>
     </aside>

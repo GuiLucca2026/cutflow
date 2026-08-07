@@ -2,10 +2,10 @@
 
 Planner de edição, revisão, aprovação e entrega para produtoras audiovisuais.
 Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow) + Fase 3
-(Planning) + Fase 5 (Intelligence)** do produto descrito no briefing,
-totalmente funcionais — não é um mockup: todo botão, formulário,
-drag-and-drop e mudança de status persiste de verdade em banco de dados
-relacional.
+(Planning) + Fase 5 (Intelligence) + Fase 6 (Analytics)** do produto
+descrito no briefing, totalmente funcionais — não é um mockup: todo botão,
+formulário, drag-and-drop e mudança de status persiste de verdade em banco
+de dados relacional.
 
 ## Deploy rápido (Vercel)
 
@@ -21,7 +21,7 @@ relacional.
 **Antes de usar**, rode `supabase-setup.sql` uma vez no editor SQL do
 Lovable — ver seção "Para colocar em produção" abaixo.
 
-## O que já funciona (Fase 1 + 2 + 3 + 5)
+## O que já funciona (Fase 1 + 2 + 3 + 5 + 6)
 
 - **Modelo de dados relacional completo**: clientes, projetos, vídeos, versões,
   revisões/alterações, checklist, comentários, links de projeto, log de
@@ -91,17 +91,20 @@ Lovable — ver seção "Para colocar em produção" abaixo.
   equipe — % de capacidade usada em hoje/7/14/30 dias, e um gráfico dos
   próximos 14 dias comparando horas agendadas vs. capacidade disponível da
   empresa inteira dia a dia.
+- **Analytics** (`/analytics`, spec Fase 6): KPIs calculados em cima dos
+  mesmos dados que o resto do app usa, sem data warehouse nem job noturno —
+  ver `src/lib/analytics.ts`. **Entrega no prazo** (compara a entrega com o
+  prazo original travado, não o atual — Deadline Lock), com gráfico de
+  tendência dos últimos 6 meses; **taxa de revisão** (média de rodadas por
+  vídeo, ranking por cliente); **tempo de espera do cliente** (retrato de
+  agora, ranking por cliente); **utilização da equipe** (agregada e por
+  editor). Filtros por período, cliente e editor.
 
 ## O que fica para as próximas fases (conforme o roadmap do briefing)
-
-O menu lateral já mostra "Fase 6" no item ainda não construído (Analytics),
-para deixar claro o que é real hoje:
 
 - **Fase 4 — Calendar Sync**: Google Calendar (OAuth2 real precisa de um
   projeto no Google Cloud com credenciais suas), Apple Calendar via feeds
   `.ics` assináveis por editor.
-- **Fase 6 — Analytics**: KPIs (on-time delivery, revision rate, client
-  wait time, team utilization), relatórios de produtividade.
 - **Auth real / multi-tenant**: parcialmente feito — quem entra via o botão
   do painel da G2 já usa Supabase Auth de verdade (ver seção de integração
   abaixo). O seletor "Ver como" continua existindo só como fallback de
