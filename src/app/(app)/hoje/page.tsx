@@ -17,7 +17,7 @@ function StatCard({ label, value, icon: Icon, tone = "default", href }: { label:
     default: "text-cf-text border-cf-border",
     danger: "text-red-400 border-red-500/30",
     warn: "text-amber-400 border-amber-500/30",
-    good: "text-cf-lime border-cf-lime/30",
+    good: "text-cf-success border-cf-success/30",
   };
   const body = (
     <div className={cn("rounded-xl border bg-cf-surface p-4 flex items-center gap-3 transition-colors", href && "hover:border-cf-lime/40")}>

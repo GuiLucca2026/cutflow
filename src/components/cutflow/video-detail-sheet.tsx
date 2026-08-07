@@ -48,7 +48,21 @@ export function VideoDetailSheetHost({ users }: { users: User[] }) {
       .finally(() => setLoading(false));
   }, [openVideoId, bump]);
 
-  function afterMutate() {
+  // Duas velocidades de "atualizar depois de uma ação", de propósito.
+  // `refresh()` só re-busca os dados DESTE vídeo (uma chamada leve à
+  // /api/videos/[id]) — suficiente pra checklist, comentário, versão nova
+  // ou resolver uma alteração, já que nada disso aparece fora da própria
+  // aba. `router.refresh()` já é bem mais caro: refaz TODO o layout (usuário
+  // atual, todos os usuários, clientes, projetos, todos os vídeos, carga de
+  // trabalho, alertas) mais a página de fundo inteira. Antes disso rodava
+  // em toda ação — inclusive marcar um item do checklist — e cada clique
+  // esperava por ~7 idas ao banco que não tinham nada a ver com o que foi
+  // clicado. Só troca de status precisa da versão cara, porque só ela muda
+  // a coluna no Kanban / os cartões da lista / os números da Hoje.
+  function refreshLight() {
+    refresh();
+  }
+  function refreshAfterStatusChange() {
     refresh();
     router.refresh();
   }
@@ -63,7 +77,13 @@ export function VideoDetailSheetHost({ users }: { users: User[] }) {
             <div className="h-32 w-full bg-cf-surface-2 rounded animate-pulse" />
           </div>
         ) : data?.video ? (
-          <VideoDetailBody video={data.video} activity={data.activity} users={users} onMutate={afterMutate} />
+          <VideoDetailBody
+            video={data.video}
+            activity={data.activity}
+            users={users}
+            onMutate={refreshLight}
+            onStatusChange={refreshAfterStatusChange}
+          />
         ) : (
           <div className="p-6 text-cf-text-dim text-sm">Vídeo não encontrado.</div>
         )}
@@ -72,7 +92,19 @@ export function VideoDetailSheetHost({ users }: { users: User[] }) {
   );
 }
 
-function VideoDetailBody({ video, activity, users, onMutate }: { video: any; activity: any[]; users: User[]; onMutate: () => void }) {
+function VideoDetailBody({
+  video,
+  activity,
+  users,
+  onMutate,
+  onStatusChange,
+}: {
+  video: any;
+  activity: any[];
+  users: User[];
+  onMutate: () => void;
+  onStatusChange: () => void;
+}) {
   const [commentBody, setCommentBody] = React.useState("");
   const [revisionDesc, setRevisionDesc] = React.useState("");
   const [pending, startTransition] = React.useTransition();
@@ -122,7 +154,7 @@ function VideoDetailBody({ video, activity, users, onMutate }: { video: any; act
               startTransition(async () => {
                 await updateVideoStatus(video.id, v);
                 toast.success(`Status alterado para ${STATUS_META[v]?.label ?? v}`);
-                onMutate();
+                onStatusChange();
               })
             }
           >

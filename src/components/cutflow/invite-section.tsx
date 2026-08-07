@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   PENDENTE: { label: "Pendente", color: "#38BDF8" },
-  ACEITO: { label: "Aceito", color: "#C6FF00" },
+  ACEITO: { label: "Aceito", color: "#34D399" },
   EXPIRADO: { label: "Expirado", color: "#9A9C9F" },
   REVOGADO: { label: "Revogado", color: "#EF4444" },
 };

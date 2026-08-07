@@ -170,7 +170,7 @@ function KpiCard({ label, value, detail, icon: Icon, tone = "default" }: { label
     default: "text-cf-text border-cf-border",
     danger: "text-red-400 border-red-500/30",
     warn: "text-amber-400 border-amber-500/30",
-    good: "text-cf-lime border-cf-lime/30",
+    good: "text-cf-success border-cf-success/30",
   };
   return (
     <div className="rounded-xl border border-cf-border bg-cf-surface p-4">

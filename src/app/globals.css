@@ -3,6 +3,14 @@
 :root {
   --cf-lime: #C6FF00;
   --cf-lime-dim: #A8DB00;
+  /* Verde dedicado pra "sucesso/concluído" — separado do lime, que fica
+     reservado pra marca/ação primária (botão Criar, item ativo do menu,
+     links em hover). Antes os dois papéis dividiam a mesma cor: o check
+     de item concluído, a barra de progresso e o botão de ação usavam o
+     mesmo lime, então nada se destacava como "isso terminou" vs "isso é
+     clicável" — cores repetidas demais perto uma da outra, sem função
+     clara. Ver checkbox.tsx e domain.ts (status APROVADO). */
+  --cf-success: #34D399;
   --cf-black: #111111;
   --cf-surface: #17181A;
   --cf-surface-2: #1E2023;
@@ -21,6 +29,7 @@
   --color-foreground: var(--foreground);
   --color-cf-lime: var(--cf-lime);
   --color-cf-lime-dim: var(--cf-lime-dim);
+  --color-cf-success: var(--cf-success);
   --color-cf-black: var(--cf-black);
   --color-cf-surface: var(--cf-surface);
   --color-cf-surface-2: var(--cf-surface-2);

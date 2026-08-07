@@ -8,9 +8,17 @@ export const STATUS_META: Record<
   string,
   { label: string; color: string; bg: string; order: number; group: "backlog" | "editing" | "review" | "client" | "done" }
 > = {
+  // Cores pensadas por grupo (backlog/editing/review/client/done), não por
+  // status isolado — antes 3 famílias de cor cobriam os 18 status (o mesmo
+  // azul em "pronto pra editar" — início do pipeline — e "enviado ao
+  // cliente"/"exportando"/"upload" — quase no fim; o mesmo lime da marca em
+  // "editando" e "aprovado"), então dava pra confundir o estágio de um
+  // vídeo só de bater o olho na cor. "Aguardando X" continua toda em âmbar
+  // de propósito — é uma família só porque o significado é sempre o mesmo
+  // ("parado esperando alguém"), o rótulo já diz esperando o quê.
   BACKLOG: { label: "Backlog", color: "#9A9C9F", bg: "#2B2B2B", order: 0, group: "backlog" },
   AGUARDANDO_MATERIAL: { label: "Aguardando material", color: "#F59E0B", bg: "#3A2E13", order: 1, group: "backlog" },
-  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#38BDF8", bg: "#132A38", order: 2, group: "backlog" },
+  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#22D3EE", bg: "#0D2E33", order: 2, group: "backlog" },
   EDITANDO: { label: "Editando", color: "#C6FF00", bg: "#232B0A", order: 3, group: "editing" },
   EDICAO_PAUSADA: { label: "Edição pausada", color: "#F59E0B", bg: "#3A2E13", order: 4, group: "editing" },
   REVISAO_INTERNA: { label: "Revisão interna", color: "#A78BFA", bg: "#251E3A", order: 5, group: "review" },
@@ -20,7 +28,7 @@ export const STATUS_META: Record<
   ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#FB923C", bg: "#3A2410", order: 9, group: "client" },
   EM_ALTERACAO: { label: "Em alteração", color: "#FB923C", bg: "#3A2410", order: 10, group: "editing" },
   AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#F59E0B", bg: "#3A2E13", order: 11, group: "client" },
-  APROVADO: { label: "Aprovado", color: "#C6FF00", bg: "#232B0A", order: 12, group: "done" },
+  APROVADO: { label: "Aprovado", color: "#34D399", bg: "#12271F", order: 12, group: "done" },
   EXPORTANDO: { label: "Exportando", color: "#38BDF8", bg: "#132A38", order: 13, group: "done" },
   UPLOAD_ENVIO: { label: "Upload / envio", color: "#38BDF8", bg: "#132A38", order: 14, group: "done" },
   ENTREGUE: { label: "Entregue", color: "#4ADE80", bg: "#122A18", order: 15, group: "done" },
