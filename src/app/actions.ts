@@ -69,6 +69,52 @@ export async function updateVideoStatus(videoId: string, newStatus: string) {
   revalidatePath(`/projetos/${video.project_id}`);
 }
 
+// Shifts every date field on a video by the same number of days — used by
+// the Timeline/Gantt drag-and-drop (src/components/cutflow/timeline-gantt.tsx)
+// to "move the whole bar" while preserving the spacing between internal,
+// review, client and final deadlines. originalFinalDeadline is left
+// untouched on purpose (Deadline Lock — it's the historical reference, not
+// used in overdue/risk math, which always reads finalDeadline).
+export async function rescheduleVideo(videoId: string, dayDelta: number) {
+  if (!dayDelta) return;
+  const supabase = await getSupabase();
+  const { data: video } = await supabase
+    .from(TABLES.videos)
+    .select("project_id, internal_deadline, review_deadline, client_deadline, final_deadline, planned_start_date")
+    .eq("id", videoId)
+    .maybeSingle();
+  if (!video) return;
+
+  const shiftISO = (iso: string | null) => (iso ? new Date(new Date(iso).getTime() + dayDelta * 86400000).toISOString() : iso);
+  const shiftDate = (d: string | null) => (d ? new Date(new Date(`${d}T00:00:00`).getTime() + dayDelta * 86400000).toISOString().slice(0, 10) : d);
+
+  await supabase
+    .from(TABLES.videos)
+    .update(
+      toRow({
+        plannedStartDate: shiftDate(video.planned_start_date),
+        internalDeadline: shiftISO(video.internal_deadline),
+        reviewDeadline: shiftISO(video.review_deadline),
+        clientDeadline: shiftISO(video.client_deadline),
+        finalDeadline: shiftISO(video.final_deadline),
+        updatedAt: nowISO(),
+      })
+    )
+    .eq("id", videoId);
+
+  await logActivity(
+    "VIDEO",
+    videoId,
+    "Prazo reagendado",
+    `Prazos deslocados em ${dayDelta > 0 ? "+" : ""}${dayDelta} dia(s) pela Timeline.`
+  );
+
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${video.project_id}`);
+  revalidatePath("/timeline");
+  revalidatePath("/calendario");
+}
+
 export async function updateVideoField(
   videoId: string,
   field: "priority" | "editorId" | "estimatedHours" | "finalDeadline" | "internalDeadline" | "notes" | "currentVersion",
@@ -208,6 +254,31 @@ export async function addVideoVersion(videoId: string, label: string, notes?: st
   await supabase.from(TABLES.videos).update(toRow({ currentVersion: label, updatedAt: nowISO() })).eq("id", videoId);
   await logActivity("VIDEO", videoId, "Nova versão enviada", label);
   revalidateEverywhere();
+}
+
+// ---------------------------------------------------------------------------
+// Planejar minha semana (Auto Schedule) — persists the computed plan
+// (src/lib/planning.ts) as real workload_entries for the current editor.
+// ---------------------------------------------------------------------------
+export async function applyWeekPlan(entries: { videoId: string; date: string; hours: number }[]) {
+  if (entries.length === 0) return;
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+
+  const dates = entries.map((e) => e.date).sort();
+  const from = dates[0];
+  const to = dates[dates.length - 1];
+
+  // Replace this editor's entries for the planned window rather than
+  // appending — re-applying the plan (e.g. after a status update changes
+  // hoursRemaining) shouldn't duplicate entries.
+  await supabase.from(TABLES.workloadEntries).delete().eq("editor_id", user.id).gte("date", from).lte("date", to);
+  await supabase
+    .from(TABLES.workloadEntries)
+    .insert(entries.map((e) => toRow({ id: crypto.randomUUID(), editorId: user.id, videoId: e.videoId, date: e.date, hours: e.hours })));
+
+  revalidatePath("/minha-semana");
+  revalidatePath("/equipe");
 }
 
 // ---------------------------------------------------------------------------

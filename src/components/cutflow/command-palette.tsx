@@ -10,7 +10,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
-import { Building2, Clapperboard, FolderKanban, Sun, Kanban, UserRound, Send, MessageSquareWarning, Plus } from "lucide-react";
+import { Building2, Clapperboard, FolderKanban, Sun, Kanban, UserRound, Send, MessageSquareWarning, Plus, Calendar, GanttChartSquare, CalendarClock } from "lucide-react";
 import { STATUS_META } from "@/lib/domain";
 import { withBasePath } from "@/lib/base-path";
 
@@ -73,7 +73,10 @@ export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | 
             <CommandGroup heading="Navegação">
               <CommandItem onSelect={() => go("/hoje")}><Sun className="h-4 w-4" /> Ir para Hoje</CommandItem>
               <CommandItem onSelect={() => go("/minha-edicao")}><UserRound className="h-4 w-4" /> Minha Edição</CommandItem>
+              <CommandItem onSelect={() => go("/minha-semana")}><CalendarClock className="h-4 w-4" /> Planejar Semana</CommandItem>
               <CommandItem onSelect={() => go("/kanban")}><Kanban className="h-4 w-4" /> Kanban</CommandItem>
+              <CommandItem onSelect={() => go("/calendario")}><Calendar className="h-4 w-4" /> Calendário</CommandItem>
+              <CommandItem onSelect={() => go("/timeline")}><GanttChartSquare className="h-4 w-4" /> Timeline</CommandItem>
               <CommandItem onSelect={() => go("/entregas")}><Send className="h-4 w-4" /> Entregas</CommandItem>
               <CommandItem onSelect={() => go("/revisoes")}><MessageSquareWarning className="h-4 w-4" /> Revisões</CommandItem>
             </CommandGroup>

@@ -9,6 +9,7 @@ import {
   FolderKanban,
   Clapperboard,
   Calendar,
+  CalendarClock,
   GanttChartSquare,
   MessageSquareWarning,
   Users,
@@ -21,11 +22,12 @@ import {
 const NAV = [
   { href: "/hoje", label: "Hoje", icon: Sun },
   { href: "/minha-edicao", label: "Minha Edição", icon: UserRound },
+  { href: "/minha-semana", label: "Planejar Semana", icon: CalendarClock },
   { href: "/projetos", label: "Projetos", icon: FolderKanban },
   { href: "/videos", label: "Vídeos", icon: Clapperboard },
   { href: "/kanban", label: "Kanban", icon: Kanban },
-  { href: "/calendario", label: "Calendário", icon: Calendar, soon: true },
-  { href: "/timeline", label: "Timeline", icon: GanttChartSquare, soon: true },
+  { href: "/calendario", label: "Calendário", icon: Calendar },
+  { href: "/timeline", label: "Timeline", icon: GanttChartSquare },
   { href: "/revisoes", label: "Revisões", icon: MessageSquareWarning },
   { href: "/entregas", label: "Entregas", icon: Send },
   { href: "/equipe", label: "Equipe", icon: Users },
@@ -68,9 +70,9 @@ export function Sidebar() {
       </nav>
       <div className="p-3 border-t border-cf-border">
         <div className="rounded-lg bg-cf-surface border border-cf-border px-3 py-2.5 text-[11px] text-cf-text-dim leading-relaxed">
-          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2
+          <span className="text-cf-lime font-semibold">CUTFLOW</span> · Fase 1+2+3
           <br />
-          Foundation & Workflow ativos
+          Foundation, Workflow & Planning ativos
         </div>
       </div>
     </aside>

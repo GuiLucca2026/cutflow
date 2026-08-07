@@ -1,10 +1,10 @@
 # CUTFLOW — Production / Post-Production Operating System
 
 Planner de edição, revisão, aprovação e entrega para produtoras audiovisuais.
-Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow)** do produto
-descrito no briefing, totalmente funcionais — não é um mockup: todo botão,
-formulário, drag-and-drop e mudança de status persiste de verdade em banco
-de dados relacional.
+Este pacote entrega **Fase 1 (Foundation) + Fase 2 (Workflow) + Fase 3
+(Planning)** do produto descrito no briefing, totalmente funcionais — não é
+um mockup: todo botão, formulário, drag-and-drop e mudança de status
+persiste de verdade em banco de dados relacional.
 
 ## Deploy rápido (Vercel)
 
@@ -20,7 +20,7 @@ de dados relacional.
 **Antes de usar**, rode `supabase-setup.sql` uma vez no editor SQL do
 Lovable — ver seção "Para colocar em produção" abaixo.
 
-## O que já funciona (Fase 1 + 2)
+## O que já funciona (Fase 1 + 2 + 3)
 
 - **Modelo de dados relacional completo**: clientes, projetos, vídeos, versões,
   revisões/alterações, checklist, comentários, links de projeto, log de
@@ -56,15 +56,26 @@ Lovable — ver seção "Para colocar em produção" abaixo.
 - **26 vídeos, 8 projetos, 5 clientes, 4 pessoas de equipe** de dados de
   demonstração realistas, com itens atrasados, aguardando cliente, em
   edição etc. — ver `src/db/seed.ts`.
+- **Calendário** (`/calendario`, spec Fase 3): visões mês / semana / dia /
+  agenda com os prazos de edição, revisão e entrega de todos os vídeos
+  ativos — clique num evento pra abrir a ficha do vídeo direto.
+- **Timeline / Gantt** (`/timeline`, spec Fase 3): vídeos agrupados por
+  projeto como barras ao longo do tempo, com **drag-and-drop real** — arraste
+  uma barra pra reagendar o vídeo inteiro (prazo interno, de revisão e de
+  entrega se movem juntos, preservando o espaçamento entre eles).
+- **Planejar Semana** (`/minha-semana`, spec Fase 3 — a função-diferencial
+  do briefing): pra cada editor, sugere automaticamente em qual dia
+  trabalhar em qual vídeo pelos próximos 7 dias, combinando **Backward
+  Planning** (o que está mais perto do prazo reivindica capacidade primeiro)
+  com **Auto Schedule** (preenche a capacidade diária de cada dia útil) —
+  ver `src/lib/planning.ts`. Um botão "Aplicar plano" grava o resultado
+  como carga de trabalho real (aparece em Equipe).
 
 ## O que fica para as próximas fases (conforme o roadmap do briefing)
 
-O menu lateral já mostra "Fase 3+" nos itens ainda não construídos, para
-deixar claro o que é real hoje:
+O menu lateral já mostra "Fase 3+" no item ainda não construído (Analytics),
+para deixar claro o que é real hoje:
 
-- **Fase 3 — Planning**: Calendário (dia/semana/mês/agenda), Timeline/Gantt
-  com drag-and-drop, Auto Schedule e Backward Planning, "Planejar minha
-  semana" (a função de diferencial que você pediu).
 - **Fase 4 — Calendar Sync**: Google Calendar (OAuth2 real precisa de um
   projeto no Google Cloud com credenciais suas), Apple Calendar via feeds
   `.ics` assináveis por editor.
