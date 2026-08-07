@@ -39,7 +39,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
         <div className="min-w-0">
           <div className="font-semibold text-sm truncate">{video.name}</div>
           <div className="text-xs text-cf-text-dim truncate">
-            {video.project?.client?.name} · {video.project?.name}
+            {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
           </div>
         </div>
         {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}

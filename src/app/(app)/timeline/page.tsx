@@ -22,7 +22,9 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
 
   const byProject = new Map<string, TimelineProjectGroup>();
   for (const v of relevant) {
-    const pid = v.projectId;
+    // Videos without a project (spec: "vídeo avulso") are grouped under a
+    // single synthetic bucket rather than one row per video.
+    const pid = v.projectId ?? "__no_project__";
     if (!byProject.has(pid)) {
       byProject.set(pid, {
         id: pid,
@@ -45,7 +47,11 @@ export default async function TimelinePage({ searchParams }: { searchParams: Pro
       editorColor: v.editor?.avatarColor ?? null,
     });
   }
-  const projects = Array.from(byProject.values()).sort((a, b) => a.name.localeCompare(b.name));
+  const projects = Array.from(byProject.values()).sort((a, b) => {
+    if (a.id === "__no_project__") return 1;
+    if (b.id === "__no_project__") return -1;
+    return a.name.localeCompare(b.name);
+  });
 
   const prevHref = `/timeline?from=${dstr(addDays(windowStart, -14))}`;
   const nextHref = `/timeline?from=${dstr(addDays(windowStart, 14))}`;

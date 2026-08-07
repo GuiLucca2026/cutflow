@@ -71,7 +71,9 @@ create table if not exists public.cutflow_projects (
 
 create table if not exists public.cutflow_videos (
   id text primary key,
-  project_id text not null references public.cutflow_projects(id) on delete cascade,
+  -- Nullable on purpose: a video can be created "avulso" (standalone),
+  -- without being linked to a project yet, and attached to one later.
+  project_id text references public.cutflow_projects(id) on delete cascade,
   name text not null,
   format text not null default 'Horizontal',
   aspect_ratio text not null default '16:9',
@@ -99,6 +101,10 @@ create table if not exists public.cutflow_videos (
   created_at text not null,
   updated_at text not null
 );
+
+-- Safe to run even on a database created before this column was made
+-- nullable — dropping NOT NULL on an already-nullable column is a no-op.
+alter table public.cutflow_videos alter column project_id drop not null;
 
 create table if not exists public.cutflow_video_versions (
   id text primary key,

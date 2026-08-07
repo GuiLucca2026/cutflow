@@ -87,11 +87,17 @@ function VideoDetailBody({ video, activity, users, onMutate }: { video: any; act
       <SheetHeader>
         <div className="flex items-center gap-2 text-xs text-cf-text-dim">
           <FolderKanban className="h-3.5 w-3.5" />
-          <Link href={`/projetos/${video.projectId}`} className="hover:text-cf-lime transition-colors">
-            {video.project?.name}
-          </Link>
-          <span>·</span>
-          <span>{video.project?.client?.name}</span>
+          {video.project ? (
+            <>
+              <Link href={`/projetos/${video.projectId}`} className="hover:text-cf-lime transition-colors">
+                {video.project.name}
+              </Link>
+              <span>·</span>
+              <span>{video.project.client?.name ?? "—"}</span>
+            </>
+          ) : (
+            <span>Vídeo avulso · sem projeto</span>
+          )}
         </div>
         <SheetTitle>{video.name}</SheetTitle>
         <div className="flex flex-wrap items-center gap-2 pt-1">

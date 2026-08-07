@@ -178,7 +178,9 @@ export type Project = {
 
 export type Video = {
   id: string;
-  projectId: string;
+  // Nullable — a video can exist "avulso" (standalone), not yet linked to
+  // a project (see supabase-setup.sql).
+  projectId: string | null;
   name: string;
   format: string;
   aspectRatio: string;

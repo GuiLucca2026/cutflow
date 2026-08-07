@@ -51,8 +51,10 @@ Lovable — ver seção "Para colocar em produção" abaixo.
   categoria (footage / edição / entrega / referências).
 - **Busca global + Command Palette (⌘K)**: pesquise clientes, projetos e
   vídeos, navegue e crie itens sem tirar a mão do teclado.
-- **Quick Add**: criar cliente, projeto ou vídeo em poucos cliques, de
-  qualquer tela.
+- **Painel "Criar" unificado**: um único painel (não três telas separadas)
+  com abas Vídeo / Projeto / Cliente — e cada seletor de cliente/projeto
+  tem "+ Criar novo" embutido, então dá pra cadastrar tudo sem sair do
+  fluxo. Um vídeo pode ser criado avulso (sem projeto) e vinculado depois.
 - **26 vídeos, 8 projetos, 5 clientes, 4 pessoas de equipe** de dados de
   demonstração realistas, com itens atrasados, aguardando cliente, em
   edição etc. — ver `src/db/seed.ts`.

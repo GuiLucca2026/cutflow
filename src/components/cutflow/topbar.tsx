@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { CommandPalette } from "@/components/cutflow/command-palette";
-import { QuickAddDialogs } from "@/components/cutflow/quick-add";
+import { CreatePanel, type CreateTab } from "@/components/cutflow/create-panel";
 import { switchUser } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -38,8 +38,14 @@ export function Topbar({
   linkedAccount?: boolean;
 }) {
   const [paletteOpenSignal, setPaletteOpenSignal] = React.useState(0);
-  const [quickAddType, setQuickAddType] = React.useState<"cliente" | "projeto" | "video" | null>(null);
+  const [createOpen, setCreateOpen] = React.useState(false);
+  const [createTab, setCreateTab] = React.useState<CreateTab>("video");
   const router = useRouter();
+
+  function openCreate(type: "cliente" | "projeto" | "video") {
+    setCreateTab(type === "cliente" ? "cliente" : type === "projeto" ? "projeto" : "video");
+    setCreateOpen(true);
+  }
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-cf-border bg-cf-black/90 backdrop-blur px-5 py-3">
@@ -56,18 +62,9 @@ export function Topbar({
 
       <div className="flex-1" />
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Criar
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => setQuickAddType("projeto")}>Projeto</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setQuickAddType("video")}>Vídeo</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setQuickAddType("cliente")}>Cliente</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button size="sm" className="gap-1.5" onClick={() => openCreate("video")}>
+        <Plus className="h-4 w-4" /> Criar
+      </Button>
 
       <Button size="icon" variant="ghost" className="relative">
         <Bell className="h-4 w-4" />
@@ -124,8 +121,16 @@ export function Topbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CommandPalette onQuickAdd={setQuickAddType} />
-      <QuickAddDialogs type={quickAddType} onClose={() => setQuickAddType(null)} clients={clients} users={users} projects={projects} />
+      <CommandPalette onQuickAdd={openCreate} />
+      <CreatePanel
+        open={createOpen}
+        tab={createTab}
+        onTabChange={setCreateTab}
+        onClose={() => setCreateOpen(false)}
+        clients={clients}
+        users={users}
+        projects={projects}
+      />
     </header>
   );
 }

@@ -307,11 +307,14 @@ export async function createClient(formData: FormData) {
   return id;
 }
 
-export async function createProject(formData: FormData) {
+// Shared by createProject (top-level "Projeto" tab, redirects to the new
+// project afterward) and createProjectQuick (inline "+ Criar novo projeto"
+// from inside the video form, which must NOT navigate away mid-form).
+async function insertProject(formData: FormData): Promise<string | undefined> {
   const name = String(formData.get("name") || "").trim();
   const clientId = String(formData.get("clientId") || "");
   const deadline = String(formData.get("deadline") || "");
-  if (!name || !clientId || !deadline) return;
+  if (!name || !clientId || !deadline) return undefined;
 
   const supabase = await getSupabase();
   const user = await getCurrentUser();
@@ -338,14 +341,30 @@ export async function createProject(formData: FormData) {
 
   await logActivity("PROJECT", id, "Projeto criado", `${user.name} criou o projeto "${name}".`);
   revalidatePath("/projetos");
+  return id;
+}
+
+export async function createProject(formData: FormData) {
+  const id = await insertProject(formData);
+  if (!id) return;
   redirect(`/projetos/${id}`);
 }
 
+// Used by the "+ Criar novo projeto" affordance inside the video creation
+// form (src/components/cutflow/create-panel.tsx) — same insert as
+// createProject, but returns the id instead of navigating away, so the
+// video form the user was filling out stays open and usable.
+export async function createProjectQuick(formData: FormData) {
+  return insertProject(formData);
+}
+
 export async function createVideo(formData: FormData) {
-  const projectId = String(formData.get("projectId") || "");
+  // projectId is optional — a video can be created "avulso" (standalone)
+  // and attached to a project later (see supabase-setup.sql / schema.ts).
+  const projectId = String(formData.get("projectId") || "") || null;
   const name = String(formData.get("name") || "").trim();
   const finalDeadline = String(formData.get("finalDeadline") || "");
-  if (!projectId || !name || !finalDeadline) return;
+  if (!name || !finalDeadline) return;
 
   const supabase = await getSupabase();
   const finalISO = new Date(finalDeadline).toISOString();
@@ -389,6 +408,6 @@ export async function createVideo(formData: FormData) {
 
   await logActivity("VIDEO", id, "Vídeo criado", name);
   revalidateEverywhere();
-  revalidatePath(`/projetos/${projectId}`);
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
   return id;
 }

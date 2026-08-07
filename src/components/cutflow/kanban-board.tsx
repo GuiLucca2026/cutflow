@@ -129,7 +129,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
     >
       <div className="text-sm font-medium truncate">{video.name}</div>
       <div className="text-[11px] text-cf-text-dim truncate mt-0.5">
-        {video.project?.client?.name} · {video.project?.name}
+        {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
       </div>
       <div className="flex items-center gap-1.5 mt-2">
         <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />
