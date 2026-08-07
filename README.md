@@ -8,7 +8,7 @@ de dados relacional.
 
 ## Deploy rápido (Vercel)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGuiLucca2026%2FCutFlow&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Copie%20esses%20dois%20valores%20do%20.env%20do%20site%20da%20G2%20(ou%20do%20.env.local%20deste%20repo)&project-name=cutflow&repository-name=cutflow)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGuiLucca2026%2Fcutflow&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Copie%20esses%20dois%20valores%20do%20.env%20do%20site%20da%20G2%20(ou%20do%20.env.local%20deste%20repo)&project-name=cutflow&repository-name=cutflow)
 
 Clique no botão, faça login com sua conta da Vercel, cole as duas
 variáveis quando pedido (`NEXT_PUBLIC_SUPABASE_URL` e
