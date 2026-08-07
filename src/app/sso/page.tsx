@@ -16,6 +16,14 @@ import { createClient } from "@/lib/supabase/client";
 export default function SsoPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  // Raw detail from Supabase (message/status), surfaced in small text below
+  // the friendly message — this is what turns "não funciona" into an
+  // actionable diagnosis (e.g. "Invalid Refresh Token: Already Used" means
+  // the link was opened twice; "Invalid API key" means NEXT_PUBLIC_SUPABASE_*
+  // on Vercel doesn't match the G2 admin panel's project anymore; "signature
+  // is invalid" means the Supabase JWT secret was rotated). Never contains
+  // the tokens themselves, only Supabase's own error text.
+  const [detail, setDetail] = useState<string | null>(null);
 
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, "");
@@ -37,14 +45,18 @@ export default function SsoPage() {
     let supabase: ReturnType<typeof createClient>;
     try {
       supabase = createClient();
-    } catch {
+    } catch (e: any) {
       setError("G2 FLOW ainda não está configurado para o login único (variáveis do Supabase ausentes).");
+      setDetail(e?.message ?? null);
       return;
     }
 
     supabase.auth.setSession({ access_token, refresh_token }).then(({ error }) => {
       if (error) {
+        // eslint-disable-next-line no-console
+        console.error("[sso] setSession failed:", error);
         setError("Não foi possível validar sua sessão. Volte ao painel admin da G2 e tente novamente.");
+        setDetail(`${error.message}${(error as any).status ? ` (status ${(error as any).status})` : ""}`);
       } else {
         router.replace("/hoje");
       }
@@ -54,7 +66,12 @@ export default function SsoPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cf-black text-cf-text px-6">
       {error ? (
-        <p className="text-cf-text-dim max-w-sm text-center text-sm">{error}</p>
+        <div className="max-w-sm text-center space-y-2">
+          <p className="text-cf-text-dim text-sm">{error}</p>
+          {detail && (
+            <p className="text-cf-text-dim/60 text-xs font-mono break-words">{detail}</p>
+          )}
+        </div>
       ) : (
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 rounded-full border-2 border-cf-lime border-t-transparent animate-spin" />
