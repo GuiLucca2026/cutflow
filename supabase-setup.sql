@@ -216,6 +216,21 @@ create table if not exists public.cutflow_captures (
   updated_at text not null
 );
 
+-- Convites: login próprio (e-mail/senha) pra quem não é admin da G2 — ver
+-- comentário maior na seção "Fase 4b — Convite" mais abaixo.
+create table if not exists public.cutflow_invites (
+  id text primary key,
+  token text not null unique,
+  email text not null,
+  name text not null,
+  role text not null default 'EDITOR',
+  invited_by_id text references public.cutflow_users(id),
+  status text not null default 'PENDENTE',
+  created_at text not null,
+  expires_at text not null,
+  accepted_at text
+);
+
 -- ---------------------------------------------------------------------------
 -- RLS: qualquer usuário autenticado tem acesso total (ferramenta interna)
 -- ---------------------------------------------------------------------------
@@ -229,7 +244,7 @@ begin
       'cutflow_video_versions', 'cutflow_revisions', 'cutflow_checklist_items',
       'cutflow_comments', 'cutflow_activity_logs', 'cutflow_project_links',
       'cutflow_workload_entries', 'cutflow_notifications', 'cutflow_saved_views',
-      'cutflow_captures'
+      'cutflow_captures', 'cutflow_invites'
     ])
   loop
     execute format('alter table public.%I enable row level security;', t);
@@ -313,3 +328,34 @@ create policy "cutflow_avatars_update" on storage.objects for update to authenti
 drop policy if exists "cutflow_avatars_delete" on storage.objects;
 create policy "cutflow_avatars_delete" on storage.objects for delete to authenticated
   using (bucket_id = 'avatars');
+
+-- ---------------------------------------------------------------------------
+-- Fase 4b — Convite: login próprio (e-mail/senha) pra quem não é admin da G2
+-- ---------------------------------------------------------------------------
+-- Mesmo raciocínio do token do .ics: uma pessoa sem sessão precisa conseguir
+-- ver "quem te convidou, pra qual papel" na tela de aceitar o convite, sem
+-- ganhar acesso a NADA mais. cutflow_invite_lookup() devolve só a linha do
+-- token pedido (nunca a lista inteira, que teria e-mail de todo mundo
+-- convidado) — RLS na tabela cutflow_invites continua bloqueando qualquer
+-- outro acesso anônimo normalmente.
+create or replace function public.cutflow_invite_lookup(p_token text)
+returns table (
+  email text,
+  name text,
+  role text,
+  status text,
+  expires_at text,
+  inviter_name text
+)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select i.email, i.name, i.role, i.status, i.expires_at, u.name
+  from public.cutflow_invites i
+  left join public.cutflow_users u on u.id = i.invited_by_id
+  where i.token = p_token;
+$$;
+
+grant execute on function public.cutflow_invite_lookup(text) to anon;

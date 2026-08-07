@@ -498,3 +498,57 @@ export async function regenerateIcsToken() {
   revalidatePath("/hoje");
   return token;
 }
+
+// ---------------------------------------------------------------------------
+// Convites — login próprio (e-mail/senha) pra quem não é admin da G2
+// ---------------------------------------------------------------------------
+// Só ADMIN convida gente nova — evita qualquer pessoa da equipe criar
+// contas com papéis que não deveria poder atribuir.
+export async function createInvite(formData: FormData) {
+  const user = await getCurrentUser();
+  if (user.role !== "ADMIN") return undefined;
+
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const role = String(formData.get("role") || "EDITOR");
+  if (!name || !email) return undefined;
+
+  const supabase = await getSupabase();
+  const token = crypto.randomUUID().replace(/-/g, "");
+  const now = new Date();
+  const expires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  await supabase.from(TABLES.invites).insert(
+    toRow({
+      id: crypto.randomUUID(),
+      token,
+      email,
+      name,
+      role,
+      invitedById: user.id,
+      status: "PENDENTE",
+      createdAt: now.toISOString(),
+      expiresAt: expires.toISOString(),
+    })
+  );
+
+  revalidatePath("/equipe");
+  return token;
+}
+
+export async function revokeInvite(inviteId: string) {
+  const user = await getCurrentUser();
+  if (user.role !== "ADMIN") return;
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.invites).update(toRow({ status: "REVOGADO" })).eq("id", inviteId);
+  revalidatePath("/equipe");
+}
+
+// Chamada pela tela pública /convite/[token] logo depois que a pessoa
+// convidada já tem uma sessão real (supabase.auth.signUp já rodou no
+// browser) — nesse ponto ela já é "authenticated" pra RLS, então essa
+// escrita não precisa de nenhuma função security-definer.
+export async function markInviteAccepted(token: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.invites).update(toRow({ status: "ACEITO", acceptedAt: nowISO() })).eq("token", token);
+}

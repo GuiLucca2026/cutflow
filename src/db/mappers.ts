@@ -15,6 +15,7 @@ import type {
   ProjectLink,
   WorkloadEntry,
   Capture,
+  Invite,
 } from "./schema";
 
 export function mapUser(r: any): User | null {
@@ -219,6 +220,23 @@ export function mapCapture(r: any): (Capture & Record<string, any>) | null {
   };
 }
 
+export function mapInvite(r: any): (Invite & Record<string, any>) | null {
+  if (!r) return null;
+  return {
+    id: r.id,
+    token: r.token,
+    email: r.email,
+    name: r.name,
+    role: r.role,
+    invitedById: r.invited_by_id,
+    status: r.status,
+    createdAt: r.created_at,
+    expiresAt: r.expires_at,
+    acceptedAt: r.accepted_at,
+    ...(r.invitedBy !== undefined ? { invitedBy: mapUser(r.invitedBy) } : {}),
+  };
+}
+
 export function mapWorkloadEntry(r: any): (WorkloadEntry & Record<string, any>) | null {
   if (!r) return null;
   return {
@@ -243,6 +261,9 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   startTime: "start_time",
   endTime: "end_time",
   crewIds: "crew_ids",
+  invitedById: "invited_by_id",
+  expiresAt: "expires_at",
+  acceptedAt: "accepted_at",
   dailyCapacityHours: "daily_capacity_hours",
   workDays: "work_days",
   createdAt: "created_at",

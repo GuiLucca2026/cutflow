@@ -122,6 +122,19 @@ Lovable — ver seção "Para colocar em produção" abaixo.
 - **Perfil** (`Editar perfil`, no menu do avatar): trocar o nome e a foto
   (upload real pro Supabase Storage, bucket `avatars`) — antes só existia a
   cor/iniciais.
+- **Convite com login próprio** (`/equipe`, seção "Convites", só ADMIN vê):
+  gera um link (`/convite/[token]`) pra alguém que **não** é admin da G2
+  (freelancer, editor externo) criar uma senha e passar a entrar direto
+  pela tela `/login` — sem precisar do painel da G2. A conta é criada de
+  verdade no mesmo Supabase Auth que a G2 usa (`supabase.auth.signUp`), com
+  o papel (role) que você escolheu ao convidar. Um admin pode revogar um
+  convite ainda não aceito. **Atenção**: se o projeto do Supabase tiver
+  confirmação de e-mail obrigatória ligada, a pessoa convidada vai precisar
+  clicar num link de confirmação antes de conseguir entrar — eu não tenho
+  acesso ao painel de Auth do Supabase (só ao SQL editor via Lovable) pra
+  conferir ou mudar essa configuração, então se um convidado disser que
+  criou a conta mas não consegue entrar, vale checar isso em Lovable →
+  Cloud → Auth.
 
 ## O que fica para as próximas fases (conforme o roadmap do briefing)
 

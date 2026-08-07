@@ -55,6 +55,11 @@ async function getLinkedUser() {
       (supaUser.user_metadata?.full_name as string | undefined) ||
       supaUser.email?.split("@")[0] ||
       "Novo usuário";
+    // Only set for accounts created via /convite (see src/app/convite/
+    // [token]/page.tsx) — the SSO handoff from the G2 admin panel never
+    // sends this, so those profiles keep falling back to the table default
+    // (EDITOR) exactly as before.
+    const role = supaUser.user_metadata?.role as string | undefined;
 
     const now = new Date().toISOString();
     const { data: created, error } = await supabase
@@ -65,6 +70,7 @@ async function getLinkedUser() {
           supabaseUserId: supaUser.id,
           name,
           email: supaUser.email ?? `${supaUser.id}@g2filmes.local`,
+          ...(role ? { role } : {}),
           createdAt: now,
           updatedAt: now,
         })

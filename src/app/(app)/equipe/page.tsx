@@ -1,6 +1,8 @@
-import { listUsers, listWorkloadEntries, listVideos } from "@/db/queries";
+import { listUsers, listWorkloadEntries, listVideos, listInvites } from "@/db/queries";
+import { getCurrentUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { InviteSection } from "@/components/cutflow/invite-section";
 import { format, addDays } from "date-fns";
 import { isDone } from "@/lib/domain";
 import { fmtHours } from "@/lib/format";
@@ -13,7 +15,8 @@ function dstr(d: Date) {
 }
 
 export default async function EquipePage() {
-  const [users, videos] = await Promise.all([listUsers(), listVideos()]);
+  const [users, videos, currentUser] = await Promise.all([listUsers(), listVideos(), getCurrentUser()]);
+  const invites = currentUser.role === "ADMIN" ? await listInvites() : [];
   const now = new Date();
 
   const ranges = [
@@ -95,6 +98,8 @@ export default async function EquipePage() {
           </div>
         </div>
       </div>
+
+      {currentUser.role === "ADMIN" && <InviteSection invites={invites} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {editors.map((editor) => {

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Sidebar } from "@/components/cutflow/sidebar";
 import { Topbar } from "@/components/cutflow/topbar";
 import { getCurrentUser, getAllUsers } from "@/lib/auth";
@@ -72,9 +73,17 @@ function NoSessionScreen() {
       <div className="max-w-sm text-center space-y-3">
         <h1 className="font-display text-3xl tracking-wide">G2 FLOW</h1>
         <p className="text-cf-text-dim text-sm">
-          Este link não pode ser aberto diretamente. Acesse o G2 FLOW pelo
-          botão <strong className="text-cf-text">“Abrir G2 FLOW”</strong> no
+          Este link não pode ser aberto diretamente. Se você é admin da G2,
+          acesse o G2 FLOW pelo botão{" "}
+          <strong className="text-cf-text">“Abrir G2 FLOW”</strong> no
           painel admin da G2 — ele já entra com o seu usuário automaticamente.
+        </p>
+        <p className="text-cf-text-dim text-sm">
+          Foi convidado por e-mail?{" "}
+          <Link href="/login" className="text-cf-lime hover:underline">
+            Entre com e-mail e senha aqui
+          </Link>
+          .
         </p>
       </div>
     </div>

@@ -8,6 +8,7 @@ import {
   mapActivityLog,
   mapWorkloadEntry,
   mapCapture,
+  mapInvite,
 } from "@/db/mappers";
 
 export async function listClients() {
@@ -158,6 +159,19 @@ export async function listCaptures() {
   const { data, error } = await supabase.from(TABLES.captures).select(select).order("date");
   if (error) throw error;
   return data.map((r) => mapCapture(r)!);
+}
+
+// ---------------------------------------------------------------------------
+// Invites (real email/senha login pra quem não é admin da G2)
+// ---------------------------------------------------------------------------
+export async function listInvites() {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.invites)
+    .select("*, invitedBy:cutflow_users!invited_by_id(*)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => mapInvite(r)!);
 }
 
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];

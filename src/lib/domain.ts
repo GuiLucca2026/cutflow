@@ -50,6 +50,15 @@ export const PRIORITY_META: Record<string, { label: string; color: string; bg: s
   URGENTE: { label: "Urgente", color: "#EF4444", bg: "#301414" },
 };
 
+export const ROLE_META: Record<string, { label: string }> = {
+  ADMIN: { label: "Admin" },
+  PRODUTOR: { label: "Produtor" },
+  EDITOR: { label: "Editor" },
+  ASSISTENTE: { label: "Assistente" },
+  FREELANCER: { label: "Freelancer" },
+  VISUALIZADOR: { label: "Visualizador" },
+};
+
 export function isDone(status: string) {
   return ["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(status);
 }

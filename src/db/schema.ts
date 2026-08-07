@@ -31,9 +31,11 @@ export const TABLES = {
   notifications: "cutflow_notifications",
   savedViews: "cutflow_saved_views",
   captures: "cutflow_captures",
+  invites: "cutflow_invites",
 } as const;
 
 export const CAPTURE_STATUSES = ["AGENDADA", "CONCLUIDA", "CANCELADA"] as const;
+export const INVITE_STATUSES = ["PENDENTE", "ACEITO", "EXPIRADO", "REVOGADO"] as const;
 
 export const PROJECT_TYPES = [
   "Institucional",
@@ -229,6 +231,25 @@ export type VideoVersion = {
   sentAt: string;
   sentById: string | null;
   notes: string | null;
+};
+
+// A pending (or resolved) invitation to join G2 FLOW with a real login of
+// its own — for people who aren't a G2 admin panel user (freelancers,
+// external editors) and so can't arrive via the SSO handoff. See
+// src/app/convite/[token]/page.tsx and the cutflow_invite_lookup() SQL
+// function (supabase-setup.sql) for how an unauthenticated visitor can
+// read just enough of this row to accept it.
+export type Invite = {
+  id: string;
+  token: string;
+  email: string;
+  name: string;
+  role: string;
+  invitedById: string | null;
+  status: (typeof INVITE_STATUSES)[number];
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
 };
 
 // A capture/shoot session — distinct from a Video: this is the "filming
