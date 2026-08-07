@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cf-lime: #C6FF00;
+  --cf-lime-dim: #A8DB00;
+  --cf-black: #111111;
+  --cf-surface: #17181A;
+  --cf-surface-2: #1E2023;
+  --cf-border: #2B2B2B;
+  --cf-gray: #6B6B6B;
+  --cf-gray-light: #EDEDED;
+  --cf-text: #F3F4F1;
+  --cf-text-dim: #9A9C9F;
+
+  --background: var(--cf-black);
+  --foreground: var(--cf-text);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cf-lime: var(--cf-lime);
+  --color-cf-lime-dim: var(--cf-lime-dim);
+  --color-cf-black: var(--cf-black);
+  --color-cf-surface: var(--cf-surface);
+  --color-cf-surface-2: var(--cf-surface-2);
+  --color-cf-border: var(--cf-border);
+  --color-cf-gray: var(--cf-gray);
+  --color-cf-gray-light: var(--cf-gray-light);
+  --color-cf-text: var(--cf-text);
+  --color-cf-text-dim: var(--cf-text-dim);
+  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--cf-border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cf-gray);
+}
+
+@keyframes cf-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cf-fade-in {
+  animation: cf-fade-in 0.18s ease-out;
+}
+
+.cf-scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@keyframes cf-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.cf-pulse-dot {
+  animation: cf-pulse-dot 1.8s ease-in-out infinite;
 }
