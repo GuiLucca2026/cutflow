@@ -8,13 +8,17 @@ de dados relacional.
 
 ## Deploy rápido (Vercel)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FGuiLucca2026%2Fcutflow&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&envDescription=Copie%20esses%20dois%20valores%20do%20.env%20do%20site%20da%20G2%20(ou%20do%20.env.local%20deste%20repo)&project-name=cutflow&repository-name=cutflow)
+1. Acesse [vercel.com/new](https://vercel.com/new), encontre **cutflow** na
+   lista de repositórios do GitHub e clique **Import** (não use um link de
+   "clone/template" — este repositório já existe na sua conta, então o
+   fluxo certo é *importar* o repositório existente, não criar uma cópia
+   nova dele).
+2. Em **Environment Variables**, adicione `NEXT_PUBLIC_SUPABASE_URL` e
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (mesmos valores do `.env` da G2).
+3. Clique em **Deploy**.
 
-Clique no botão, faça login com sua conta da Vercel, cole as duas
-variáveis quando pedido (`NEXT_PUBLIC_SUPABASE_URL` e
-`NEXT_PUBLIC_SUPABASE_ANON_KEY` — mesmos valores do `.env` da G2) e
-confirme o deploy. **Antes de usar**, rode `supabase-setup.sql` uma vez no
-editor SQL do Lovable — ver seção "Para colocar em produção" abaixo.
+**Antes de usar**, rode `supabase-setup.sql` uma vez no editor SQL do
+Lovable — ver seção "Para colocar em produção" abaixo.
 
 ## O que já funciona (Fase 1 + 2)
 
