@@ -489,10 +489,14 @@ function VideoDetailBody({
               informação (ver Hint em cada um explicando isso). Horas
               estimadas/realizadas e Complexidade são campos editáveis. */}
           <SidebarSection title="Detalhes">
+            {/* min-w-0 em cada item do grid: sem isso o item de grid usa
+                min-width:auto (tamanho do conteúdo) por padrão, e o
+                truncate lá dentro do Fact nunca chega a agir — o texto
+                empurra a coluna e quebra em duas linhas mesmo assim. */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <Fact label="Formato" value={`${video.format} · ${video.aspectRatio}`} />
               <Hint text="Atualiza sozinha quando você envia uma nova versão na aba Versões.">
-                <div><Fact label="Versão atual" value={video.currentVersion ?? "—"} /></div>
+                <div className="min-w-0"><Fact label="Versão atual" value={video.currentVersion ?? "—"} /></div>
               </Hint>
               {/* onStatusChange (não onMutate): estas duas horas entram
                   direto na fórmula de risco (computeDeliveryRisk em
@@ -502,10 +506,10 @@ function VideoDetailBody({
               <EditableHoursFact label="Horas estimadas" field="estimatedHours" value={video.estimatedHours} videoId={video.id} onMutate={onStatusChange} />
               <EditableHoursFact label="Horas realizadas" field="actualHours" value={video.actualHours} videoId={video.id} onMutate={onStatusChange} />
               <Hint text="Conta sozinha: sobe 1 a cada alteração registrada na aba Alterações.">
-                <div><Fact label="Rodadas de alteração" value={String(video.revisionCount)} /></div>
+                <div className="min-w-0"><Fact label="Rodadas de alteração" value={String(video.revisionCount)} /></div>
               </Hint>
-              <div>
-                <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">Complexidade</div>
+              <div className="min-w-0">
+                <div className="truncate text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">Complexidade</div>
                 <Select
                   value={video.complexity}
                   onValueChange={(v) =>
@@ -638,9 +642,14 @@ function VideoTeamSection({
             ))}
           </div>
         )}
-        <div className="flex gap-2 pt-1">
+        {/* flex-wrap: numa lateral estreita (mobile) "Adicionar pessoa" +
+            função + botão não cabem numa linha só — melhor quebrar pra uma
+            segunda linha do que estourar/cortar o botão de + no canto. Os
+            dois selects têm min-w-0 pra poder truncar (ver SelectTrigger em
+            ui/select.tsx) em vez de quebrar o texto em duas linhas. */}
+        <div className="flex flex-wrap gap-2 pt-1">
           <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger className="flex-1"><SelectValue placeholder="Adicionar pessoa…" /></SelectTrigger>
+            <SelectTrigger className="min-w-0 flex-1 basis-32"><SelectValue placeholder="Adicionar pessoa…" /></SelectTrigger>
             <SelectContent>
               {users.map((u) => (
                 <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
@@ -655,7 +664,7 @@ function VideoTeamSection({
               ))}
             </SelectContent>
           </Select>
-          <Button type="button" size="sm" disabled={!userId || pending} onClick={add}>
+          <Button type="button" size="sm" disabled={!userId || pending} onClick={add} className="shrink-0">
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -702,8 +711,8 @@ function EditableHoursFact({
   }
 
   return (
-    <div>
-      <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">{label}</div>
+    <div className="min-w-0">
+      <div className="truncate text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5" title={label}>{label}</div>
       <div className="flex items-center gap-1.5">
         <Input
           type="number"
@@ -726,9 +735,13 @@ function EditableHoursFact({
 
 function Fact({ label, value, avatar }: { label: string; value: string; avatar?: { name: string; avatarColor: string } | null }) {
   return (
-    <div>
-      <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">{label}</div>
-      <div className="flex items-center gap-1.5 font-medium">
+    <div className="min-w-0">
+      {/* truncate + title: labels como "Rodadas de alteração" não cabem
+          numa coluna de ~140px (metade da lateral de 300px) sem quebrar em
+          duas linhas — em vez disso corta com "..." e mostra o texto
+          completo no hover/tap. */}
+      <div className="truncate text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5" title={label}>{label}</div>
+      <div className="flex items-center gap-1.5 font-medium truncate" title={value}>
         {avatar && <Avatar name={avatar.name} color={avatar.avatarColor} size={18} />}
         {value}
       </div>
