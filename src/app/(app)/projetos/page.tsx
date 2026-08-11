@@ -3,6 +3,7 @@ import { listProjects } from "@/db/queries";
 import { projectProgress } from "@/lib/domain";
 import { fmtDateWeekday, fmtCurrency } from "@/lib/format";
 import { PriorityBadge } from "@/components/cutflow/badges";
+import { ProjectContextMenu } from "@/components/cutflow/project-context-menu";
 import { Avatar, AvatarStack } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { isOverdue } from "@/lib/domain";
@@ -28,44 +29,45 @@ export default async function ProjetosPage() {
           const editors = Array.from(new Map(p.videos.filter((v: any) => v.editorId).map((v: any) => [v.editorId, v])).values());
 
           return (
-            <Link
-              key={p.id}
-              href={`/projetos/${p.id}`}
-              className={cn(
-                "rounded-xl border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors",
-                overdue ? "border-red-500/40" : "border-cf-border"
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.client?.color }} />
-                    <span className="text-xs text-cf-text-dim truncate">{p.client?.name}</span>
-                  </div>
-                  <h3 className="font-semibold mt-0.5 truncate">{p.name}</h3>
-                  <div className="text-xs text-cf-text-dim mt-0.5">{p.type} · {p.videos.length} vídeos</div>
-                </div>
-                <PriorityBadge priority={p.priority} />
-              </div>
-
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-cf-text-dim mb-1">
-                  <span>Progresso</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress value={progress} />
-              </div>
-
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-cf-border">
-                <div className="text-xs text-cf-text-dim flex items-center gap-1">
-                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}
-                  <span className={overdue ? "text-red-600 font-semibold" : ""}>Prazo: {fmtDateWeekday(p.deadline)}</span>
-                </div>
-                {editors.length > 0 && (
-                  <AvatarStack people={editors.map((v: any) => ({ name: v.editor?.name ?? "?", color: v.editor?.avatarColor }))} />
+            <ProjectContextMenu key={p.id} project={{ id: p.id, name: p.name }} href={`/projetos/${p.id}`}>
+              <Link
+                href={`/projetos/${p.id}`}
+                className={cn(
+                  "rounded-xl border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors",
+                  overdue ? "border-red-500/40" : "border-cf-border"
                 )}
-              </div>
-            </Link>
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.client?.color }} />
+                      <span className="text-xs text-cf-text-dim truncate">{p.client?.name}</span>
+                    </div>
+                    <h3 className="font-semibold mt-0.5 truncate">{p.name}</h3>
+                    <div className="text-xs text-cf-text-dim mt-0.5">{p.type} · {p.videos.length} vídeos</div>
+                  </div>
+                  <PriorityBadge priority={p.priority} />
+                </div>
+
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs text-cf-text-dim mb-1">
+                    <span>Progresso</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-cf-border">
+                  <div className="text-xs text-cf-text-dim flex items-center gap-1">
+                    {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}
+                    <span className={overdue ? "text-red-600 font-semibold" : ""}>Prazo: {fmtDateWeekday(p.deadline)}</span>
+                  </div>
+                  {editors.length > 0 && (
+                    <AvatarStack people={editors.map((v: any) => ({ name: v.editor?.name ?? "?", color: v.editor?.avatarColor }))} />
+                  )}
+                </div>
+              </Link>
+            </ProjectContextMenu>
           );
         })}
       </div>

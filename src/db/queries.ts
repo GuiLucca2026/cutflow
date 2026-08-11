@@ -49,11 +49,25 @@ export async function getUser(id: string) {
 const PROJECT_SELECT =
   "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
 
+// Vídeo embutido dentro de projeto (project.videos) não passa pelo filtro
+// da query principal — PostgREST não filtra recurso aninhado por coluna
+// dele mesmo via .select() simples, então tiramos os excluídos aqui, do
+// lado do JS, depois de mapear. Mantém "excluído some de todo lugar,
+// exceto a Lixeira" verdadeiro mesmo pra listas aninhadas.
+function stripDeletedVideos(project: any): any {
+  if (project?.videos) project.videos = project.videos.filter((v: any) => !v.deletedAt);
+  return project;
+}
+
 export async function listProjects() {
   const supabase = await getSupabase();
-  const { data, error } = await supabase.from(TABLES.projects).select(PROJECT_SELECT).order("deadline", { ascending: false });
+  const { data, error } = await supabase
+    .from(TABLES.projects)
+    .select(PROJECT_SELECT)
+    .is("deleted_at", null)
+    .order("deadline", { ascending: false });
   if (error) throw error;
-  return data.map((r) => mapProject(r)!);
+  return data.map((r) => stripDeletedVideos(mapProject(r)!));
 }
 
 export async function getProject(id: string) {
@@ -62,7 +76,8 @@ export async function getProject(id: string) {
     "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
   const { data, error } = await supabase.from(TABLES.projects).select(select).eq("id", id).maybeSingle();
   if (error) throw error;
-  return mapProject(data);
+  const mapped = mapProject(data);
+  return mapped ? stripDeletedVideos(mapped) : null;
 }
 
 export async function listProjectsByClient(clientId: string) {
@@ -72,7 +87,21 @@ export async function listProjectsByClient(clientId: string) {
     .from(TABLES.projects)
     .select(select)
     .eq("client_id", clientId)
+    .is("deleted_at", null)
     .order("deadline", { ascending: false });
+  if (error) throw error;
+  return data.map((r) => stripDeletedVideos(mapProject(r)!));
+}
+
+// Lixeira — só o que foi excluído (deleted_at preenchido), mais recente
+// primeiro. Usado pela página /lixeira; nenhuma outra tela chama isso.
+export async function listDeletedProjects() {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.projects)
+    .select(PROJECT_SELECT)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
   if (error) throw error;
   return data.map((r) => mapProject(r)!);
 }
@@ -97,7 +126,19 @@ const VIDEO_SELECT =
 
 export async function listVideos() {
   const supabase = await getSupabase();
-  const { data, error } = await supabase.from(TABLES.videos).select(VIDEO_SELECT).order("final_deadline");
+  const { data, error } = await supabase.from(TABLES.videos).select(VIDEO_SELECT).is("deleted_at", null).order("final_deadline");
+  if (error) throw error;
+  return data.map((r) => mapVideo(r)!);
+}
+
+// Lixeira — só vídeos excluídos, mais recente primeiro.
+export async function listDeletedVideos() {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.videos)
+    .select(VIDEO_SELECT)
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
   if (error) throw error;
   return data.map((r) => mapVideo(r)!);
 }

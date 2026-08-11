@@ -188,6 +188,11 @@ export type Project = {
   budget: number | null;
   createdAt: string;
   updatedAt: string;
+  // Lixeira (soft delete) — null = ativo, normalmente. Ver
+  // supabase-setup.sql "Fase 7" e as ações deleteProject/restoreProject
+  // em actions.ts. listProjects() já filtra isso fora por padrão; só
+  // listDeletedProjects() (usada pela página /lixeira) devolve o resto.
+  deletedAt: string | null;
 };
 
 export type Video = {
@@ -221,6 +226,8 @@ export type Video = {
   driveUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  // Lixeira (soft delete) — ver o mesmo campo em Project acima.
+  deletedAt: string | null;
 };
 
 export type VideoVersion = {

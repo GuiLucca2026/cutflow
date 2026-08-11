@@ -19,6 +19,7 @@ import { fmtDateWeekday } from "@/lib/format";
 import { updateVideoStatus } from "@/app/actions";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge } from "@/components/cutflow/badges";
+import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
@@ -128,39 +129,41 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
   const accent = overdue ? "#DC2626" : statusColor;
 
   return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={() => !isDragging && onOpen(video.id)}
-      style={{
-        ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
-        ["--cf-card-tint" as any]: `${accent}1f`,
-        borderColor: `${accent}4d`,
-      }}
-      className={cn(
-        "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10",
-        (isDragging || dragging) && "opacity-60 shadow-xl"
-      )}
-    >
-      <div className="text-sm font-medium truncate">{video.name}</div>
-      <div className="text-[11px] text-cf-text-dim truncate mt-0.5">
-        {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
-      </div>
-      <div className="flex items-center gap-1.5 mt-2">
-        <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />
-        {overdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
-        <span className={cn("ml-auto text-[11px]", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
-          {fmtDateWeekday(video.finalDeadline)}
-        </span>
-      </div>
-      {video.editor && (
-        <div className="flex items-center gap-1.5 mt-2">
-          <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
-          <span className="text-[11px] text-cf-text-dim">{video.editor.name.split(" ")[0]}</span>
+    <VideoContextMenu video={video} onOpen={() => onOpen(video.id)}>
+      <div
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        onClick={() => !isDragging && onOpen(video.id)}
+        style={{
+          ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
+          ["--cf-card-tint" as any]: `${accent}1f`,
+          borderColor: `${accent}4d`,
+        }}
+        className={cn(
+          "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10",
+          (isDragging || dragging) && "opacity-60 shadow-xl"
+        )}
+      >
+        <div className="text-sm font-medium truncate">{video.name}</div>
+        <div className="text-[11px] text-cf-text-dim truncate mt-0.5">
+          {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
         </div>
-      )}
-    </div>
+        <div className="flex items-center gap-1.5 mt-2">
+          <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />
+          {overdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
+          <span className={cn("ml-auto text-[11px]", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
+            {fmtDateWeekday(video.finalDeadline)}
+          </span>
+        </div>
+        {video.editor && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
+            <span className="text-[11px] text-cf-text-dim">{video.editor.name.split(" ")[0]}</span>
+          </div>
+        )}
+      </div>
+    </VideoContextMenu>
   );
 }
 

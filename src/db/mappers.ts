@@ -80,6 +80,7 @@ export function mapProject(r: any): (Project & Record<string, any>) | null {
     budget: r.budget,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    deletedAt: r.deleted_at ?? null,
     // Embedded relations (present only when requested via .select())
     ...(r.client !== undefined ? { client: mapClient(r.client) } : {}),
     ...(r.producer !== undefined ? { producer: mapUser(r.producer) } : {}),
@@ -120,6 +121,7 @@ export function mapVideo(r: any): (Video & Record<string, any>) | null {
     driveUrl: r.drive_url,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    deletedAt: r.deleted_at ?? null,
     ...(r.project !== undefined ? { project: mapProject(r.project) } : {}),
     ...(r.editor !== undefined ? { editor: mapUser(r.editor) } : {}),
     ...(r.approver !== undefined ? { approver: mapUser(r.approver) } : {}),
@@ -319,6 +321,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   userId: "user_id",
   completedById: "completed_by_id",
   completedAt: "completed_at",
+  deletedAt: "deleted_at",
 };
 
 export function toRow<T extends Record<string, any>>(obj: T): Record<string, any> {

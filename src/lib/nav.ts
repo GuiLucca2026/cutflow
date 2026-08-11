@@ -13,6 +13,7 @@ import {
   BarChart3,
   Send,
   Kanban,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,6 +59,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/equipe", label: "Equipe", icon: Users },
       { href: "/clientes", label: "Clientes", icon: Building2 },
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
+      { href: "/lixeira", label: "Lixeira", icon: Trash2 },
     ],
   },
 ];

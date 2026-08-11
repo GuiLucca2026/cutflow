@@ -2,6 +2,7 @@
 
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
+import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { Avatar } from "@/components/ui/avatar";
 import { computeDeliveryRisk, isOverdue, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours } from "@/lib/format";
@@ -34,38 +35,40 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const accent = overdue ? "#DC2626" : statusColor;
 
   return (
-    <button
-      onClick={() => open(video.id)}
-      style={{ ["--cf-card-tint" as any]: `${accent}1f`, borderColor: `${accent}4d` }}
-      className="w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="font-semibold text-sm truncate">{video.name}</div>
-          <div className="text-xs text-cf-text-dim truncate">
-            {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
+    <VideoContextMenu video={video} onOpen={() => open(video.id)}>
+      <button
+        onClick={() => open(video.id)}
+        style={{ ["--cf-card-tint" as any]: `${accent}1f`, borderColor: `${accent}4d` }}
+        className="w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="font-semibold text-sm truncate">{video.name}</div>
+            <div className="text-xs text-cf-text-dim truncate">
+              {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
+            </div>
           </div>
+          {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
         </div>
-        {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
-      </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
-        <StatusBadge status={video.status} />
-        <PriorityBadge priority={video.priority} />
-        {showRisk && !["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(video.status) && <RiskBadge risk={risk} />}
-      </div>
-
-      {!compact && (
-        <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-cf-border text-xs text-cf-text-dim">
-          <span className={cn("flex items-center gap-1", overdue && "text-red-600 font-semibold")}>
-            {overdue && <AlertTriangle className="h-3 w-3" />}
-            Entrega: {fmtDateWeekday(video.finalDeadline)}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {fmtHours(video.estimatedHours)}
-          </span>
+        <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+          <StatusBadge status={video.status} />
+          <PriorityBadge priority={video.priority} />
+          {showRisk && !["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(video.status) && <RiskBadge risk={risk} />}
         </div>
-      )}
-    </button>
+
+        {!compact && (
+          <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-cf-border text-xs text-cf-text-dim">
+            <span className={cn("flex items-center gap-1", overdue && "text-red-600 font-semibold")}>
+              {overdue && <AlertTriangle className="h-3 w-3" />}
+              Entrega: {fmtDateWeekday(video.finalDeadline)}
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {fmtHours(video.estimatedHours)}
+            </span>
+          </div>
+        )}
+      </button>
+    </VideoContextMenu>
   );
 }

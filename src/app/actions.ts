@@ -134,6 +134,119 @@ export async function updateVideoField(
   revalidatePath(`/projetos/${video.project_id}`);
 }
 
+export async function renameVideo(videoId: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  const supabase = await getSupabase();
+  const { data: video } = await supabase.from(TABLES.videos).select("project_id, name").eq("id", videoId).maybeSingle();
+  if (!video || video.name === trimmed) return;
+
+  await supabase.from(TABLES.videos).update(toRow({ name: trimmed, updatedAt: nowISO() })).eq("id", videoId);
+  await logActivity("VIDEO", videoId, "Renomeado", `"${video.name}" → "${trimmed}"`);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${video.project_id}`);
+}
+
+// ---------------------------------------------------------------------------
+// Lixeira (soft delete) — atalho de botão direito no card (ver
+// video-context-menu.tsx). "Excluir" nunca apaga a linha na hora, só marca
+// deleted_at; listVideos()/listProjects() já filtram isso fora, então o
+// item some de todo lugar exceto da própria página /lixeira, de onde dá
+// pra restaurar ou apagar de vez. Ver supabase-setup.sql "Fase 7".
+// ---------------------------------------------------------------------------
+export async function deleteVideo(videoId: string) {
+  const supabase = await getSupabase();
+  const { data: video } = await supabase.from(TABLES.videos).select("project_id, name").eq("id", videoId).maybeSingle();
+  if (!video) return;
+
+  await supabase.from(TABLES.videos).update(toRow({ deletedAt: nowISO(), updatedAt: nowISO() })).eq("id", videoId);
+  await logActivity("VIDEO", videoId, "Movido para a lixeira", video.name);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${video.project_id}`);
+  revalidatePath("/lixeira");
+}
+
+export async function restoreVideo(videoId: string) {
+  const supabase = await getSupabase();
+  const { data: video } = await supabase.from(TABLES.videos).select("project_id, name").eq("id", videoId).maybeSingle();
+  if (!video) return;
+
+  await supabase.from(TABLES.videos).update(toRow({ deletedAt: null, updatedAt: nowISO() })).eq("id", videoId);
+  await logActivity("VIDEO", videoId, "Restaurado da lixeira", video.name);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${video.project_id}`);
+  revalidatePath("/lixeira");
+}
+
+// Exclusão definitiva — só chamada de dentro da própria Lixeira, com
+// confirmação na UI (é a única ação deste arquivo que não tem volta).
+export async function permanentlyDeleteVideo(videoId: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.videos).delete().eq("id", videoId);
+  revalidatePath("/lixeira");
+}
+
+export async function renameProject(projectId: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  const supabase = await getSupabase();
+  const { data: project } = await supabase.from(TABLES.projects).select("name").eq("id", projectId).maybeSingle();
+  if (!project || project.name === trimmed) return;
+
+  await supabase.from(TABLES.projects).update(toRow({ name: trimmed, updatedAt: nowISO() })).eq("id", projectId);
+  await logActivity("PROJECT", projectId, "Renomeado", `"${project.name}" → "${trimmed}"`);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${projectId}`);
+}
+
+// Excluir um projeto arrasta os vídeos dele junto (só os que ainda não
+// estavam excluídos por conta própria) — senão eles ficariam "soltos",
+// aparecendo em Vídeos/Kanban/Hoje sem o projeto que os organiza.
+// Restaurar desfaz o mesmo conjunto. Caso de borda aceito: se algum desses
+// vídeos tinha sido excluído individualmente ANTES do projeto, restaurar o
+// projeto também restaura ele — não vale a pena guardar essa distinção só
+// pra esse caso raro.
+export async function deleteProject(projectId: string) {
+  const supabase = await getSupabase();
+  const { data: project } = await supabase.from(TABLES.projects).select("name").eq("id", projectId).maybeSingle();
+  if (!project) return;
+
+  const stamp = nowISO();
+  await supabase.from(TABLES.projects).update(toRow({ deletedAt: stamp, updatedAt: stamp })).eq("id", projectId);
+  await supabase
+    .from(TABLES.videos)
+    .update(toRow({ deletedAt: stamp, updatedAt: stamp }))
+    .eq("project_id", projectId)
+    .is("deleted_at", null);
+  await logActivity("PROJECT", projectId, "Movido para a lixeira", project.name);
+  revalidateEverywhere();
+  revalidatePath("/lixeira");
+}
+
+export async function restoreProject(projectId: string) {
+  const supabase = await getSupabase();
+  const { data: project } = await supabase.from(TABLES.projects).select("name").eq("id", projectId).maybeSingle();
+  if (!project) return;
+
+  const stamp = nowISO();
+  await supabase.from(TABLES.projects).update(toRow({ deletedAt: null, updatedAt: stamp })).eq("id", projectId);
+  await supabase.from(TABLES.videos).update(toRow({ deletedAt: null, updatedAt: stamp })).eq("project_id", projectId);
+  await logActivity("PROJECT", projectId, "Restaurado da lixeira", project.name);
+  revalidateEverywhere();
+  revalidatePath("/lixeira");
+}
+
+export async function permanentlyDeleteProject(projectId: string) {
+  const supabase = await getSupabase();
+  // A FK de cutflow_videos.project_id já é "on delete cascade" (ver
+  // supabase-setup.sql), então apagar o projeto já levaria os vídeos
+  // junto — mas apagamos explicitamente antes de qualquer jeito, só pra
+  // não depender silenciosamente desse detalhe do schema.
+  await supabase.from(TABLES.videos).delete().eq("project_id", projectId);
+  await supabase.from(TABLES.projects).delete().eq("id", projectId);
+  revalidatePath("/lixeira");
+}
+
 // ---------------------------------------------------------------------------
 // Checklist
 // ---------------------------------------------------------------------------

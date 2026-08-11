@@ -364,3 +364,18 @@ as $$
 $$;
 
 grant execute on function public.cutflow_invite_lookup(text) to anon;
+
+-- ---------------------------------------------------------------------------
+-- Fase 7 — Lixeira: soft delete de vídeo e projeto
+-- ---------------------------------------------------------------------------
+-- "Excluir" (atalho do menu de botão direito no card) nunca apaga a linha
+-- na hora — só marca deleted_at. listProjects()/listVideos() já filtram
+-- isso fora por padrão, então o item some de todo lugar exceto da própria
+-- página /lixeira, de onde dá pra restaurar ou apagar de vez. Texto (não
+-- timestamptz) pelo mesmo motivo dos outros campos de data/hora deste
+-- arquivo (created_at, expires_at, completed_at...) — consistência com o
+-- resto do schema. Exclusão DEFINITIVA usa delete() de verdade, já coberta
+-- pela policy "cutflow_authenticated_all" (for all) lá em cima — não
+-- precisa de policy nova.
+alter table public.cutflow_videos add column if not exists deleted_at text;
+alter table public.cutflow_projects add column if not exists deleted_at text;
