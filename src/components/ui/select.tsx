@@ -18,9 +18,13 @@ function SelectTrigger({ className, children, ...props }: React.ComponentProps<t
       )}
       {...props}
     >
-      {children}
+      {/* min-w-0 é o que permite o truncate funcionar dentro de um flex
+          item — sem ele o item nunca encolhe abaixo do tamanho do texto e
+          o valor selecionado (ou o placeholder) quebra em duas linhas,
+          estourando a altura fixa (h-9) do trigger. */}
+      <span className="min-w-0 flex-1 truncate text-left">{children}</span>
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="h-4 w-4 opacity-60" />
+        <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
