@@ -16,10 +16,18 @@ import {
 import { RenameDialog } from "@/components/cutflow/rename-dialog";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { Avatar } from "@/components/ui/avatar";
-import { updateVideoStatus, renameVideo, deleteVideo, restoreVideo, updateVideoField, setVideoResponsible } from "@/app/actions";
+import {
+  updateVideoStatus,
+  renameVideo,
+  deleteVideo,
+  restoreVideo,
+  updateVideoField,
+  setVideoResponsible,
+  setVideoProject,
+} from "@/app/actions";
 import { KANBAN_STATUSES, STATUS_META, PRIORITY_META } from "@/lib/domain";
 import { PRIORITIES } from "@/db/schema";
-import { FolderOpen, Pencil, Flag, ListChecks, Trash2, UserRound } from "lucide-react";
+import { FolderOpen, Pencil, Flag, ListChecks, Trash2, UserRound, FolderKanban } from "lucide-react";
 
 // Menu de botão direito no card de vídeo — mesma ideia do menu do Google
 // Drive que o usuário mandou de referência (Renomear, Excluir, atalhos
@@ -31,15 +39,16 @@ export function VideoContextMenu({
   onOpen,
   children,
 }: {
-  video: { id: string; name: string; status: string; priority: string; editorId?: string | null };
+  video: { id: string; name: string; status: string; priority: string; editorId?: string | null; projectId?: string | null };
   onOpen: () => void;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const [renaming, setRenaming] = React.useState(false);
-  // A equipe vem do contexto (carregada uma vez no layout) — assim o card
-  // não precisa receber a lista de pessoas de página em página.
-  const { users } = useVideoDetail();
+  // A equipe e a lista de projetos vêm do contexto (carregadas uma vez no
+  // layout) — assim o card não precisa receber essas listas de página em
+  // página.
+  const { users, projects } = useVideoDetail();
 
   function del() {
     // Otimista + desfazer no próprio toast — igual Drive/Gmail: exclui na
@@ -90,6 +99,46 @@ export function VideoContextMenu({
                 >
                   <Avatar name={u.name} color={u.avatarColor} size={16} />
                   <span className={u.id === video.editorId ? "font-semibold" : undefined}>{u.name}</span>
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+
+          {/* Vídeo pode ficar avulso (sem projeto) de propósito — diferente
+              do responsável, aqui "Sem projeto" é uma opção legítima na
+              lista, não só o estado inicial. Ver setVideoProject em
+              actions.ts. */}
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="gap-2">
+              <FolderKanban className="h-3.5 w-3.5" /> Mover para projeto
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="max-h-72 overflow-y-auto">
+              <ContextMenuItem
+                onSelect={() =>
+                  setVideoProject(video.id, null).then(() => {
+                    toast.success(`${video.name} desvinculado do projeto.`);
+                    router.refresh();
+                  })
+                }
+                className="gap-2"
+              >
+                <span className={!video.projectId ? "font-semibold" : undefined}>Sem projeto (avulso)</span>
+              </ContextMenuItem>
+              {projects.length > 0 && <ContextMenuSeparator />}
+              {projects.map((p) => (
+                <ContextMenuItem
+                  key={p.id}
+                  onSelect={() =>
+                    setVideoProject(video.id, p.id).then(() => {
+                      toast.success(`${video.name} movido para "${p.name}".`);
+                      router.refresh();
+                    })
+                  }
+                  className="gap-2"
+                >
+                  <span className={p.id === video.projectId ? "font-semibold" : undefined}>
+                    {p.name}{p.clientName ? ` — ${p.clientName}` : ""}
+                  </span>
                 </ContextMenuItem>
               ))}
             </ContextMenuSubContent>

@@ -160,6 +160,32 @@ export async function renameVideo(videoId: string, name: string) {
   revalidatePath(`/projetos/${video.project_id}`);
 }
 
+// Vincula um vídeo "avulso" a um projeto, move ele pra outro projeto, ou
+// desvincula (projectId null volta ele a avulso — diferente de
+// responsável/cliente, "sem projeto" é um estado válido e é assim que todo
+// vídeo nasce quando criado fora de um projeto, ver createVideo). Acessível
+// pelo menu de botão direito do card (VideoContextMenu) e pela ficha do
+// vídeo (video-detail-sheet.tsx).
+export async function setVideoProject(videoId: string, projectId: string | null) {
+  const supabase = await getSupabase();
+  const { data: video } = await supabase.from(TABLES.videos).select("project_id, name").eq("id", videoId).maybeSingle();
+  if (!video || video.project_id === projectId) return;
+
+  let detail: string;
+  if (projectId) {
+    const { data: project } = await supabase.from(TABLES.projects).select("name").eq("id", projectId).maybeSingle();
+    detail = project?.name ? `Vinculado ao projeto "${project.name}".` : "Vinculado a um projeto.";
+  } else {
+    detail = "Desvinculado do projeto (vídeo avulso).";
+  }
+
+  await supabase.from(TABLES.videos).update(toRow({ projectId, updatedAt: nowISO() })).eq("id", videoId);
+  await logActivity("VIDEO", videoId, "Projeto alterado", detail);
+  revalidateEverywhere();
+  if (video.project_id) revalidatePath(`/projetos/${video.project_id}`);
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
+}
+
 // ---------------------------------------------------------------------------
 // Lixeira (soft delete) — atalho de botão direito no card (ver
 // video-context-menu.tsx). "Excluir" nunca apaga a linha na hora, só marca

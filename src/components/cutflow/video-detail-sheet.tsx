@@ -39,14 +39,16 @@ import {
   addTeamMember,
   removeTeamMember,
   setVideoResponsible,
+  setVideoProject,
   renameVideo,
 } from "@/app/actions";
 import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X, Pencil } from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
 
 type User = { id: string; name: string; avatarColor: string };
+type ProjectLite = { id: string; name: string; clientName: string | null };
 
-export function VideoDetailSheetHost({ users }: { users: User[] }) {
+export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; projects?: ProjectLite[] }) {
   const { openVideoId, close, bump, refresh } = useVideoDetail();
   const [data, setData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
@@ -97,6 +99,7 @@ export function VideoDetailSheetHost({ users }: { users: User[] }) {
             video={data.video}
             activity={data.activity}
             users={users}
+            projects={projects}
             onMutate={refreshLight}
             onStatusChange={refreshAfterStatusChange}
           />
@@ -112,12 +115,14 @@ function VideoDetailBody({
   video,
   activity,
   users,
+  projects,
   onMutate,
   onStatusChange,
 }: {
   video: any;
   activity: any[];
   users: User[];
+  projects: ProjectLite[];
   onMutate: () => void;
   onStatusChange: () => void;
 }) {
@@ -222,6 +227,32 @@ function VideoDetailBody({
             <span>{progress}%</span>
           </div>
           <Progress value={progress} />
+        </div>
+
+        {/* Projeto — diferente de responsável/cliente, "sem projeto" É uma
+            opção válida (vídeo avulso). Editável aqui e no menu de botão
+            direito do card ("Mover para projeto") — ver setVideoProject em
+            actions.ts. */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] uppercase tracking-wide text-cf-text-dim">Projeto</div>
+          <Select
+            value={video.projectId ?? "__none__"}
+            onValueChange={(v) =>
+              startTransition(async () => {
+                await setVideoProject(video.id, v === "__none__" ? null : v);
+                toast.success(v === "__none__" ? "Vídeo desvinculado do projeto." : "Vídeo vinculado ao projeto.");
+                onStatusChange();
+              })
+            }
+          >
+            <SelectTrigger><SelectValue placeholder="Selecionar projeto" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sem projeto (avulso)</SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}{p.clientName ? ` — ${p.clientName}` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Responsável é editável aqui (e no menu de botão direito do card).

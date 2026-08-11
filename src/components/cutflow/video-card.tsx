@@ -30,6 +30,8 @@ export type VideoCardData = {
   updatedAt?: string | null;
   // Usado pelo menu de botão direito pra marcar quem é o responsável atual.
   editorId?: string | null;
+  // Idem, pra marcar em qual projeto o vídeo já está no menu "Mover para projeto".
+  projectId?: string | null;
 };
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {

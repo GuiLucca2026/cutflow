@@ -34,9 +34,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const alerts = computeAlerts({ videos, workloadEntries, users });
 
   const usersLite = users.map((u) => ({ id: u.id, name: u.name, avatarColor: u.avatarColor }));
+  // Cliente já resolvido aqui (não só clientId) pra "mover para projeto" no
+  // menu de botão direito e na ficha do vídeo mostrarem "Projeto — Cliente"
+  // sem precisar cruzar listas de novo em cada componente cliente.
+  const projectsLite = projects.map((p) => ({
+    id: p.id,
+    name: p.name,
+    clientName: clients.find((c) => c.id === p.clientId)?.name ?? null,
+  }));
 
   return (
-    <VideoDetailProvider users={usersLite}>
+    <VideoDetailProvider users={usersLite} projects={projectsLite}>
       <div className="flex min-h-screen w-full">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
@@ -50,7 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
           <main className="flex-1 p-5 lg:p-7 max-w-[1600px] w-full mx-auto">{children}</main>
         </div>
-        <VideoDetailSheetHost users={usersLite} />
+        <VideoDetailSheetHost users={usersLite} projects={projectsLite} />
       </div>
     </VideoDetailProvider>
   );
