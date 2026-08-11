@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { RenameDialog } from "@/components/cutflow/rename-dialog";
+import { Hint } from "@/components/ui/tooltip";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import {
   KANBAN_STATUSES,
@@ -41,6 +42,7 @@ import {
   setVideoResponsible,
   setVideoProject,
   renameVideo,
+  updateVideoField,
 } from "@/app/actions";
 import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X, Pencil } from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
@@ -279,15 +281,72 @@ function VideoDetailBody({
           </Select>
         </div>
 
-        {/* Key facts grid */}
+        {/* Aprovador é opcional (ao contrário de Responsável) — nem todo
+            vídeo já tem um aprovador definido, então "Sem aprovador" é uma
+            opção válida na lista, não só o estado inicial. */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] uppercase tracking-wide text-cf-text-dim">Aprovador</div>
+          <Select
+            value={video.approverId ?? "__none__"}
+            onValueChange={(v) =>
+              startTransition(async () => {
+                await updateVideoField(video.id, "approverId", v === "__none__" ? null : v);
+                toast.success(v === "__none__" ? "Aprovador removido." : "Aprovador definido.");
+                onMutate();
+              })
+            }
+          >
+            <SelectTrigger><SelectValue placeholder="Definir aprovador" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sem aprovador</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Key facts grid — Formato fica só leitura (definido na criação);
+            Versão atual e Rodadas de alteração também ficam só leitura de
+            propósito: são contadores que já se atualizam sozinhos a partir
+            das abas Versões/Alterações logo abaixo, então editar aqui
+            direto criaria dois lugares divergentes pra a mesma informação
+            (ver Hint em cada um explicando isso). Horas estimadas/
+            realizadas e Complexidade viram campos editáveis. */}
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <Fact label="Aprovador" value={video.approver?.name ?? "—"} avatar={video.approver} />
           <Fact label="Formato" value={`${video.format} · ${video.aspectRatio}`} />
-          <Fact label="Versão atual" value={video.currentVersion ?? "—"} />
-          <Fact label="Horas estimadas" value={fmtHours(video.estimatedHours)} />
-          <Fact label="Horas realizadas" value={fmtHours(video.actualHours)} />
-          <Fact label="Rodadas de alteração" value={String(video.revisionCount)} />
-          <Fact label="Complexidade" value={video.complexity} />
+          <Hint text="Atualiza sozinha quando você envia uma nova versão na aba Versões, mais abaixo.">
+            <div><Fact label="Versão atual" value={video.currentVersion ?? "—"} /></div>
+          </Hint>
+          {/* onStatusChange (não onMutate): estas duas horas entram direto
+              na fórmula de risco (computeDeliveryRisk em lib/domain.ts),
+              que os cards fora desta aba (Kanban, Hoje, listas) também
+              calculam — precisa do refresh pesado pra eles acompanharem. */}
+          <EditableHoursFact label="Horas estimadas" field="estimatedHours" value={video.estimatedHours} videoId={video.id} onMutate={onStatusChange} />
+          <EditableHoursFact label="Horas realizadas" field="actualHours" value={video.actualHours} videoId={video.id} onMutate={onStatusChange} />
+          <Hint text="Conta sozinha: sobe 1 a cada alteração registrada na aba Alterações, mais abaixo.">
+            <div><Fact label="Rodadas de alteração" value={String(video.revisionCount)} /></div>
+          </Hint>
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">Complexidade</div>
+            <Select
+              value={video.complexity}
+              onValueChange={(v) =>
+                startTransition(async () => {
+                  await updateVideoField(video.id, "complexity", v);
+                  toast.success("Complexidade atualizada.");
+                  onMutate();
+                })
+              }
+            >
+              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SIMPLES">Simples</SelectItem>
+                <SelectItem value="MEDIA">Média</SelectItem>
+                <SelectItem value="COMPLEXA">Complexa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <VideoTeamSection videoId={video.id} team={video.team ?? []} users={users} onMutate={onMutate} />
@@ -552,6 +611,66 @@ function VideoTeamSection({
         <Button type="button" size="sm" disabled={!userId || pending} onClick={add}>
           <Plus className="h-3.5 w-3.5" />
         </Button>
+      </div>
+    </div>
+  );
+}
+
+// Horas estimadas/realizadas eram só leitura na ficha — não existia NENHUM
+// jeito de registrar hora trabalhada de verdade num vídeo, só o valor que
+// veio da criação. Salva no blur (ou Enter), não a cada tecla — evita
+// mandar uma escrita pro banco por dígito digitado. Confirma o valor
+// vindo do servidor sempre que `value` mudar de referência, igual o
+// checklist logo abaixo faz.
+function EditableHoursFact({
+  label,
+  field,
+  value,
+  videoId,
+  onMutate,
+}: {
+  label: string;
+  field: "estimatedHours" | "actualHours";
+  value: number;
+  videoId: string;
+  onMutate: () => void;
+}) {
+  const [text, setText] = React.useState(String(value));
+  React.useEffect(() => setText(String(value)), [value]);
+  const [pending, startTransition] = React.useTransition();
+
+  function commit() {
+    const parsed = Number(text.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      setText(String(value));
+      return;
+    }
+    if (parsed === value) return;
+    startTransition(async () => {
+      await updateVideoField(videoId, field, parsed);
+      toast.success(`${label} atualizado para ${fmtHours(parsed)}.`);
+      onMutate();
+    });
+  }
+
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">{label}</div>
+      <div className="flex items-center gap-1.5">
+        <Input
+          type="number"
+          min={0}
+          step={0.5}
+          disabled={pending}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          }}
+          className="h-8 w-20 px-2 text-sm font-medium"
+        />
+        <span className="text-cf-text-dim text-xs">h</span>
       </div>
     </div>
   );

@@ -130,7 +130,17 @@ export async function rescheduleVideo(videoId: string, dayDelta: number) {
 
 export async function updateVideoField(
   videoId: string,
-  field: "priority" | "editorId" | "estimatedHours" | "finalDeadline" | "internalDeadline" | "notes" | "currentVersion",
+  field:
+    | "priority"
+    | "editorId"
+    | "approverId"
+    | "estimatedHours"
+    | "actualHours"
+    | "complexity"
+    | "finalDeadline"
+    | "internalDeadline"
+    | "notes"
+    | "currentVersion",
   value: string | number | null
 ) {
   const supabase = await getSupabase();
