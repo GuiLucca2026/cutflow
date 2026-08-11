@@ -14,20 +14,27 @@ const TooltipProvider = TooltipPrimitive.Provider;
 // gráfico), então precisa de contraste garantido em vez de combinar com o
 // fundo. É o padrão mais comum de tooltip por um motivo: sempre legível,
 // não importa o que está embaixo.
+//
+// bg-cf-side-bg, não bg-cf-black: apesar do nome, --cf-black hoje é um
+// cinza quase branco (#F5F5FA — sobrou do tema escuro antigo, ver
+// globals.css), então "bg-cf-black text-white" virava texto branco em
+// cima de um fundo quase branco, ilegível. --cf-side-bg é o único tom
+// realmente escuro que sobrou na paleta clara (usado no sidebar) — é o
+// que de fato garante contraste aqui.
 function TooltipContent({ className, sideOffset = 6, ...props }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 max-w-64 rounded-md bg-cf-black px-2.5 py-1.5 text-xs leading-snug text-white shadow-lg",
+          "z-50 max-w-64 rounded-md bg-cf-side-bg px-2.5 py-1.5 text-xs leading-snug text-white shadow-lg",
           "data-[state=delayed-open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=delayed-open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=delayed-open]:zoom-in-95",
           className
         )}
         {...props}
       >
         {props.children}
-        <TooltipPrimitive.Arrow className="fill-cf-black" />
+        <TooltipPrimitive.Arrow className="fill-cf-side-bg" />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
