@@ -7,7 +7,7 @@ import { TeamStrip, type TeamMemberLite } from "@/components/cutflow/team-strip"
 import { Avatar } from "@/components/ui/avatar";
 import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
-import { Clock, AlertTriangle } from "lucide-react";
+import { Clock, AlertTriangle, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type VideoCardData = {
@@ -49,7 +49,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
         style={{ ["--cf-card-tint" as any]: `${accent}1f`, borderColor: `${accent}4d` }}
         className="w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer"
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <div className="min-w-0">
             {/* Hierarquia de cima pra baixo = do mais genérico pro mais
                 específico (Cliente → Projeto → Vídeo), pedido explicitamente
@@ -82,12 +82,6 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               </span>
             </div>
           </div>
-          {(video.editor || (video.team && video.team.length > 0)) && (
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
-              <TeamStrip team={video.team} size={15} />
-            </div>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
@@ -100,6 +94,27 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               de selos redundantes. Atraso continua visível no rodapé. */}
           {showRisk && !isDone(video.status) && !isWaitingClient(video.status) && !clientWait && <RiskBadge risk={risk} />}
           {clientWait && <ClientWaitBadge wait={clientWait} />}
+        </div>
+
+        {/* Responsável com NOME, não só as iniciais num círculo no canto:
+            supervisão mútua só funciona se der pra saber de quem é o vídeo
+            sem precisar passar o mouse ou decorar cor de avatar. Vídeo sem
+            responsável é o pior caso (não está na fila de ninguém, atrasa
+            calado), então ganha destaque em vez de ficar vazio. */}
+        <div className="flex items-center gap-1.5 mt-2.5">
+          {video.editor ? (
+            <>
+              <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
+              <span className="text-xs text-cf-text-dim truncate">{video.editor.name}</span>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
+              <UserX className="h-3.5 w-3.5" /> Sem responsável
+            </span>
+          )}
+          <span className="ml-auto shrink-0">
+            <TeamStrip team={video.team} size={16} />
+          </span>
         </div>
 
         {!compact && (

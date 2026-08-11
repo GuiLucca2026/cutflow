@@ -23,7 +23,7 @@ import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, UserX } from "lucide-react";
 import type { VideoCardData } from "@/components/cutflow/video-card";
 
 export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] }) {
@@ -184,19 +184,22 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
             ação pendente (cobrar retorno / alteração pra começar), então
             não polui a maioria dos cards. */}
         {clientWait && <ClientWaitBadge wait={clientWait} className="mt-1.5 text-[9px] px-1.5 py-0" />}
-        {(video.editor || (video.team && video.team.length > 0)) && (
-          <div className="flex items-center justify-between gap-1.5 mt-2">
-            {video.editor ? (
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
-                <span className="text-[11px] text-cf-text-dim truncate">{video.editor.name.split(" ")[0]}</span>
-              </div>
-            ) : (
-              <span />
-            )}
-            <TeamStrip team={video.team} size={15} />
-          </div>
-        )}
+        {/* Sempre mostra a linha do responsável, mesmo sem editor: um card
+            sem ninguém atribuído é justamente o que precisa saltar aos
+            olhos (ver o mesmo trecho em video-card.tsx). */}
+        <div className="flex items-center justify-between gap-1.5 mt-2">
+          {video.editor ? (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
+              <span className="text-[11px] text-cf-text-dim truncate">{video.editor.name}</span>
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700">
+              <UserX className="h-3 w-3" /> Sem responsável
+            </span>
+          )}
+          <TeamStrip team={video.team} size={15} />
+        </div>
       </div>
     </VideoContextMenu>
   );

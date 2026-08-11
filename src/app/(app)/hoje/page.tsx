@@ -145,7 +145,12 @@ export default async function HojePage() {
       </Section>
 
       {overdue.length > 0 && (
-        <Section title="Atrasados" subtitle="Precisam de ação imediata" count={overdue.length} tone="danger">
+        <Section
+          title="Atrasados"
+          subtitle="De toda a produtora, não só seus — veja por pessoa no Panorama"
+          count={overdue.length}
+          tone="danger"
+        >
           <CardGrid videos={overdue} />
         </Section>
       )}

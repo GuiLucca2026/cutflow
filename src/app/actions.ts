@@ -31,6 +31,7 @@ async function logActivity(entityType: "PROJECT" | "VIDEO", entityId: string, ac
 
 function revalidateEverywhere() {
   revalidatePath("/hoje");
+  revalidatePath("/panorama");
   revalidatePath("/minha-edicao");
   revalidatePath("/kanban");
   revalidatePath("/videos");

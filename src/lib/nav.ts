@@ -13,6 +13,7 @@ import {
   BarChart3,
   Send,
   Kanban,
+  Gauge,
   Trash2,
   type LucideIcon,
 } from "lucide-react";
@@ -38,6 +39,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Produção",
     items: [
+      // Contraparte da "Minha Edição": lá é a fila de UMA pessoa, aqui é a
+      // produtora inteira dividida por pessoa. Fica fora do grupo "Meu dia"
+      // de propósito — o que é pessoal continua pessoal, e quem procura
+      // "como está todo mundo" tem um lugar óbvio pra ir.
+      { href: "/panorama", label: "Panorama", icon: Gauge },
       { href: "/projetos", label: "Projetos", icon: FolderKanban },
       { href: "/videos", label: "Vídeos", icon: Clapperboard },
       { href: "/captacoes", label: "Captações", icon: Camera },
