@@ -6,7 +6,7 @@ import { toRow } from "@/db/mappers";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
-import { STATUS_META, TEAM_ROLE_META, isWaitingClient } from "@/lib/domain";
+import { STATUS_META, TEAM_ROLE_META, USER_ROLES, isWaitingClient } from "@/lib/domain";
 import { redirect } from "next/navigation";
 
 function nowISO() {
@@ -689,6 +689,33 @@ export async function regenerateIcsToken() {
   await supabase.from(TABLES.users).update(toRow({ icsToken: token, updatedAt: nowISO() })).eq("id", user.id);
   revalidatePath("/hoje");
   return token;
+}
+
+// ---------------------------------------------------------------------------
+// Papel da pessoa na equipe — só ADMIN altera
+// ---------------------------------------------------------------------------
+// Devolve { ok, error } em vez de dar throw: erro lançado de dentro de uma
+// server action chega no browser como mensagem genérica em produção (o
+// Next.js esconde o texto original de propósito), então o usuário veria
+// "algo deu errado" no lugar do motivo real.
+export async function updateUserRole(userId: string, role: string): Promise<{ ok: boolean; error?: string }> {
+  const me = await getCurrentUser();
+  if (me.role !== "ADMIN") return { ok: false, error: "Só um admin pode alterar papéis." };
+  // Papel tem que ser um dos conhecidos — sem isso, qualquer string chegaria
+  // na coluna e a pessoa poderia ficar com um papel que nenhuma tela entende.
+  if (!USER_ROLES.includes(role)) return { ok: false, error: "Papel inválido." };
+  // Ninguém rebaixa o próprio acesso. Se o único admin virasse Editor sem
+  // querer, sumiria justamente a tela que desfaz isso e a conta ficaria sem
+  // ninguém capaz de mexer em papéis de novo. Como um admin nunca se rebaixa,
+  // sempre sobra pelo menos um — outro admin pode alterar você normalmente.
+  if (userId === me.id) return { ok: false, error: "Você não pode alterar o seu próprio papel — peça pra outro admin." };
+
+  const supabase = await getSupabase();
+  const { error } = await supabase.from(TABLES.users).update(toRow({ role, updatedAt: nowISO() })).eq("id", userId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/equipe");
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------

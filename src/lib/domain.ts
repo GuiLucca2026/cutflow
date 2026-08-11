@@ -60,14 +60,45 @@ export const PRIORITY_META: Record<string, { label: string; color: string; bg: s
   URGENTE: { label: "Urgente", color: "#DC2626", bg: "#FEE2E2" },
 };
 
-export const ROLE_META: Record<string, { label: string }> = {
-  ADMIN: { label: "Admin" },
-  PRODUTOR: { label: "Produtor" },
-  EDITOR: { label: "Editor" },
-  ASSISTENTE: { label: "Assistente" },
-  FREELANCER: { label: "Freelancer" },
-  VISUALIZADOR: { label: "Visualizador" },
+// Papel da PESSOA dentro da G2 (o que ela é na equipe) — não confundir com
+// TEAM_ROLE_META lá embaixo, que é a função dela num vídeo específico
+// (montagem, motion, colorização...). A mesma pessoa tem um papel só aqui e
+// pode ter várias funções em vídeos diferentes.
+//
+// Só ADMIN muda o papel de alguém (ver updateUserRole em actions.ts) e é o
+// único papel que hoje destrava algo de fato no app: convidar gente nova e
+// mudar papéis. Os outros são organizacionais — aparecem na Equipe e no
+// convite, mas ainda não restringem telas.
+//
+// Pra criar um papel novo basta adicionar uma linha aqui: o seletor da
+// Equipe, o do convite e os selos já saem daqui.
+export const ROLE_META: Record<string, { label: string; color: string }> = {
+  ADMIN: { label: "Admin", color: "#BE185D" },
+  PRODUTOR: { label: "Produtor", color: "#1D4ED8" },
+  ATENDENTE: { label: "Atendente", color: "#0F766E" },
+  EDITOR: { label: "Editor", color: "#7C3AED" },
+  ASSISTENTE: { label: "Assistente", color: "#B45309" },
+  OPERADOR_CAMERA: { label: "Operador de Câmera", color: "#7E22CE" },
+  FREELANCER: { label: "Freelancer", color: "#C2410C" },
+  VISUALIZADOR: { label: "Visualizador", color: "#6B7280" },
 };
+
+export const USER_ROLES = Object.keys(ROLE_META);
+
+// Quem pega trabalho de produção (e por isso entra na conta de capacidade
+// da Equipe). Atendente e Visualizador ficam de fora: não recebem vídeo.
+//
+// Isso precisa bater com quem PODE ter horas agendadas, senão a conta da
+// empresa mente: as horas de todo mundo entram no total agendado, mas a
+// capacidade só soma quem está nesta lista — alguém fora dela com vídeos
+// atribuídos empurraria a barra pra "sobrecarga" sem existir sobrecarga
+// nenhuma. Antes daqui a lista era só EDITOR+ADMIN no código da página, o
+// que já dava esse falso positivo com qualquer freelancer.
+export const PRODUCTION_ROLES = ["ADMIN", "PRODUTOR", "EDITOR", "ASSISTENTE", "OPERADOR_CAMERA", "FREELANCER"];
+
+export function isProductionRole(role: string) {
+  return PRODUCTION_ROLES.includes(role);
+}
 
 // Equipe do vídeo (Fase 8) — função de cada colaborador ADICIONAL, além do
 // Editor responsável (video.editorId, que continua sozinho controlando

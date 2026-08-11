@@ -3,8 +3,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { InviteSection } from "@/components/cutflow/invite-section";
+import { PeopleRoles } from "@/components/cutflow/people-roles";
 import { format, addDays } from "date-fns";
-import { isDone } from "@/lib/domain";
+import { isDone, isProductionRole } from "@/lib/domain";
 import { fmtHours } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +42,10 @@ export default async function EquipePage() {
 
   const allEntries = await listWorkloadEntries(dstr(now), dstr(addDays(now, 30)));
 
-  const editors = users.filter((u) => u.role === "EDITOR" || u.role === "ADMIN");
+  // Ver isProductionRole em lib/domain.ts: tem que ser a mesma turma cujas
+  // horas entram no total agendado, senão a % da empresa acusa sobrecarga
+  // que não existe.
+  const editors = users.filter((u) => isProductionRole(u.role));
 
   // Fase 5 — Capacity Planning agregado: mesma conta de cada card individual,
   // só que somada pra empresa toda, pra responder "a equipe inteira consegue
@@ -66,13 +70,13 @@ export default async function EquipePage() {
     <div className="cf-fade-in space-y-6 pb-16">
       <div>
         <h1 className="font-display text-4xl tracking-wide">Equipe</h1>
-        <p className="text-cf-text-dim text-sm">Carga de trabalho e capacidade por editor</p>
+        <p className="text-cf-text-dim text-sm">Papéis, carga de trabalho e capacidade da equipe</p>
       </div>
 
       <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
         <div className="flex items-baseline gap-2 mb-3">
           <h2 className="font-display text-xl tracking-wide">Capacity Planning — empresa toda</h2>
-          <span className="text-cf-text-dim text-xs">{editors.length} {editors.length === 1 ? "editor" : "editores"}</span>
+          <span className="text-cf-text-dim text-xs">{editors.length} {editors.length === 1 ? "pessoa" : "pessoas"} em produção</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
@@ -111,6 +115,21 @@ export default async function EquipePage() {
           </div>
         </div>
       </div>
+
+      {/* Todo mundo vê quem é quem; só admin troca o papel (a própria ação
+          no servidor também barra, isso aqui é só a interface). */}
+      <PeopleRoles
+        people={users.map((u) => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          avatarColor: u.avatarColor,
+          avatarUrl: u.avatarUrl ?? null,
+          role: u.role,
+        }))}
+        canEdit={currentUser.role === "ADMIN"}
+        currentUserId={currentUser.id}
+      />
 
       {currentUser.role === "ADMIN" && <InviteSection invites={invites} error={invitesError} />}
 
