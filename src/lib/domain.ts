@@ -6,7 +6,17 @@ export type VideoStatus = (typeof import("@/db/schema").VIDEO_STATUSES)[number];
 
 export const STATUS_META: Record<
   string,
-  { label: string; color: string; bg: string; order: number; group: "backlog" | "editing" | "review" | "client" | "done" }
+  {
+    label: string;
+    color: string;
+    bg: string;
+    order: number;
+    group: "backlog" | "editing" | "review" | "client" | "done";
+    // Frase de uma linha pra quem não conhece o fluxo ainda — aparece no
+    // tooltip do badge (ver Hint em ui/tooltip.tsx + StatusBadge em
+    // cutflow/badges.tsx). Escrita pra alguém que nunca usou o G2 FLOW.
+    hint: string;
+  }
 > = {
   // Cores pensadas por grupo (backlog/editing/review/client/done), não por
   // status isolado, e recalibradas pro conceito claro+roxo (texto mais
@@ -18,24 +28,24 @@ export const STATUS_META: Record<
   // motivo que já tinha separado o cf-success do cf-lime antes. "Aguardando
   // X" continua toda em âmbar de propósito: o significado é sempre o mesmo
   // ("parado esperando alguém"), o rótulo já diz esperando o quê.
-  BACKLOG: { label: "Backlog", color: "#6B7280", bg: "#F1F2F4", order: 0, group: "backlog" },
-  AGUARDANDO_MATERIAL: { label: "Aguardando material", color: "#B45309", bg: "#FEF3C7", order: 1, group: "backlog" },
-  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#0F766E", bg: "#CCFBF1", order: 2, group: "backlog" },
-  EDITANDO: { label: "Editando", color: "#7C3AED", bg: "#EDE9FE", order: 3, group: "editing" },
-  EDICAO_PAUSADA: { label: "Edição pausada", color: "#B45309", bg: "#FEF3C7", order: 4, group: "editing" },
-  REVISAO_INTERNA: { label: "Revisão interna", color: "#7E22CE", bg: "#F3E8FF", order: 5, group: "review" },
-  CORRECAO_INTERNA: { label: "Correção interna", color: "#BE185D", bg: "#FCE7F3", order: 6, group: "review" },
-  ENVIADO_AO_CLIENTE: { label: "Enviado ao cliente", color: "#1D4ED8", bg: "#DBEAFE", order: 7, group: "client" },
-  AGUARDANDO_FEEDBACK: { label: "Aguardando feedback", color: "#B45309", bg: "#FEF3C7", order: 8, group: "client" },
-  ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#E11D48", bg: "#FFE4E6", order: 9, group: "client" },
-  EM_ALTERACAO: { label: "Em alteração", color: "#E11D48", bg: "#FFE4E6", order: 10, group: "editing" },
-  AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#B45309", bg: "#FEF3C7", order: 11, group: "client" },
-  APROVADO: { label: "Aprovado", color: "#16A34A", bg: "#DCFCE7", order: 12, group: "done" },
-  EXPORTANDO: { label: "Exportando", color: "#1D4ED8", bg: "#DBEAFE", order: 13, group: "done" },
-  UPLOAD_ENVIO: { label: "Upload / envio", color: "#1D4ED8", bg: "#DBEAFE", order: 14, group: "done" },
-  ENTREGUE: { label: "Entregue", color: "#0F172A", bg: "#F1F5F9", order: 15, group: "done" },
-  ARQUIVADO: { label: "Arquivado", color: "#6B7280", bg: "#F1F2F4", order: 16, group: "done" },
-  CANCELADO: { label: "Cancelado", color: "#DC2626", bg: "#FEE2E2", order: 17, group: "done" },
+  BACKLOG: { label: "Backlog", color: "#6B7280", bg: "#F1F2F4", order: 0, group: "backlog", hint: "Ainda não começou — só está na fila." },
+  AGUARDANDO_MATERIAL: { label: "Aguardando material", color: "#B45309", bg: "#FEF3C7", order: 1, group: "backlog", hint: "Falta receber arquivo, briefing ou gravação pra poder editar." },
+  PRONTO_PARA_EDITAR: { label: "Pronto para editar", color: "#0F766E", bg: "#CCFBF1", order: 2, group: "backlog", hint: "Material em mãos — falta alguém começar a editar." },
+  EDITANDO: { label: "Editando", color: "#7C3AED", bg: "#EDE9FE", order: 3, group: "editing", hint: "Em edição agora." },
+  EDICAO_PAUSADA: { label: "Edição pausada", color: "#B45309", bg: "#FEF3C7", order: 4, group: "editing", hint: "A edição começou, mas está parada no momento." },
+  REVISAO_INTERNA: { label: "Revisão interna", color: "#7E22CE", bg: "#F3E8FF", order: 5, group: "review", hint: "Sendo revisado pela própria equipe, antes de mandar pro cliente." },
+  CORRECAO_INTERNA: { label: "Correção interna", color: "#BE185D", bg: "#FCE7F3", order: 6, group: "review", hint: "Corrigindo algo que a revisão interna apontou." },
+  ENVIADO_AO_CLIENTE: { label: "Enviado ao cliente", color: "#1D4ED8", bg: "#DBEAFE", order: 7, group: "client", hint: "Já foi enviado — aguardando o cliente abrir/assistir." },
+  AGUARDANDO_FEEDBACK: { label: "Aguardando feedback", color: "#B45309", bg: "#FEF3C7", order: 8, group: "client", hint: "O cliente recebeu, estamos esperando o retorno dele." },
+  ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#E11D48", bg: "#FFE4E6", order: 9, group: "client", hint: "O cliente pediu alteração — ainda não começamos a mexer." },
+  EM_ALTERACAO: { label: "Em alteração", color: "#E11D48", bg: "#FFE4E6", order: 10, group: "editing", hint: "Mexendo na alteração que o cliente pediu." },
+  AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#B45309", bg: "#FEF3C7", order: 11, group: "client", hint: "Alteração feita — esperando o cliente aprovar." },
+  APROVADO: { label: "Aprovado", color: "#16A34A", bg: "#DCFCE7", order: 12, group: "done", hint: "O cliente aprovou. Falta só exportar e entregar." },
+  EXPORTANDO: { label: "Exportando", color: "#1D4ED8", bg: "#DBEAFE", order: 13, group: "done", hint: "Aprovado — gerando o arquivo final agora." },
+  UPLOAD_ENVIO: { label: "Upload / envio", color: "#1D4ED8", bg: "#DBEAFE", order: 14, group: "done", hint: "Arquivo pronto, subindo/enviando pro destino final." },
+  ENTREGUE: { label: "Entregue", color: "#0F172A", bg: "#F1F5F9", order: 15, group: "done", hint: "Concluído e entregue ao cliente." },
+  ARQUIVADO: { label: "Arquivado", color: "#6B7280", bg: "#F1F2F4", order: 16, group: "done", hint: "Finalizado e arquivado — não conta mais como trabalho ativo." },
+  CANCELADO: { label: "Cancelado", color: "#DC2626", bg: "#FEE2E2", order: 17, group: "done", hint: "Cancelado — não vai ser produzido." },
 };
 
 export const KANBAN_STATUSES: string[] = [
@@ -53,11 +63,11 @@ export const KANBAN_STATUSES: string[] = [
   "ENTREGUE",
 ];
 
-export const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  BAIXA: { label: "Baixa", color: "#6B7280", bg: "#F1F2F4" },
-  NORMAL: { label: "Normal", color: "#1D4ED8", bg: "#DBEAFE" },
-  ALTA: { label: "Alta", color: "#C2410C", bg: "#FFEDD5" },
-  URGENTE: { label: "Urgente", color: "#DC2626", bg: "#FEE2E2" },
+export const PRIORITY_META: Record<string, { label: string; color: string; bg: string; hint: string }> = {
+  BAIXA: { label: "Baixa", color: "#6B7280", bg: "#F1F2F4", hint: "Pode esperar, sem urgência no momento." },
+  NORMAL: { label: "Normal", color: "#1D4ED8", bg: "#DBEAFE", hint: "Ritmo padrão de produção." },
+  ALTA: { label: "Alta", color: "#C2410C", bg: "#FFEDD5", hint: "Precisa de atenção antes dos outros trabalhos." },
+  URGENTE: { label: "Urgente", color: "#DC2626", bg: "#FEE2E2", hint: "Trate como prioridade máxima, na frente de tudo." },
 };
 
 // Papel da PESSOA dentro da G2 (o que ela é na equipe) — não confundir com
@@ -140,11 +150,11 @@ export function hoursUntil(dateStr: string) {
 
 export type RiskLevel = "BAIXO" | "MODERADO" | "ALTO" | "CRITICO";
 
-export const RISK_META: Record<RiskLevel, { label: string; color: string; emoji: string }> = {
-  BAIXO: { label: "Baixo", color: "#16A34A", emoji: "🟢" },
-  MODERADO: { label: "Moderado", color: "#B45309", emoji: "🟡" },
-  ALTO: { label: "Alto", color: "#C2410C", emoji: "🟠" },
-  CRITICO: { label: "Crítico", color: "#DC2626", emoji: "🔴" },
+export const RISK_META: Record<RiskLevel, { label: string; color: string; emoji: string; hint: string }> = {
+  BAIXO: { label: "Baixo", color: "#16A34A", emoji: "🟢", hint: "Prazo tranquilo — tempo suficiente pro trabalho que falta." },
+  MODERADO: { label: "Moderado", color: "#B45309", emoji: "🟡", hint: "Fique de olho: prazo apertando ou revisões acumulando." },
+  ALTO: { label: "Alto", color: "#C2410C", emoji: "🟠", hint: "Risco real de atraso — pouco tempo pro que ainda falta fazer." },
+  CRITICO: { label: "Crítico", color: "#DC2626", emoji: "🔴", hint: "Muito provável atrasar (ou já atrasou) — precisa de ação agora." },
 };
 
 /**
@@ -198,9 +208,9 @@ export const CLIENT_FEEDBACK_CHASE_DAYS = 2;
 
 export type ClientWait = { kind: "COBRAR_FEEDBACK"; days: number } | { kind: "AGUARDANDO_ALTERACAO" } | null;
 
-export const CLIENT_WAIT_META: Record<"COBRAR_FEEDBACK" | "AGUARDANDO_ALTERACAO", { label: string; color: string }> = {
-  COBRAR_FEEDBACK: { label: "Cobrar feedback", color: "#B45309" },
-  AGUARDANDO_ALTERACAO: { label: "Aguardando alteração", color: "#E11D48" },
+export const CLIENT_WAIT_META: Record<"COBRAR_FEEDBACK" | "AGUARDANDO_ALTERACAO", { label: string; color: string; hint: string }> = {
+  COBRAR_FEEDBACK: { label: "Cobrar feedback", color: "#B45309", hint: "Já passou do prazo razoável de resposta — vale entrar em contato com o cliente." },
+  AGUARDANDO_ALTERACAO: { label: "Aguardando alteração", color: "#E11D48", hint: "Cliente já respondeu pedindo mudança — a bola voltou pra nós, ainda não começamos." },
 };
 
 // Desde quando o cliente está com o vídeo. clientSentAt é gravado por

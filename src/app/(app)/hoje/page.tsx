@@ -10,11 +10,12 @@ import { isToday, isWithinInterval, addDays, differenceInCalendarDays, format } 
 import { AlertTriangle, TriangleAlert, Info, Clock, Send, Users, Percent, Activity, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { Hint } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-function StatCard({ label, value, icon: Icon, tone = "default", href }: { label: string; value: string | number; icon: any; tone?: "default" | "danger" | "warn" | "good"; href?: string }) {
+function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { label: string; value: string | number; icon: any; tone?: "default" | "danger" | "warn" | "good"; href?: string; hint?: string }) {
   const toneMap = {
     default: "text-cf-text border-cf-border",
     danger: "text-red-600 border-red-500/30",
@@ -32,7 +33,9 @@ function StatCard({ label, value, icon: Icon, tone = "default", href }: { label:
       </div>
     </div>
   );
-  return href ? <Link href={href}>{body}</Link> : body;
+  // Cada tile é um número que resume uma conta que a pessoa não vê rodar —
+  // o hover explica de onde ele sai antes mesmo dela clicar pra investigar.
+  return <Hint text={hint}>{href ? <Link href={href}>{body}</Link> : body}</Hint>;
 }
 
 export default async function HojePage() {
@@ -110,12 +113,48 @@ export default async function HojePage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        <StatCard label="Entregas hoje" value={todayDeliveries.length} icon={Send} tone={todayDeliveries.length > 0 ? "good" : "default"} />
-        <StatCard label="Atrasados" value={overdue.length} icon={AlertTriangle} tone={overdue.length > 0 ? "danger" : "default"} />
-        <StatCard label="Aguardando cliente" value={waitingClient.length} icon={Clock} tone="warn" />
-        <StatCard label="Editando agora" value={todayEditing.length} icon={Activity} tone="default" />
-        <StatCard label="Entregas na semana" value={weekDeliveries.length} icon={Sparkles} tone="good" />
-        <StatCard label="Operation Health" value={`${health}%`} icon={Percent} tone={health >= 80 ? "good" : health >= 60 ? "warn" : "danger"} />
+        <StatCard
+          label="Entregas hoje"
+          value={todayDeliveries.length}
+          icon={Send}
+          tone={todayDeliveries.length > 0 ? "good" : "default"}
+          hint="Vídeos ativos com prazo final marcado para hoje."
+        />
+        <StatCard
+          label="Atrasados"
+          value={overdue.length}
+          icon={AlertTriangle}
+          tone={overdue.length > 0 ? "danger" : "default"}
+          hint="Passaram da data de entrega final e ainda não foram entregues — de toda a produtora."
+        />
+        <StatCard
+          label="Aguardando cliente"
+          value={waitingClient.length}
+          icon={Clock}
+          tone="warn"
+          hint="Vídeos enviados ao cliente, aguardando feedback ou aprovação — a bola está do lado de fora."
+        />
+        <StatCard
+          label="Editando agora"
+          value={todayEditing.length}
+          icon={Activity}
+          tone="default"
+          hint="Vídeos em edição, em alteração ou em correção interna neste momento."
+        />
+        <StatCard
+          label="Entregas na semana"
+          value={weekDeliveries.length}
+          icon={Sparkles}
+          tone="good"
+          hint="Vídeos ativos com prazo final entre hoje e os próximos 7 dias."
+        />
+        <StatCard
+          label="Operation Health"
+          value={`${health}%`}
+          icon={Percent}
+          tone={health >= 80 ? "good" : health >= 60 ? "warn" : "danger"}
+          hint="Começa em 100% e cai com atrasos, risco crítico/alto de entrega e clientes acumulando espera de feedback."
+        />
       </div>
 
       {alerts.length > 0 && (

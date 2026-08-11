@@ -5,6 +5,7 @@ import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/compon
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip, type TeamMemberLite } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
+import { Hint } from "@/components/ui/tooltip";
 import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { Clock, AlertTriangle, UserX } from "lucide-react";
@@ -112,9 +113,11 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               <span className="text-xs text-cf-text-dim truncate">{video.editor.name}</span>
             </>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
-              <UserX className="h-3.5 w-3.5" /> Sem responsável
-            </span>
+            <Hint text="Nenhum editor foi definido para este vídeo ainda — ele não está na fila de ninguém.">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700">
+                <UserX className="h-3.5 w-3.5" /> Sem responsável
+              </span>
+            </Hint>
           )}
           <span className="ml-auto shrink-0">
             <TeamStrip team={video.team} size={16} />
@@ -123,10 +126,12 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
 
         {!compact && (
           <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-cf-border text-xs text-cf-text-dim">
-            <span className={cn("flex items-center gap-1", overdue && "text-red-600 font-semibold")}>
-              {overdue && <AlertTriangle className="h-3 w-3" />}
-              Entrega: {fmtDateWeekday(video.finalDeadline)}
-            </span>
+            <Hint text={overdue ? "Passou da data de entrega final e o vídeo ainda não foi entregue." : undefined}>
+              <span className={cn("flex items-center gap-1", overdue && "text-red-600 font-semibold")}>
+                {overdue && <AlertTriangle className="h-3 w-3" />}
+                Entrega: {fmtDateWeekday(video.finalDeadline)}
+              </span>
+            </Hint>
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" /> {fmtHours(video.estimatedHours)}
             </span>
