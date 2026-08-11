@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { getProject, getProjectActivity } from "@/db/queries";
+import { getProject, getProjectActivity, listUsers } from "@/db/queries";
+import { ResponsibleSelect } from "@/components/cutflow/responsible-select";
 import { projectProgress, PRIORITY_META } from "@/lib/domain";
 import { fmtDateTime, fmtCurrency } from "@/lib/format";
 import { PriorityBadge } from "@/components/cutflow/badges";
@@ -21,7 +22,7 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
   const { video } = await searchParams;
-  const [project, activity] = await Promise.all([getProject(id), getProjectActivity(id)]);
+  const [project, activity, users] = await Promise.all([getProject(id), getProjectActivity(id), listUsers()]);
   if (!project) notFound();
 
   const progress = projectProgress(project.videos);
@@ -52,7 +53,18 @@ export default async function ProjectDetailPage({
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-5">
-          <Fact label="Produtor" value={project.producer?.name ?? "—"} />
+          {/* Responsável do projeto = produtor. Quem cria já entra aqui
+              (ver insertProject) e a troca é feita neste seletor. */}
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-1">Responsável</div>
+            <ResponsibleSelect
+              kind="project"
+              id={project.id}
+              value={project.producerId ?? null}
+              users={users.map((u) => ({ id: u.id, name: u.name }))}
+              className="h-8 text-sm"
+            />
+          </div>
           <Fact label="Editor líder" value={project.leadEditor?.name ?? "—"} />
           <Fact label="Vídeos" value={String(project.videos.length)} />
           <Fact label="Orçamento" value={project.budget ? fmtCurrency(project.budget) : "—"} />

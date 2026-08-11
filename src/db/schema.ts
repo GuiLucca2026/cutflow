@@ -299,6 +299,10 @@ export type Capture = {
   location: string | null;
   // References into cutflow_users.id — who's expected on set.
   crewIds: string[];
+  // Dono da captação (Fase 10). Quem cria assume por padrão e pode passar
+  // adiante depois — ver setCaptureResponsible em actions.ts. Nullable só
+  // por causa das captações criadas antes desta coluna existir.
+  responsibleId: string | null;
   status: (typeof CAPTURE_STATUSES)[number];
   createdAt: string;
   updatedAt: string;

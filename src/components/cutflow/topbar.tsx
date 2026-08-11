@@ -147,6 +147,7 @@ export function Topbar({
         clients={clients}
         users={users}
         projects={projects}
+        currentUserId={currentUser.id}
       />
       <ProfileDialog
         open={profileOpen}

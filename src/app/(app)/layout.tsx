@@ -33,8 +33,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const alerts = computeAlerts({ videos, workloadEntries, users });
 
+  const usersLite = users.map((u) => ({ id: u.id, name: u.name, avatarColor: u.avatarColor }));
+
   return (
-    <VideoDetailProvider>
+    <VideoDetailProvider users={usersLite}>
       <div className="flex min-h-screen w-full">
         <Sidebar />
         <div className="flex-1 flex flex-col min-w-0">
@@ -48,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
           <main className="flex-1 p-5 lg:p-7 max-w-[1600px] w-full mx-auto">{children}</main>
         </div>
-        <VideoDetailSheetHost users={users.map((u) => ({ id: u.id, name: u.name, avatarColor: u.avatarColor }))} />
+        <VideoDetailSheetHost users={usersLite} />
       </div>
     </VideoDetailProvider>
   );

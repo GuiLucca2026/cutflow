@@ -560,6 +560,7 @@ export async function createVideo(formData: FormData) {
   if (!name || !finalDeadline) return;
 
   const supabase = await getSupabase();
+  const user = await getCurrentUser();
   const finalISO = new Date(finalDeadline).toISOString();
   const id = crypto.randomUUID();
 
@@ -570,7 +571,10 @@ export async function createVideo(formData: FormData) {
       name,
       format: String(formData.get("format") || "Horizontal"),
       aspectRatio: String(formData.get("aspectRatio") || "16:9"),
-      editorId: String(formData.get("editorId") || "") || null,
+      // Nunca fica sem responsável: se ninguém foi escolhido no formulário,
+      // quem criou assume. Vídeo sem dono não entra na fila de ninguém e
+      // atrasa em silêncio — ver o bloco "Sem responsável" no Panorama.
+      editorId: String(formData.get("editorId") || "") || user.id,
       estimatedHours: Number(formData.get("estimatedHours") || 4),
       priority: String(formData.get("priority") || "NORMAL"),
       finalDeadline: finalISO,
@@ -617,6 +621,7 @@ export async function createCapture(formData: FormData) {
   const crewIds = formData.getAll("crewIds").map(String).filter(Boolean);
 
   const supabase = await getSupabase();
+  const user = await getCurrentUser();
   const id = crypto.randomUUID();
   await supabase.from(TABLES.captures).insert(
     toRow({
@@ -629,6 +634,8 @@ export async function createCapture(formData: FormData) {
       endTime: String(formData.get("endTime") || "") || null,
       location: String(formData.get("location") || "") || null,
       crewIds,
+      // Mesma regra do vídeo: quem cria assume, e dá pra trocar depois.
+      responsibleId: String(formData.get("responsibleId") || "") || user.id,
       status: "AGENDADA",
       createdAt: nowISO(),
       updatedAt: nowISO(),
@@ -690,6 +697,52 @@ export async function regenerateIcsToken() {
   await supabase.from(TABLES.users).update(toRow({ icsToken: token, updatedAt: nowISO() })).eq("id", user.id);
   revalidatePath("/hoje");
   return token;
+}
+
+// ---------------------------------------------------------------------------
+// Responsável — vídeo, captação e projeto sempre têm um
+// ---------------------------------------------------------------------------
+// Quem cria já entra como responsável (ver createVideo/createCapture/
+// insertProject); estas ações servem pra passar o bastão depois. Todas
+// exigem um destinatário: "tirar o responsável" não existe de propósito —
+// um item sem dono não aparece na fila de ninguém e atrasa em silêncio.
+// (Itens antigos, criados antes desta regra, ainda podem estar sem
+// responsável; eles ficam marcados em âmbar no card e agrupados no topo do
+// Panorama justamente pra serem corrigidos.)
+export async function setVideoResponsible(videoId: string, userId: string) {
+  if (!userId) return;
+  const supabase = await getSupabase();
+  const { data: video } = await supabase.from(TABLES.videos).select("project_id").eq("id", videoId).maybeSingle();
+  if (!video) return;
+
+  const [{ data: person }] = await Promise.all([
+    supabase.from(TABLES.users).select("name").eq("id", userId).maybeSingle(),
+    supabase.from(TABLES.videos).update(toRow({ editorId: userId, updatedAt: nowISO() })).eq("id", videoId),
+  ]);
+
+  await logActivity("VIDEO", videoId, "Responsável definido", person?.name ?? undefined);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${video.project_id}`);
+}
+
+export async function setCaptureResponsible(captureId: string, userId: string) {
+  if (!userId) return;
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.captures).update(toRow({ responsibleId: userId, updatedAt: nowISO() })).eq("id", captureId);
+  revalidatePath("/captacoes");
+  revalidatePath("/calendario");
+}
+
+// No projeto o "responsável" é o produtor (producer_id) — a coluna que
+// insertProject já preenchia com quem criou.
+export async function setProjectResponsible(projectId: string, userId: string) {
+  if (!userId) return;
+  const supabase = await getSupabase();
+  const { data: person } = await supabase.from(TABLES.users).select("name").eq("id", userId).maybeSingle();
+  await supabase.from(TABLES.projects).update(toRow({ producerId: userId, updatedAt: nowISO() })).eq("id", projectId);
+  await logActivity("PROJECT", projectId, "Responsável definido", person?.name ?? undefined);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${projectId}`);
 }
 
 // ---------------------------------------------------------------------------

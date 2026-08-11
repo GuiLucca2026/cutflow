@@ -239,10 +239,12 @@ export function mapCapture(r: any): (Capture & Record<string, any>) | null {
     endTime: r.end_time,
     location: r.location,
     crewIds: r.crew_ids ?? [],
+    responsibleId: r.responsible_id ?? null,
     status: r.status,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     ...(r.project !== undefined ? { project: mapProject(r.project) } : {}),
+    ...(r.responsible !== undefined ? { responsible: mapUser(r.responsible) } : {}),
   };
 }
 
@@ -287,6 +289,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   startTime: "start_time",
   endTime: "end_time",
   crewIds: "crew_ids",
+  responsibleId: "responsible_id",
   invitedById: "invited_by_id",
   expiresAt: "expires_at",
   acceptedAt: "accepted_at",

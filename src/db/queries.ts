@@ -200,7 +200,7 @@ export async function listWorkloadEntries(fromISO: string, toISO: string) {
 // ---------------------------------------------------------------------------
 export async function listCaptures() {
   const supabase = await getSupabase();
-  const select = "*, project:cutflow_projects(*, client:cutflow_clients(*))";
+  const select = "*, project:cutflow_projects(*, client:cutflow_clients(*)), responsible:cutflow_users!responsible_id(*)";
   const { data, error } = await supabase.from(TABLES.captures).select(select).order("date");
   if (error) throw error;
   return data.map((r) => mapCapture(r)!);

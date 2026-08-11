@@ -37,6 +37,7 @@ import {
   resolveRevision,
   addTeamMember,
   removeTeamMember,
+  setVideoResponsible,
 } from "@/app/actions";
 import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X } from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
@@ -201,9 +202,32 @@ function VideoDetailBody({
           <Progress value={progress} />
         </div>
 
+        {/* Responsável é editável aqui (e no menu de botão direito do card).
+            Não existe opção "sem responsável": todo vídeo tem que ter dono
+            — ver setVideoResponsible em actions.ts. */}
+        <div className="space-y-1.5">
+          <div className="text-[11px] uppercase tracking-wide text-cf-text-dim">Responsável</div>
+          <Select
+            value={video.editorId ?? ""}
+            onValueChange={(v) =>
+              startTransition(async () => {
+                await setVideoResponsible(video.id, v);
+                toast.success(`Responsável atualizado.`);
+                onStatusChange();
+              })
+            }
+          >
+            <SelectTrigger><SelectValue placeholder="Definir responsável" /></SelectTrigger>
+            <SelectContent>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Key facts grid */}
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <Fact label="Editor" value={video.editor?.name ?? "—"} avatar={video.editor} />
           <Fact label="Aprovador" value={video.approver?.name ?? "—"} avatar={video.approver} />
           <Fact label="Formato" value={`${video.format} · ${video.aspectRatio}`} />
           <Fact label="Versão atual" value={video.currentVersion ?? "—"} />

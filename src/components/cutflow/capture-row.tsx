@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { MapPin, Clock, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ResponsibleSelect } from "@/components/cutflow/responsible-select";
 import { updateCaptureStatus, deleteCapture } from "@/app/actions";
 import { fmtDateWeekday } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export type CaptureData = {
   location: string | null;
   crewIds: string[];
   status: string;
+  responsibleId: string | null;
   project?: { name: string; client: { name: string; color: string } | null } | null;
 };
 
@@ -81,6 +83,19 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
       </div>
 
       {capture.description && <p className="text-xs text-cf-text-dim mt-2 whitespace-pre-wrap">{capture.description}</p>}
+
+      {/* Responsável da captação — quem cria assume, e a troca é aqui.
+          Não tem opção de deixar vazio (ver responsible-select.tsx). */}
+      <div className="flex items-center gap-2 mt-3">
+        <span className="text-[11px] uppercase tracking-wide text-cf-text-dim shrink-0">Responsável</span>
+        <ResponsibleSelect
+          kind="capture"
+          id={capture.id}
+          value={capture.responsibleId}
+          users={crew}
+          className="h-8 text-sm w-[190px]"
+        />
+      </div>
 
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center -space-x-2">

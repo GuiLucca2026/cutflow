@@ -14,10 +14,12 @@ import {
   ContextMenuSubContent,
 } from "@/components/ui/context-menu";
 import { RenameDialog } from "@/components/cutflow/rename-dialog";
-import { updateVideoStatus, renameVideo, deleteVideo, restoreVideo, updateVideoField } from "@/app/actions";
+import { useVideoDetail } from "@/components/cutflow/video-detail-context";
+import { Avatar } from "@/components/ui/avatar";
+import { updateVideoStatus, renameVideo, deleteVideo, restoreVideo, updateVideoField, setVideoResponsible } from "@/app/actions";
 import { KANBAN_STATUSES, STATUS_META, PRIORITY_META } from "@/lib/domain";
 import { PRIORITIES } from "@/db/schema";
-import { FolderOpen, Pencil, Flag, ListChecks, Trash2 } from "lucide-react";
+import { FolderOpen, Pencil, Flag, ListChecks, Trash2, UserRound } from "lucide-react";
 
 // Menu de botão direito no card de vídeo — mesma ideia do menu do Google
 // Drive que o usuário mandou de referência (Renomear, Excluir, atalhos
@@ -29,12 +31,15 @@ export function VideoContextMenu({
   onOpen,
   children,
 }: {
-  video: { id: string; name: string; status: string; priority: string };
+  video: { id: string; name: string; status: string; priority: string; editorId?: string | null };
   onOpen: () => void;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const [renaming, setRenaming] = React.useState(false);
+  // A equipe vem do contexto (carregada uma vez no layout) — assim o card
+  // não precisa receber a lista de pessoas de página em página.
+  const { users } = useVideoDetail();
 
   function del() {
     // Otimista + desfazer no próprio toast — igual Drive/Gmail: exclui na
@@ -62,6 +67,33 @@ export function VideoContextMenu({
           </ContextMenuItem>
 
           <ContextMenuSeparator />
+
+          {/* Sem opção de "tirar o responsável": todo vídeo tem que ter um
+              dono (ver setVideoResponsible em actions.ts). Só dá pra passar
+              o bastão pra outra pessoa. */}
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="gap-2">
+              <UserRound className="h-3.5 w-3.5" /> Definir responsável
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {users.length === 0 && <ContextMenuItem disabled>Ninguém cadastrado</ContextMenuItem>}
+              {users.map((u) => (
+                <ContextMenuItem
+                  key={u.id}
+                  onSelect={() =>
+                    setVideoResponsible(video.id, u.id).then(() => {
+                      toast.success(`${video.name} agora é responsabilidade de ${u.name.split(" ")[0]}.`);
+                      router.refresh();
+                    })
+                  }
+                  className="gap-2"
+                >
+                  <Avatar name={u.name} color={u.avatarColor} size={16} />
+                  <span className={u.id === video.editorId ? "font-semibold" : undefined}>{u.name}</span>
+                </ContextMenuItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
 
           <ContextMenuSub>
             <ContextMenuSubTrigger className="gap-2">

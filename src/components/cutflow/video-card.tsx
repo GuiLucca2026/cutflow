@@ -28,6 +28,8 @@ export type VideoCardData = {
   // Contagem da espera do cliente (Fase 9) — ver computeClientWait.
   clientSentAt?: string | null;
   updatedAt?: string | null;
+  // Usado pelo menu de botão direito pra marcar quem é o responsável atual.
+  editorId?: string | null;
 };
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { createClient, createProject, createProjectQuick, createVideo, createCapture } from "@/app/actions";
 import { PROJECT_TYPES, VIDEO_FORMATS } from "@/db/schema";
 import { PRIORITY_META } from "@/lib/domain";
@@ -21,10 +22,20 @@ type ClientLite = { id: string; name: string };
 type ProjectLite = { id: string; name: string; clientId: string };
 type UserLite = { id: string; name: string };
 
-// One dialog, three tabs, instead of three separate dialogs behind a
-// dropdown menu — and every "pick an existing X" select also offers
-// "+ Criar novo X" inline, so you never have to close this panel, go
-// create the client/project you're missing, then start over.
+// Um seletor que também aceita cadastrar na hora ("+ Criar novo cliente")
+// não cria nada sozinho: ele guarda o rascunho e só grava quando o
+// formulário de fora é salvo. Quem está de fora chama commit() antes de
+// gravar o próprio registro e recebe o id final — assim quem preencheu o
+// nome de um projeto novo e clicou direto em "Criar vídeo" não perde o que
+// digitou nem precisa clicar em "Adicionar projeto" primeiro.
+// `ok: false` significa "tem rascunho pela metade, não dá pra seguir" — o
+// próprio picker já avisou o motivo em toast.
+type PickerHandle = { commit: () => Promise<{ ok: boolean; id: string }> };
+
+// One dialog, four tabs, instead of separate dialogs behind a dropdown menu
+// — and every "pick an existing X" select also offers "+ Criar novo X"
+// inline, so you never have to close this panel, go create the
+// client/project you're missing, then start over.
 export function CreatePanel({
   open,
   tab,
@@ -33,6 +44,7 @@ export function CreatePanel({
   clients: initialClients,
   users,
   projects: initialProjects,
+  currentUserId,
 }: {
   open: boolean;
   tab: CreateTab;
@@ -41,6 +53,7 @@ export function CreatePanel({
   clients: ClientLite[];
   users: UserLite[];
   projects: ProjectLite[];
+  currentUserId: string;
 }) {
   const router = useRouter();
 
@@ -55,75 +68,144 @@ export function CreatePanel({
   const addClient = React.useCallback((c: ClientLite) => setClients((prev) => [...prev, c]), []);
   const addProject = React.useCallback((p: ProjectLite) => setProjects((prev) => [...prev, p]), []);
 
+  // Fechar clicando fora (ou no X, ou no Esc) apagava tudo que tinha sido
+  // digitado, sem aviso — o jeito mais fácil de perder um cadastro inteiro
+  // por um clique torto. Agora, se tem coisa preenchida, perguntamos antes
+  // e oferecemos salvar. Os três caminhos de fechar passam pelo mesmo
+  // onOpenChange do Radix, então uma trava só cobre todos.
+  const [dirty, setDirty] = React.useState(false);
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const handleDirty = React.useCallback((d: boolean) => setDirty(d), []);
+
+  React.useEffect(() => {
+    if (open) setDirty(false);
+  }, [open]);
+
   function finish() {
+    setDirty(false);
+    setConfirmOpen(false);
     onClose();
     router.refresh();
   }
 
+  function requestClose() {
+    if (dirty) setConfirmOpen(true);
+    else onClose();
+  }
+
+  function discardAndClose() {
+    setConfirmOpen(false);
+    setDirty(false);
+    onClose();
+  }
+
+  // requestSubmit() (e não submit()) de propósito: dispara a validação
+  // nativa do navegador, então se faltar um campo obrigatório o próprio
+  // campo é apontado em vez de sair fechando e perdendo o resto.
+  function saveAndClose() {
+    setConfirmOpen(false);
+    formRef.current?.requestSubmit();
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Criar</DialogTitle>
-          <DialogDescription>
-            Cadastre um cliente, um projeto, uma captação ou um vídeo — um vídeo pode ficar sem projeto por enquanto e
-            ser vinculado depois.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && requestClose()}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Criar</DialogTitle>
+            <DialogDescription>
+              Cadastre um cliente, um projeto, uma captação ou um vídeo — um vídeo pode ficar sem projeto por enquanto e
+              ser vinculado depois.
+            </DialogDescription>
+          </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => onTabChange(v as CreateTab)}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="video">Vídeo</TabsTrigger>
-            <TabsTrigger value="captacao">Captação</TabsTrigger>
-            <TabsTrigger value="projeto">Projeto</TabsTrigger>
-            <TabsTrigger value="cliente">Cliente</TabsTrigger>
-          </TabsList>
+          <Tabs value={tab} onValueChange={(v) => onTabChange(v as CreateTab)}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="video">Vídeo</TabsTrigger>
+              <TabsTrigger value="captacao">Captação</TabsTrigger>
+              <TabsTrigger value="projeto">Projeto</TabsTrigger>
+              <TabsTrigger value="cliente">Cliente</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="cliente">
-            <ClientForm onCreated={(c) => { addClient(c); toast.success("Cliente criado."); finish(); }} />
-          </TabsContent>
+            <TabsContent value="cliente">
+              <ClientForm
+                formRef={formRef}
+                onDirty={handleDirty}
+                onCreated={(c) => { addClient(c); toast.success("Cliente criado."); finish(); }}
+              />
+            </TabsContent>
 
-          <TabsContent value="projeto">
-            <ProjectForm clients={clients} onAddClient={addClient} />
-          </TabsContent>
+            <TabsContent value="projeto">
+              <ProjectForm formRef={formRef} onDirty={handleDirty} clients={clients} onAddClient={addClient} />
+            </TabsContent>
 
-          <TabsContent value="video">
-            <VideoForm
-              projects={projects}
-              clients={clients}
-              users={users}
-              onAddClient={addClient}
-              onAddProject={addProject}
-              onCreated={() => { toast.success("Vídeo criado."); finish(); }}
-            />
-          </TabsContent>
+            <TabsContent value="video">
+              <VideoForm
+                formRef={formRef}
+                onDirty={handleDirty}
+                projects={projects}
+                clients={clients}
+                users={users}
+                currentUserId={currentUserId}
+                onAddClient={addClient}
+                onAddProject={addProject}
+                onCreated={() => { toast.success("Vídeo criado."); finish(); }}
+              />
+            </TabsContent>
 
-          <TabsContent value="captacao">
-            <CaptureForm
-              projects={projects}
-              clients={clients}
-              users={users}
-              onAddClient={addClient}
-              onAddProject={addProject}
-              onCreated={() => { toast.success("Captação agendada."); finish(); }}
-            />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+            <TabsContent value="captacao">
+              <CaptureForm
+                formRef={formRef}
+                onDirty={handleDirty}
+                projects={projects}
+                clients={clients}
+                users={users}
+                currentUserId={currentUserId}
+                onAddClient={addClient}
+                onAddProject={addProject}
+                onCreated={() => { toast.success("Captação agendada."); finish(); }}
+              />
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmOpen} onOpenChange={(v) => !v && setConfirmOpen(false)}>
+        <DialogContent className="max-w-sm" showClose={false}>
+          <DialogHeader>
+            <DialogTitle>Sair sem salvar?</DialogTitle>
+            <DialogDescription>
+              Você preencheu dados que ainda não foram cadastrados. Se sair agora, eles se perdem.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setConfirmOpen(false)}>Continuar editando</Button>
+            <Button type="button" variant="outline" className="text-red-600" onClick={discardAndClose}>Descartar</Button>
+            <Button type="button" onClick={saveAndClose}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
+type FormBase = { formRef: React.RefObject<HTMLFormElement | null>; onDirty: (dirty: boolean) => void };
 
 // ---------------------------------------------------------------------------
 // Cliente
 // ---------------------------------------------------------------------------
-function ClientForm({ onCreated }: { onCreated: (c: ClientLite) => void }) {
+function ClientForm({ formRef, onDirty, onCreated }: FormBase & { onCreated: (c: ClientLite) => void }) {
   const [name, setName] = React.useState("");
   const [tradeName, setTradeName] = React.useState("");
   const [contactName, setContactName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [whatsapp, setWhatsapp] = React.useState("");
   const [pending, setPending] = React.useState(false);
+
+  React.useEffect(() => {
+    onDirty(Boolean(name.trim() || tradeName.trim() || contactName.trim() || email.trim() || whatsapp.trim()));
+  }, [name, tradeName, contactName, email, whatsapp, onDirty]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,10 +220,11 @@ function ClientForm({ onCreated }: { onCreated: (c: ClientLite) => void }) {
     const id = await createClient(fd);
     setPending(false);
     if (id) onCreated({ id, name: name.trim() });
+    else toast.error("Não foi possível criar o cliente.");
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form ref={formRef} onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor="c-name">Nome / Razão social</Label>
         <Input id="c-name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder="Ex: Vortex Sportwear" />
@@ -174,58 +257,53 @@ function ClientForm({ onCreated }: { onCreated: (c: ClientLite) => void }) {
 }
 
 // Inline picker: pick an existing client, or expand a one-field form to
-// create one on the spot without leaving whatever you were filling out.
-function ClientPicker({
-  clients,
-  value,
-  onChange,
-  onCreated,
-}: {
-  clients: ClientLite[];
-  value: string;
-  onChange: (id: string) => void;
-  onCreated: (c: ClientLite) => void;
-}) {
+// create one on the spot. O cadastro em si só acontece no commit() — ver
+// PickerHandle lá em cima.
+const ClientPicker = React.forwardRef<
+  PickerHandle,
+  {
+    clients: ClientLite[];
+    value: string;
+    onChange: (id: string) => void;
+    onCreated: (c: ClientLite) => void;
+    onDraft?: (hasDraft: boolean) => void;
+  }
+>(function ClientPicker({ clients, value, onChange, onCreated, onDraft }, ref) {
   const [creating, setCreating] = React.useState(false);
   const [name, setName] = React.useState("");
-  const [pending, setPending] = React.useState(false);
 
-  async function handleCreate() {
-    if (!name.trim() || pending) return;
-    setPending(true);
-    const fd = new FormData();
-    fd.set("name", name.trim());
-    const id = await createClient(fd);
-    setPending(false);
-    if (id) {
+  React.useEffect(() => {
+    onDraft?.(creating && !!name.trim());
+  }, [creating, name, onDraft]);
+
+  React.useImperativeHandle(ref, () => ({
+    async commit() {
+      if (!creating || !name.trim()) return { ok: true, id: value };
+      const fd = new FormData();
+      fd.set("name", name.trim());
+      const id = await createClient(fd);
+      if (!id) {
+        toast.error("Não foi possível criar o cliente.");
+        return { ok: false, id: "" };
+      }
       onCreated({ id, name: name.trim() });
       onChange(id);
       setCreating(false);
       setName("");
-    }
-  }
+      return { ok: true, id };
+    },
+  }));
 
   if (creating) {
     return (
-      <div className="flex gap-2">
-        <Input
-          autoFocus
-          placeholder="Nome do novo cliente"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleCreate();
-            }
-          }}
-        />
-        <Button type="button" size="sm" onClick={handleCreate} disabled={pending || !name.trim()}>
-          {pending ? "…" : "Adicionar"}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={() => { setCreating(false); setName(""); }}>
-          Cancelar
-        </Button>
+      <div className="space-y-1.5">
+        <Input autoFocus placeholder="Nome do novo cliente" value={name} onChange={(e) => setName(e.target.value)} />
+        <div className="flex items-center gap-2">
+          <p className="text-[11px] text-cf-text-dim flex-1">Cadastrado junto ao salvar.</p>
+          <Button type="button" size="sm" variant="ghost" onClick={() => { setCreating(false); setName(""); }}>
+            Cancelar
+          </Button>
+        </div>
       </div>
     );
   }
@@ -241,43 +319,62 @@ function ClientPicker({
       </SelectContent>
     </Select>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Projeto
 // ---------------------------------------------------------------------------
 function ProjectForm({
+  formRef,
+  onDirty,
   clients,
   onAddClient,
-}: {
-  clients: ClientLite[];
-  onAddClient: (c: ClientLite) => void;
-}) {
+}: FormBase & { clients: ClientLite[]; onAddClient: (c: ClientLite) => void }) {
   const [name, setName] = React.useState("");
   const [clientId, setClientId] = React.useState("");
+  const [clientDraft, setClientDraft] = React.useState(false);
   const [type, setType] = React.useState("Outros");
   const [priority, setPriority] = React.useState("NORMAL");
   const [description, setDescription] = React.useState("");
   const [pending, setPending] = React.useState(false);
+  const clientRef = React.useRef<PickerHandle>(null);
+  const handleClientDraft = React.useCallback((d: boolean) => setClientDraft(d), []);
+
+  React.useEffect(() => {
+    onDirty(Boolean(name.trim() || clientId || description.trim() || clientDraft));
+  }, [name, clientId, description, clientDraft, onDirty]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !clientId || pending) return;
+    if (!name.trim() || pending) return;
     setPending(true);
+
+    // Cliente digitado inline vira cadastro aqui, antes do projeto.
+    const client = await clientRef.current!.commit();
+    if (!client.ok) return setPending(false);
+    if (!client.id) {
+      toast.error("Escolha (ou cadastre) o cliente do projeto.");
+      return setPending(false);
+    }
+
     const fd = new FormData();
     fd.set("name", name.trim());
-    fd.set("clientId", clientId);
+    fd.set("clientId", client.id);
     fd.set("type", type);
     fd.set("priority", priority);
     if (description) fd.set("description", description);
-    // createProject redirects to the new project's page on success — that
-    // navigation is what closes this dialog, so there's no onClose() call
-    // (and no setPending(false)) on the success path here.
+    // createProject redireciona pra página do projeto novo — é essa
+    // navegação que fecha o painel, então não tem onClose() nem
+    // setPending(false) no caminho de sucesso. Limpamos o "tem coisa não
+    // salva" antes pra não perguntar nada durante a saída.
+    onDirty(false);
     await createProject(fd);
   }
 
+  const canSubmit = Boolean(name.trim() && (clientId || clientDraft));
+
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form ref={formRef} onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
         <Label htmlFor="p-name">Nome do projeto</Label>
         <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder="Ex: Campanha Verão 2026" />
@@ -285,7 +382,7 @@ function ProjectForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Cliente</Label>
-          <ClientPicker clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} />
+          <ClientPicker ref={clientRef} clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} onDraft={handleClientDraft} />
         </div>
         <div className="space-y-1.5">
           <Label>Tipo</Label>
@@ -315,83 +412,81 @@ function ProjectForm({
         <Textarea id="p-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Briefing rápido do projeto…" />
       </div>
       <DialogFooter>
-        <Button type="submit" disabled={pending || !name.trim() || !clientId}>
-          {pending ? "Criando…" : "Criar projeto"}
-        </Button>
+        <Button type="submit" disabled={pending || !canSubmit}>{pending ? "Criando…" : "Criar projeto"}</Button>
       </DialogFooter>
     </form>
   );
 }
 
-// Compact inline form (name, client — the 2 fields createProject actually
-// requires; prazo de projeto não existe mais) used by ProjectPicker's
-// "+ Criar novo projeto".
-function InlineProjectCreate({
-  clients,
-  onAddClient,
-  onCreated,
-  onCancel,
-}: {
-  clients: ClientLite[];
-  onAddClient: (c: ClientLite) => void;
-  onCreated: (p: ProjectLite) => void;
-  onCancel: () => void;
-}) {
+// Seletor de projeto com cadastro embutido (nome + cliente). Igual ao
+// ClientPicker: guarda o rascunho e só grava no commit(), chamado por quem
+// está de fora ao salvar o vídeo/captação.
+const ProjectPicker = React.forwardRef<
+  PickerHandle,
+  {
+    projects: ProjectLite[];
+    clients: ClientLite[];
+    value: string;
+    onChange: (id: string) => void;
+    onAddProject: (p: ProjectLite) => void;
+    onAddClient: (c: ClientLite) => void;
+    onDraft?: (hasDraft: boolean) => void;
+  }
+>(function ProjectPicker({ projects, clients, value, onChange, onAddProject, onAddClient, onDraft }, ref) {
+  const [creating, setCreating] = React.useState(false);
   const [name, setName] = React.useState("");
   const [clientId, setClientId] = React.useState("");
-  const [pending, setPending] = React.useState(false);
+  const [clientDraft, setClientDraft] = React.useState(false);
+  const clientRef = React.useRef<PickerHandle>(null);
+  const handleClientDraft = React.useCallback((d: boolean) => setClientDraft(d), []);
 
-  async function handleCreate() {
-    if (!name.trim() || !clientId || pending) return;
-    setPending(true);
-    const fd = new FormData();
-    fd.set("name", name.trim());
-    fd.set("clientId", clientId);
-    const id = await createProjectQuick(fd);
-    setPending(false);
-    if (id) onCreated({ id, name: name.trim(), clientId });
-  }
+  React.useEffect(() => {
+    onDraft?.(creating && (!!name.trim() || !!clientId || clientDraft));
+  }, [creating, name, clientId, clientDraft, onDraft]);
 
-  return (
-    <div className="rounded-lg border border-cf-border bg-cf-surface-2 p-3 space-y-2.5">
-      <div className="text-xs font-semibold text-cf-text-dim">Novo projeto</div>
-      <Input autoFocus placeholder="Nome do projeto" value={name} onChange={(e) => setName(e.target.value)} />
-      <ClientPicker clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} />
-      <div className="flex gap-2">
-        <Button type="button" size="sm" onClick={handleCreate} disabled={pending || !name.trim() || !clientId}>
-          {pending ? "Criando…" : "Adicionar projeto"}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancelar</Button>
-      </div>
-    </div>
-  );
-}
+  React.useImperativeHandle(ref, () => ({
+    async commit() {
+      if (!creating || !name.trim()) return { ok: true, id: value };
 
-function ProjectPicker({
-  projects,
-  clients,
-  value,
-  onChange,
-  onAddProject,
-  onAddClient,
-}: {
-  projects: ProjectLite[];
-  clients: ClientLite[];
-  value: string;
-  onChange: (id: string) => void;
-  onAddProject: (p: ProjectLite) => void;
-  onAddClient: (c: ClientLite) => void;
-}) {
-  const [creating, setCreating] = React.useState(false);
+      // Projeto novo precisa de cliente — e o cliente também pode ser um
+      // rascunho digitado logo abaixo, então ele é cadastrado primeiro.
+      const client = await clientRef.current!.commit();
+      if (!client.ok) return { ok: false, id: "" };
+      if (!client.id) {
+        toast.error("Escolha (ou cadastre) o cliente do novo projeto.");
+        return { ok: false, id: "" };
+      }
+
+      const fd = new FormData();
+      fd.set("name", name.trim());
+      fd.set("clientId", client.id);
+      const id = await createProjectQuick(fd);
+      if (!id) {
+        toast.error("Não foi possível criar o projeto.");
+        return { ok: false, id: "" };
+      }
+      onAddProject({ id, name: name.trim(), clientId: client.id });
+      onChange(id);
+      setCreating(false);
+      setName("");
+      setClientId("");
+      return { ok: true, id };
+    },
+  }));
 
   if (creating) {
     return (
-      <InlineProjectCreate
-        clients={clients}
-        onAddClient={onAddClient}
-        onCreated={(p) => { onAddProject(p); onChange(p.id); setCreating(false); }}
-        onCancel={() => setCreating(false)}
-      />
+      <div className="rounded-lg border border-cf-border bg-cf-surface-2 p-3 space-y-2.5">
+        <div className="text-xs font-semibold text-cf-text-dim">Novo projeto</div>
+        <Input autoFocus placeholder="Nome do projeto" value={name} onChange={(e) => setName(e.target.value)} />
+        <ClientPicker ref={clientRef} clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} onDraft={handleClientDraft} />
+        <div className="flex items-center gap-2">
+          <p className="text-[11px] text-cf-text-dim flex-1">Cadastrado junto ao salvar.</p>
+          <Button type="button" size="sm" variant="ghost" onClick={() => { setCreating(false); setName(""); setClientId(""); }}>
+            Cancelar
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -412,40 +507,60 @@ function ProjectPicker({
       </SelectContent>
     </Select>
   );
-}
+});
 
 // ---------------------------------------------------------------------------
 // Vídeo
 // ---------------------------------------------------------------------------
 function VideoForm({
+  formRef,
+  onDirty,
   projects,
   clients,
   users,
   onAddClient,
   onAddProject,
   onCreated,
-}: {
+  currentUserId,
+}: FormBase & {
   projects: ProjectLite[];
   clients: ClientLite[];
   users: UserLite[];
   onAddClient: (c: ClientLite) => void;
   onAddProject: (p: ProjectLite) => void;
   onCreated: () => void;
+  currentUserId: string;
 }) {
   const [projectId, setProjectId] = React.useState("__none__");
+  const [projectDraft, setProjectDraft] = React.useState(false);
   const [name, setName] = React.useState("");
   const [format, setFormat] = React.useState("Reel");
-  const [editorId, setEditorId] = React.useState("");
+  // Quem está criando já entra como responsável — dá pra trocar aqui mesmo
+  // ou depois (menu de botão direito no card / ficha do vídeo). O que não
+  // dá é deixar em branco: vídeo sem dono some da fila de todo mundo.
+  const [editorId, setEditorId] = React.useState(currentUserId);
   const [finalDeadline, setFinalDeadline] = React.useState("");
   const [estimatedHours, setEstimatedHours] = React.useState("4");
   const [pending, setPending] = React.useState(false);
+  const projectRef = React.useRef<PickerHandle>(null);
+  const handleProjectDraft = React.useCallback((d: boolean) => setProjectDraft(d), []);
+
+  React.useEffect(() => {
+    onDirty(Boolean(name.trim() || finalDeadline || editorId !== currentUserId || projectId !== "__none__" || projectDraft));
+  }, [name, finalDeadline, editorId, currentUserId, projectId, projectDraft, onDirty]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !finalDeadline || pending) return;
     setPending(true);
+
+    // Projeto (e o cliente dele) digitados inline são cadastrados aqui,
+    // antes do vídeo — é isso que dispensa o "Adicionar projeto".
+    const project = await projectRef.current!.commit();
+    if (!project.ok) return setPending(false);
+
     const fd = new FormData();
-    if (projectId && projectId !== "__none__") fd.set("projectId", projectId);
+    if (project.id && project.id !== "__none__") fd.set("projectId", project.id);
     fd.set("name", name.trim());
     fd.set("format", format);
     if (editorId) fd.set("editorId", editorId);
@@ -454,13 +569,23 @@ function VideoForm({
     const id = await createVideo(fd);
     setPending(false);
     if (id) onCreated();
+    else toast.error("Não foi possível criar o vídeo.");
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form ref={formRef} onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
         <Label>Projeto</Label>
-        <ProjectPicker projects={projects} clients={clients} value={projectId} onChange={setProjectId} onAddProject={onAddProject} onAddClient={onAddClient} />
+        <ProjectPicker
+          ref={projectRef}
+          projects={projects}
+          clients={clients}
+          value={projectId}
+          onChange={setProjectId}
+          onAddProject={onAddProject}
+          onAddClient={onAddClient}
+          onDraft={handleProjectDraft}
+        />
         <p className="text-[11px] text-cf-text-dim">Pode deixar &quot;Sem projeto&quot; e vincular depois.</p>
       </div>
       <div className="space-y-1.5">
@@ -480,12 +605,14 @@ function VideoForm({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Editor</Label>
+          <Label>Responsável</Label>
           <Select value={editorId} onValueChange={setEditorId}>
-            <SelectTrigger><SelectValue placeholder="Atribuir editor" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Definir responsável" /></SelectTrigger>
             <SelectContent>
               {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}{u.id === currentUserId ? " (você)" : ""}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -493,8 +620,8 @@ function VideoForm({
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="v-finalDeadline">Prazo final</Label>
-          <Input id="v-finalDeadline" type="date" value={finalDeadline} onChange={(e) => setFinalDeadline(e.target.value)} required />
+          <Label htmlFor="v-finalDeadline">Prazo de entrega</Label>
+          <DatePicker id="v-finalDeadline" value={finalDeadline} onChange={setFinalDeadline} placeholder="Escolher prazo" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="v-estimatedHours">Horas estimadas</Label>
@@ -541,21 +668,27 @@ function CrewPicker({ users, value, onChange }: { users: UserLite[]; value: stri
 }
 
 function CaptureForm({
+  formRef,
+  onDirty,
   projects,
   clients,
   users,
   onAddClient,
   onAddProject,
   onCreated,
-}: {
+  currentUserId,
+}: FormBase & {
   projects: ProjectLite[];
   clients: ClientLite[];
   users: UserLite[];
   onAddClient: (c: ClientLite) => void;
   onAddProject: (p: ProjectLite) => void;
   onCreated: () => void;
+  currentUserId: string;
 }) {
   const [projectId, setProjectId] = React.useState("__none__");
+  const [projectDraft, setProjectDraft] = React.useState(false);
+  const [responsibleId, setResponsibleId] = React.useState(currentUserId);
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [date, setDate] = React.useState("");
@@ -564,39 +697,80 @@ function CaptureForm({
   const [location, setLocation] = React.useState("");
   const [crewIds, setCrewIds] = React.useState<string[]>([]);
   const [pending, setPending] = React.useState(false);
+  const projectRef = React.useRef<PickerHandle>(null);
+  const handleProjectDraft = React.useCallback((d: boolean) => setProjectDraft(d), []);
+
+  React.useEffect(() => {
+    onDirty(
+      Boolean(
+        title.trim() || date || description.trim() || location.trim() || startTime || endTime || crewIds.length > 0 ||
+          projectId !== "__none__" || projectDraft || responsibleId !== currentUserId
+      )
+    );
+  }, [title, date, description, location, startTime, endTime, crewIds, projectId, projectDraft, responsibleId, currentUserId, onDirty]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !date || pending) return;
     setPending(true);
+
+    const project = await projectRef.current!.commit();
+    if (!project.ok) return setPending(false);
+
     const fd = new FormData();
-    if (projectId && projectId !== "__none__") fd.set("projectId", projectId);
+    if (project.id && project.id !== "__none__") fd.set("projectId", project.id);
     fd.set("title", title.trim());
     if (description) fd.set("description", description);
     fd.set("date", date);
     if (startTime) fd.set("startTime", startTime);
     if (endTime) fd.set("endTime", endTime);
     if (location) fd.set("location", location);
+    fd.set("responsibleId", responsibleId);
     crewIds.forEach((id) => fd.append("crewIds", id));
     const id = await createCapture(fd);
     setPending(false);
     if (id) onCreated();
+    else toast.error("Não foi possível agendar a captação.");
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form ref={formRef} onSubmit={submit} className="space-y-3">
       <div className="space-y-1.5">
         <Label>Projeto</Label>
-        <ProjectPicker projects={projects} clients={clients} value={projectId} onChange={setProjectId} onAddProject={onAddProject} onAddClient={onAddClient} />
+        <ProjectPicker
+          ref={projectRef}
+          projects={projects}
+          clients={clients}
+          value={projectId}
+          onChange={setProjectId}
+          onAddProject={onAddProject}
+          onAddClient={onAddClient}
+          onDraft={handleProjectDraft}
+        />
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="cap-title">Título</Label>
-        <Input id="cap-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="Ex: Captação — Evento de lançamento" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="cap-title">Título</Label>
+          <Input id="cap-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="Ex: Captação — Evento de lançamento" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Responsável</Label>
+          <Select value={responsibleId} onValueChange={setResponsibleId}>
+            <SelectTrigger><SelectValue placeholder="Definir responsável" /></SelectTrigger>
+            <SelectContent>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}{u.id === currentUserId ? " (você)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
           <Label htmlFor="cap-date">Data</Label>
-          <Input id="cap-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+          <DatePicker id="cap-date" value={date} onChange={setDate} placeholder="Escolher data" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="cap-start">Início</Label>

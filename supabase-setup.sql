@@ -417,3 +417,14 @@ create policy "cutflow_authenticated_all" on public.cutflow_video_team for all t
 -- Vídeos que JÁ estavam aguardando quando esta coluna foi criada ficam com
 -- null e caem no fallback pro updated_at, até a próxima troca de status.
 alter table public.cutflow_videos add column if not exists client_sent_at text;
+
+-- ---------------------------------------------------------------------------
+-- Fase 10 — Responsável da captação
+-- ---------------------------------------------------------------------------
+-- Vídeo já tinha dono (editor_id) e projeto também (producer_id); captação
+-- era a única coisa que podia existir sem ninguém responsável por ela.
+-- Quem cria assume por padrão e pode passar adiante depois (ver
+-- createCapture / setCaptureResponsible em actions.ts).
+-- Fica nullable por causa das captações criadas antes desta coluna existir
+-- — elas continuam válidas, só aparecem sem responsável até alguém definir.
+alter table public.cutflow_captures add column if not exists responsible_id text references public.cutflow_users(id);
