@@ -6,7 +6,7 @@ import { toRow } from "@/db/mappers";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
-import { STATUS_META, TEAM_ROLE_META } from "@/lib/domain";
+import { STATUS_META, TEAM_ROLE_META, isWaitingClient } from "@/lib/domain";
 import { redirect } from "next/navigation";
 
 function nowISO() {
@@ -59,7 +59,19 @@ export async function updateVideoStatus(videoId: string, newStatus: string) {
   const oldStatus = video.status;
   if (oldStatus === newStatus) return;
 
-  await supabase.from(TABLES.videos).update(toRow({ status: newStatus, updatedAt: nowISO() })).eq("id", videoId);
+  // Relógio da espera do cliente (Fase 9): começa a contar quando o vídeo
+  // ENTRA na mão do cliente e zera quando volta pra nossa. Andar entre dois
+  // status de espera (Enviado ao cliente → Aguardando feedback) não
+  // reinicia nada de propósito — pro cliente é a mesma espera contínua, e
+  // reiniciar aí esconderia justamente o caso que a gente quer pegar.
+  const wasWaiting = isWaitingClient(oldStatus);
+  const nowWaiting = isWaitingClient(newStatus);
+  const clientSentAt = nowWaiting && !wasWaiting ? nowISO() : !nowWaiting && wasWaiting ? null : undefined;
+
+  await supabase
+    .from(TABLES.videos)
+    .update(toRow({ status: newStatus, clientSentAt, updatedAt: nowISO() }))
+    .eq("id", videoId);
 
   const oldLabel = STATUS_META[oldStatus]?.label ?? oldStatus;
   const newLabel = STATUS_META[newStatus]?.label ?? newStatus;

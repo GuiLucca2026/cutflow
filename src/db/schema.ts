@@ -232,6 +232,13 @@ export type Video = {
   driveUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  // Quando o vídeo foi PRA MÃO DO CLIENTE (Fase 9) — gravado por
+  // updateVideoStatus ao entrar num status de espera (ENVIADO_AO_CLIENTE,
+  // AGUARDANDO_FEEDBACK, AGUARDANDO_APROVACAO) e limpo ao sair. É daqui
+  // que sai a contagem de "sem retorno há X dias" (ver computeClientWait
+  // em lib/domain.ts) — usar updatedAt pra isso seria errado, já que
+  // qualquer edição no vídeo reiniciaria o relógio.
+  clientSentAt: string | null;
   // Lixeira (soft delete) — ver o mesmo campo em Project acima.
   deletedAt: string | null;
 };

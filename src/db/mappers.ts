@@ -122,6 +122,7 @@ export function mapVideo(r: any): (Video & Record<string, any>) | null {
     driveUrl: r.drive_url,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    clientSentAt: r.client_sent_at ?? null,
     deletedAt: r.deleted_at ?? null,
     ...(r.project !== undefined ? { project: mapProject(r.project) } : {}),
     ...(r.editor !== undefined ? { editor: mapUser(r.editor) } : {}),
@@ -336,6 +337,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   completedById: "completed_by_id",
   completedAt: "completed_at",
   deletedAt: "deleted_at",
+  clientSentAt: "client_sent_at",
 };
 
 export function toRow<T extends Record<string, any>>(obj: T): Record<string, any> {

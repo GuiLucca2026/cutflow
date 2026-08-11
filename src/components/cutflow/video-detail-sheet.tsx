@@ -13,9 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
+import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
-import { KANBAN_STATUSES, STATUS_META, TEAM_ROLE_META, TEAM_ROLES, computeDeliveryRisk, statusProgress, isOverdue } from "@/lib/domain";
+import {
+  KANBAN_STATUSES,
+  STATUS_META,
+  TEAM_ROLE_META,
+  TEAM_ROLES,
+  computeClientWait,
+  computeDeliveryRisk,
+  statusProgress,
+  isDone,
+  isOverdue,
+  isWaitingClient,
+} from "@/lib/domain";
 import { fmtDateFull, fmtDateTime, fmtRelative, fmtWaitingSince, fmtHours } from "@/lib/format";
 import {
   updateVideoStatus,
@@ -121,6 +132,7 @@ function VideoDetailBody({
   React.useEffect(() => setChecklist(video.checklist), [video.checklist]);
 
   const risk = computeDeliveryRisk(video);
+  const clientWait = computeClientWait(video);
   const progress = statusProgress(video.status);
   const overdue = isOverdue(video.finalDeadline, video.status);
   const checklistDone = checklist.filter((c: any) => c.done).length;
@@ -146,7 +158,10 @@ function VideoDetailBody({
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <StatusBadge status={video.status} />
           <PriorityBadge priority={video.priority} />
-          {!["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(video.status) && <RiskBadge risk={risk} />}
+          {/* Mesma regra dos cards: risco e espera nunca aparecem juntos —
+              ver o comentário maior em video-card.tsx. */}
+          {!isDone(video.status) && !isWaitingClient(video.status) && !clientWait && <RiskBadge risk={risk} />}
+          {clientWait && <ClientWaitBadge wait={clientWait} />}
           {overdue && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
               <AlertTriangle className="h-3.5 w-3.5" /> Atrasado

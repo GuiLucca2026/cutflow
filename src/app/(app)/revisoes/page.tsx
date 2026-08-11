@@ -1,6 +1,8 @@
 import { listVideos } from "@/db/queries";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { fmtWaitingSince } from "@/lib/format";
+import { computeClientWait } from "@/lib/domain";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -38,15 +40,28 @@ export default async function RevisoesPage() {
             <div className="rounded-xl border border-dashed border-cf-border p-6 text-center text-sm text-cf-text-dim">Nada aqui.</div>
           ) : g.showWaiting ? (
             <div className="space-y-2">
-              {g.items.map((v: any) => (
-                <div key={v.id} className="flex items-center gap-3 rounded-lg border border-cf-border bg-cf-surface px-3.5 py-2.5">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{v.project?.client?.name} — {v.name}</div>
-                    <div className="text-xs text-cf-text-dim truncate">{v.project?.name}</div>
+              {g.items.map((v: any) => {
+                // Destaque só pra quem já passou do limite de cobrança —
+                // antes disso é espera normal (ver computeClientWait).
+                const chase = computeClientWait(v)?.kind === "COBRAR_FEEDBACK";
+                return (
+                  <div
+                    key={v.id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5",
+                      chase ? "border-amber-500/40" : "border-cf-border"
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{v.project?.client?.name} — {v.name}</div>
+                      <div className="text-xs text-cf-text-dim truncate">{v.project?.name}</div>
+                    </div>
+                    <div className={cn("text-xs font-semibold whitespace-nowrap", chase ? "text-amber-600" : "text-cf-text-dim")}>
+                      {chase && "⚠ Cobrar · "}Aguardando há {fmtWaitingSince(v.clientSentAt ?? v.updatedAt)}
+                    </div>
                   </div>
-                  <div className="text-xs text-amber-600 font-semibold whitespace-nowrap">Aguardando há {fmtWaitingSince(v.updatedAt)}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

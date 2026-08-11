@@ -129,6 +129,14 @@ export function computeDeliveryRisk(video: {
   revisionCount: number;
 }): RiskLevel {
   if (isDone(video.status)) return "BAIXO";
+  // Enquanto a bola está com o cliente, "risco de entrega" não mede mais
+  // nada sobre nós: o trabalho da edição acabou, não tem hora restante pra
+  // correr atrás nem o que acelerar deste lado. Marcar como CRÍTICO nessa
+  // fase só criava barulho — um card "Aguardando feedback" ficava vermelho
+  // de urgência sem existir nenhuma ação possível pro time. O que importa
+  // nessa fase é outra coisa (há quanto tempo o cliente está sentado em
+  // cima), e isso é computeClientWait() logo abaixo.
+  if (isWaitingClient(video.status)) return "BAIXO";
 
   const hLeft = hoursUntil(video.finalDeadline);
   const workRemaining = Math.max(0, video.estimatedHours - video.actualHours);
@@ -141,6 +149,51 @@ export function computeDeliveryRisk(video: {
   if (hLeft < 72 && workRemaining > 4) return "MODERADO";
   if (video.revisionCount >= 2) return "MODERADO";
   return "BAIXO";
+}
+
+// ---------------------------------------------------------------------------
+// Espera do cliente — o que substitui o risco de entrega enquanto a bola
+// não está com a gente (ver computeDeliveryRisk acima).
+// ---------------------------------------------------------------------------
+// Dois estados, os dois acionáveis (ao contrário do "CRÍTICO" que aparecia
+// antes nessa fase, que não sugeria ação nenhuma):
+//   COBRAR_FEEDBACK      → passou do limite sem retorno; alguém precisa ir
+//                          atrás do cliente. Vira alerta no sino também.
+//   AGUARDANDO_ALTERACAO → o cliente respondeu pedindo alteração e ninguém
+//                          começou ainda; a bola voltou pra nós.
+// Antes do limite, nada é mostrado de propósito — o próprio status já diz
+// "Aguardando feedback", e um segundo selo repetindo isso só polui o card.
+export const CLIENT_FEEDBACK_CHASE_DAYS = 2;
+
+export type ClientWait = { kind: "COBRAR_FEEDBACK"; days: number } | { kind: "AGUARDANDO_ALTERACAO" } | null;
+
+export const CLIENT_WAIT_META: Record<"COBRAR_FEEDBACK" | "AGUARDANDO_ALTERACAO", { label: string; color: string }> = {
+  COBRAR_FEEDBACK: { label: "Cobrar feedback", color: "#B45309" },
+  AGUARDANDO_ALTERACAO: { label: "Aguardando alteração", color: "#E11D48" },
+};
+
+// Desde quando o cliente está com o vídeo. clientSentAt é gravado por
+// updateVideoStatus() no momento em que o vídeo entra num status de espera
+// (e some quando sai), então é a data do envio de verdade. O fallback pro
+// updatedAt cobre os vídeos que já estavam aguardando antes dessa coluna
+// existir — impreciso (qualquer edição mexe no updatedAt), mas melhor do
+// que não contar nada pra eles.
+export function daysWaitingClient(video: { clientSentAt?: string | null; updatedAt?: string | null }): number {
+  const since = video.clientSentAt ?? video.updatedAt;
+  if (!since) return 0;
+  return Math.max(0, Math.floor((Date.now() - new Date(since).getTime()) / 86_400_000));
+}
+
+export function computeClientWait(video: {
+  status: string;
+  clientSentAt?: string | null;
+  updatedAt?: string | null;
+}): ClientWait {
+  if (isDone(video.status)) return null;
+  if (video.status === "ALTERACAO_SOLICITADA") return { kind: "AGUARDANDO_ALTERACAO" };
+  if (!isWaitingClient(video.status)) return null;
+  const days = daysWaitingClient(video);
+  return days >= CLIENT_FEEDBACK_CHASE_DAYS ? { kind: "COBRAR_FEEDBACK", days } : null;
 }
 
 export function statusProgress(status: string): number {

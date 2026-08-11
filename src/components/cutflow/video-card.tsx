@@ -1,11 +1,11 @@
 "use client";
 
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
-import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
+import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip, type TeamMemberLite } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
-import { computeDeliveryRisk, isOverdue, STATUS_META } from "@/lib/domain";
+import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,12 +25,16 @@ export type VideoCardData = {
   // Equipe extra além do Editor (Fase 8) — opcional porque nem toda query
   // embute isso (ver src/db/queries.ts).
   team?: TeamMemberLite[];
+  // Contagem da espera do cliente (Fase 9) — ver computeClientWait.
+  clientSentAt?: string | null;
+  updatedAt?: string | null;
 };
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {
   const { open } = useVideoDetail();
   const overdue = isOverdue(video.finalDeadline, video.status);
   const risk = computeDeliveryRisk(video);
+  const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
   // Cartão inteiro tingido na cor do status (era só uma barra na borda
   // esquerda) — --cf-card-tint alimenta a regra de bg-cf-surface no
@@ -89,7 +93,13 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
           <StatusBadge status={video.status} />
           <PriorityBadge priority={video.priority} />
-          {showRisk && !["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(video.status) && <RiskBadge risk={risk} />}
+          {/* Risco e espera dividem o mesmo lugar no card, nunca aparecem
+              juntos: onde existe um selo de espera ele é mais específico e
+              mais acionável ("aguardando alteração" já implica que o
+              trabalho está parado), e empilhar os dois recriava a poluição
+              de selos redundantes. Atraso continua visível no rodapé. */}
+          {showRisk && !isDone(video.status) && !isWaitingClient(video.status) && !clientWait && <RiskBadge risk={risk} />}
+          {clientWait && <ClientWaitBadge wait={clientWait} />}
         </div>
 
         {!compact && (

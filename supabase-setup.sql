@@ -402,3 +402,18 @@ create index if not exists cutflow_video_team_video_idx on public.cutflow_video_
 alter table public.cutflow_video_team enable row level security;
 drop policy if exists "cutflow_authenticated_all" on public.cutflow_video_team;
 create policy "cutflow_authenticated_all" on public.cutflow_video_team for all to authenticated using (true) with check (true);
+
+-- ---------------------------------------------------------------------------
+-- Fase 9 — Espera do cliente: desde quando o vídeo está na mão dele
+-- ---------------------------------------------------------------------------
+-- Preenchido por updateVideoStatus (actions.ts) quando o vídeo ENTRA num
+-- status de espera do cliente (Enviado ao cliente / Aguardando feedback /
+-- Aguardando aprovação) e limpo quando sai. É daqui que sai a contagem de
+-- "sem retorno há X dias" que vira o selo "Cobrar feedback" no card e o
+-- alerta no sino depois de 2 dias (ver computeClientWait em lib/domain.ts).
+-- Não dá pra usar updated_at pra isso: qualquer edição no vídeo reiniciaria
+-- o relógio e a cobrança nunca dispararia. Texto (não timestamptz) por
+-- consistência com o resto das colunas de data/hora deste arquivo.
+-- Vídeos que JÁ estavam aguardando quando esta coluna foi criada ficam com
+-- null e caem no fallback pro updated_at, até a próxima troca de status.
+alter table public.cutflow_videos add column if not exists client_sent_at text;

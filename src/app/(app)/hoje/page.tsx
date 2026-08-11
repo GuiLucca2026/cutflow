@@ -2,7 +2,7 @@ import { listVideos, listUsers, listWorkloadEntries } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { Greeting } from "@/components/cutflow/greeting";
-import { isOverdue, isWaitingClient, isEditing, isDone, computeDeliveryRisk } from "@/lib/domain";
+import { isOverdue, isWaitingClient, isEditing, isDone, computeDeliveryRisk, computeClientWait } from "@/lib/domain";
 import { computeAlerts } from "@/lib/alerts";
 import { fmtDateFull, fmtDateWeekday, fmtWaitingSince } from "@/lib/format";
 import { isToday, isWithinInterval, addDays, differenceInCalendarDays, format } from "date-fns";
@@ -217,14 +217,17 @@ function EmptyState({ text }: { text: string }) {
 }
 
 function WaitingRow({ video }: { video: any }) {
+  // Passou do limite = já é hora de ir atrás do cliente (mesma regra do
+  // selo no card e do alerta no sino — ver computeClientWait).
+  const chase = computeClientWait(video)?.kind === "COBRAR_FEEDBACK";
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-cf-border bg-cf-surface px-3.5 py-2.5">
+    <div className={cn("flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5", chase ? "border-amber-500/40" : "border-cf-border")}>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{video.project?.client?.name} — {video.name}</div>
         <div className="text-xs text-cf-text-dim truncate">{video.project?.name}</div>
       </div>
-      <div className="text-xs text-amber-600 font-semibold whitespace-nowrap">
-        Aguardando há {fmtWaitingSince(video.updatedAt)}
+      <div className={cn("text-xs font-semibold whitespace-nowrap", chase ? "text-amber-600" : "text-cf-text-dim")}>
+        {chase && "⚠ Cobrar · "}Aguardando há {fmtWaitingSince(video.clientSentAt ?? video.updatedAt)}
       </div>
     </div>
   );

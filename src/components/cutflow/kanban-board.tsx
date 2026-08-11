@@ -14,11 +14,11 @@ import {
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { KANBAN_STATUSES, STATUS_META, computeDeliveryRisk, isOverdue } from "@/lib/domain";
+import { KANBAN_STATUSES, STATUS_META, computeClientWait, computeDeliveryRisk, isOverdue } from "@/lib/domain";
 import { fmtDateWeekday, fmtShortId } from "@/lib/format";
 import { updateVideoStatus } from "@/app/actions";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
-import { StatusBadge, PriorityBadge } from "@/components/cutflow/badges";
+import { StatusBadge, PriorityBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
@@ -121,6 +121,7 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
 function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen: (id: string) => void; dragging?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggableCard(video.id);
   const overdue = isOverdue(video.finalDeadline, video.status);
+  const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
   // O cartão inteiro assume um tom pastel da cor do status (era só uma
   // barrinha na borda esquerda) — --cf-card-tint alimenta a regra de
@@ -179,6 +180,10 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
             {fmtDateWeekday(video.finalDeadline)}
           </span>
         </div>
+        {/* Espera do cliente (ver lib/domain.ts) — só aparece quando já tem
+            ação pendente (cobrar retorno / alteração pra começar), então
+            não polui a maioria dos cards. */}
+        {clientWait && <ClientWaitBadge wait={clientWait} className="mt-1.5 text-[9px] px-1.5 py-0" />}
         {(video.editor || (video.team && video.team.length > 0)) && (
           <div className="flex items-center justify-between gap-1.5 mt-2">
             {video.editor ? (

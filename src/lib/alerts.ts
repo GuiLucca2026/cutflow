@@ -4,7 +4,7 @@
 // keep in sync, no background job needed.
 import { format as formatDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { computeDeliveryRisk, isDone, isOverdue } from "@/lib/domain";
+import { computeClientWait, computeDeliveryRisk, isDone, isOverdue } from "@/lib/domain";
 
 export type AlertSeverity = "CRITICO" | "ALTO" | "MODERADO";
 
@@ -29,7 +29,10 @@ type AlertVideo = {
   revisionCount: number;
   editorId: string | null;
   editor?: { name: string } | null;
-  project?: { name: string } | null;
+  project?: { name: string; client?: { name: string } | null } | null;
+  // Espera do cliente (Fase 9) — ver computeClientWait em lib/domain.ts.
+  clientSentAt?: string | null;
+  updatedAt?: string | null;
 };
 
 type AlertWorkloadEntry = { editorId: string; date: string; hours: number };
@@ -67,6 +70,24 @@ export function computeAlerts(opts: { videos: AlertVideo[]; workloadEntries: Ale
       title: `Risco crítico: ${v.name}`,
       detail: `${v.project?.name ?? "Vídeo avulso"} · ${v.editor?.name ?? "sem editor"} · prazo ${dfull(v.finalDeadline)}`,
       href: `/videos`,
+    });
+  }
+
+  // 2b. Cobrar feedback — o cliente está com o vídeo há dias e não
+  // respondeu. Ocupa o lugar que o "risco crítico" ocupava nessa fase (ver
+  // computeDeliveryRisk): ali não havia ação possível pro time, aqui há uma
+  // bem clara — ligar pro cliente. Sobe pra ALTO depois de 5 dias, quando
+  // já não dá mais pra tratar como "o cliente ainda está vendo".
+  for (const v of active) {
+    const wait = computeClientWait(v);
+    if (wait?.kind !== "COBRAR_FEEDBACK") continue;
+    const quem = v.project?.client?.name ?? v.project?.name ?? "Vídeo avulso";
+    alerts.push({
+      id: `chase-${v.id}`,
+      severity: wait.days >= 5 ? "ALTO" : "MODERADO",
+      title: `Cobrar feedback: ${v.name}`,
+      detail: `${quem} · sem retorno há ${wait.days} ${wait.days === 1 ? "dia" : "dias"} · prazo de entrega ${dfull(v.finalDeadline)}`,
+      href: `/revisoes`,
     });
   }
 
