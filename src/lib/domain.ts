@@ -69,6 +69,23 @@ export const ROLE_META: Record<string, { label: string }> = {
   VISUALIZADOR: { label: "Visualizador" },
 };
 
+// Equipe do vídeo (Fase 8) — função de cada colaborador ADICIONAL, além do
+// Editor responsável (video.editorId, que continua sozinho controlando
+// Minha Edição/carga de trabalho/Analytics). Isso aqui é só "quem mais
+// colaborou e em que papel" (motion, colorização, trilha...), puramente
+// informativo no card/detalhe do vídeo.
+export const TEAM_ROLE_META: Record<string, { label: string; color: string }> = {
+  MONTAGEM: { label: "Montagem", color: "#7C3AED" },
+  MOTION: { label: "Motion Graphics", color: "#1D4ED8" },
+  COLORIZACAO: { label: "Colorização", color: "#C2410C" },
+  TRILHA: { label: "Trilha Sonora", color: "#0F766E" },
+  ROTEIRO: { label: "Roteiro", color: "#B45309" },
+  REVISAO: { label: "Revisão", color: "#BE185D" },
+  OUTRO: { label: "Outro", color: "#6B7280" },
+};
+
+export const TEAM_ROLES = Object.keys(TEAM_ROLE_META);
+
 export function isDone(status: string) {
   return ["ENTREGUE", "ARQUIVADO", "CANCELADO"].includes(status);
 }

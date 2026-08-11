@@ -47,7 +47,7 @@ export async function getUser(id: string) {
 // approver_id) — PostgREST needs a hint (`!column_name`) to know which FK
 // to embed on, since it can't infer it from the alias alone.
 const PROJECT_SELECT =
-  "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
+  "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*)))";
 
 // Vídeo embutido dentro de projeto (project.videos) não passa pelo filtro
 // da query principal — PostgREST não filtra recurso aninhado por coluna
@@ -76,7 +76,7 @@ export async function listProjects() {
 export async function getProject(id: string) {
   const supabase = await getSupabase();
   const select =
-    "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*))";
+    "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*)))";
   const { data, error } = await supabase.from(TABLES.projects).select(select).eq("id", id).maybeSingle();
   if (error) throw error;
   const mapped = mapProject(data);
@@ -125,7 +125,7 @@ export async function getProjectActivity(projectId: string) {
 // Videos
 // ---------------------------------------------------------------------------
 const VIDEO_SELECT =
-  "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*)";
+  "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*))";
 
 export async function listVideos() {
   const supabase = await getSupabase();
@@ -152,7 +152,7 @@ export async function getVideo(id: string) {
     "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), " +
     "checklist:cutflow_checklist_items(*, completedBy:cutflow_users!completed_by_id(*)), versions:cutflow_video_versions(*), " +
     "revisions:cutflow_revisions(*, assignedTo:cutflow_users!assigned_to_id(*), requestedBy:cutflow_users!requested_by_id(*)), " +
-    "comments:cutflow_comments(*, author:cutflow_users!author_id(*))";
+    "comments:cutflow_comments(*, author:cutflow_users!author_id(*)), team:cutflow_video_team(*, user:cutflow_users!user_id(*))";
   const { data, error } = await supabase.from(TABLES.videos).select(select).eq("id", id).maybeSingle();
   if (error) throw error;
   const video = mapVideo(data);
@@ -163,6 +163,7 @@ export async function getVideo(id: string) {
   video.versions?.sort((a: any, b: any) => (a.sentAt < b.sentAt ? 1 : -1));
   video.revisions?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
   video.comments?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
+  video.team?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? -1 : 1));
   return video;
 }
 

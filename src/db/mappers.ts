@@ -8,6 +8,7 @@ import type {
   Project,
   Video,
   VideoVersion,
+  VideoTeamMember,
   Revision,
   ChecklistItem,
   Comment,
@@ -129,6 +130,19 @@ export function mapVideo(r: any): (Video & Record<string, any>) | null {
     ...(r.versions !== undefined ? { versions: r.versions.map(mapVideoVersion) } : {}),
     ...(r.revisions !== undefined ? { revisions: r.revisions.map(mapRevision) } : {}),
     ...(r.comments !== undefined ? { comments: r.comments.map(mapComment) } : {}),
+    ...(r.team !== undefined ? { team: r.team.map(mapVideoTeamMember) } : {}),
+  };
+}
+
+export function mapVideoTeamMember(r: any): (VideoTeamMember & Record<string, any>) | null {
+  if (!r) return null;
+  return {
+    id: r.id,
+    videoId: r.video_id,
+    userId: r.user_id,
+    role: r.role,
+    createdAt: r.created_at,
+    ...(r.user !== undefined ? { user: mapUser(r.user) } : {}),
   };
 }
 

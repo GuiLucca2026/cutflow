@@ -3,6 +3,7 @@
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
+import { TeamStrip, type TeamMemberLite } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
 import { computeDeliveryRisk, isOverdue, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
@@ -21,6 +22,9 @@ export type VideoCardData = {
   revisionCount: number;
   editor: { name: string; avatarColor: string } | null;
   project: { name: string; client: { name: string; color: string } | null } | null;
+  // Equipe extra além do Editor (Fase 8) — opcional porque nem toda query
+  // embute isso (ver src/db/queries.ts).
+  team?: TeamMemberLite[];
 };
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {
@@ -74,7 +78,12 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               </span>
             </div>
           </div>
-          {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
+          {(video.editor || (video.team && video.team.length > 0)) && (
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
+              <TeamStrip team={video.team} size={15} />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 mt-2.5">

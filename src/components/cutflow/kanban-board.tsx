@@ -20,6 +20,7 @@ import { updateVideoStatus } from "@/app/actions";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
+import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
@@ -178,10 +179,17 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
             {fmtDateWeekday(video.finalDeadline)}
           </span>
         </div>
-        {video.editor && (
-          <div className="flex items-center gap-1.5 mt-2">
-            <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
-            <span className="text-[11px] text-cf-text-dim">{video.editor.name.split(" ")[0]}</span>
+        {(video.editor || (video.team && video.team.length > 0)) && (
+          <div className="flex items-center justify-between gap-1.5 mt-2">
+            {video.editor ? (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
+                <span className="text-[11px] text-cf-text-dim truncate">{video.editor.name.split(" ")[0]}</span>
+              </div>
+            ) : (
+              <span />
+            )}
+            <TeamStrip team={video.team} size={15} />
           </div>
         )}
       </div>

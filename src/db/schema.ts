@@ -32,6 +32,7 @@ export const TABLES = {
   savedViews: "cutflow_saved_views",
   captures: "cutflow_captures",
   invites: "cutflow_invites",
+  videoTeam: "cutflow_video_team",
 } as const;
 
 export const CAPTURE_STATUSES = ["AGENDADA", "CONCLUIDA", "CANCELADA"] as const;
@@ -233,6 +234,18 @@ export type Video = {
   updatedAt: string;
   // Lixeira (soft delete) — ver o mesmo campo em Project acima.
   deletedAt: string | null;
+};
+
+// Equipe do vídeo (Fase 8) — colaborador ADICIONAL além do Editor
+// responsável (Video.editorId), com uma função (ver TEAM_ROLE_META em
+// lib/domain.ts). Mesma pessoa pode aparecer mais de uma vez no mesmo
+// vídeo com funções diferentes. Ver supabase-setup.sql "Fase 8".
+export type VideoTeamMember = {
+  id: string;
+  videoId: string;
+  userId: string;
+  role: string;
+  createdAt: string;
 };
 
 export type VideoVersion = {

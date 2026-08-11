@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badges";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
-import { KANBAN_STATUSES, STATUS_META, computeDeliveryRisk, statusProgress, isOverdue } from "@/lib/domain";
+import { KANBAN_STATUSES, STATUS_META, TEAM_ROLE_META, TEAM_ROLES, computeDeliveryRisk, statusProgress, isOverdue } from "@/lib/domain";
 import { fmtDateFull, fmtDateTime, fmtRelative, fmtWaitingSince, fmtHours } from "@/lib/format";
 import {
   updateVideoStatus,
@@ -24,8 +24,10 @@ import {
   addRevision,
   addVideoVersion,
   resolveRevision,
+  addTeamMember,
+  removeTeamMember,
 } from "@/app/actions";
-import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus } from "lucide-react";
+import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X } from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
 
 type User = { id: string; name: string; avatarColor: string };
@@ -187,6 +189,8 @@ function VideoDetailBody({
           <Fact label="Complexidade" value={video.complexity} />
         </div>
 
+        <VideoTeamSection videoId={video.id} team={video.team ?? []} users={users} onMutate={onMutate} />
+
         {/* The date model — never collapse to one due date */}
         <div className="rounded-lg border border-cf-border bg-cf-surface-2 p-3 space-y-2">
           <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-1">Datas</div>
@@ -345,6 +349,98 @@ function VideoDetailBody({
         </Tabs>
       </div>
     </>
+  );
+}
+
+// Equipe do vídeo (Fase 8) — colaboradores extras além do Editor
+// responsável (o Fact "Editor" logo acima), cada um com uma função
+// (Montagem, Motion, Colorização, Trilha...). Puramente informativo: não
+// mexe em Minha Edição/carga de trabalho/Analytics, que continuam olhando
+// só video.editorId.
+function VideoTeamSection({
+  videoId,
+  team,
+  users,
+  onMutate,
+}: {
+  videoId: string;
+  team: any[];
+  users: User[];
+  onMutate: () => void;
+}) {
+  const [userId, setUserId] = React.useState("");
+  const [role, setRole] = React.useState(TEAM_ROLES[0]);
+  const [pending, startTransition] = React.useTransition();
+
+  function add() {
+    if (!userId || pending) return;
+    startTransition(async () => {
+      await addTeamMember(videoId, userId, role);
+      setUserId("");
+      toast.success("Adicionado à equipe.");
+      onMutate();
+    });
+  }
+
+  function remove(memberId: string) {
+    startTransition(async () => {
+      await removeTeamMember(memberId, videoId);
+      toast.success("Removido da equipe.");
+      onMutate();
+    });
+  }
+
+  return (
+    <div className="rounded-lg border border-cf-border bg-cf-surface-2 p-3 space-y-2">
+      <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim">
+        Equipe {team.length > 0 && <span className="text-cf-text-dim/70 normal-case">({team.length})</span>}
+      </div>
+      {team.length === 0 ? (
+        <p className="text-xs text-cf-text-dim">Só o Editor responsável, por enquanto.</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {team.map((t) => (
+            <div key={t.id} className="flex items-center gap-1.5 rounded-full border border-cf-border bg-cf-surface pl-1 pr-1.5 py-1">
+              <Avatar name={t.user?.name ?? "?"} color={t.user?.avatarColor} size={20} />
+              <span className="text-xs font-medium">{t.user?.name?.split(" ")[0] ?? "?"}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: TEAM_ROLE_META[t.role]?.color }}>
+                {TEAM_ROLE_META[t.role]?.label ?? t.role}
+              </span>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => remove(t.id)}
+                className="text-cf-text-dim hover:text-red-600 transition-colors disabled:opacity-50"
+                title="Remover da equipe"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2 pt-1">
+        <Select value={userId} onValueChange={setUserId}>
+          <SelectTrigger className="flex-1"><SelectValue placeholder="Adicionar pessoa…" /></SelectTrigger>
+          <SelectContent>
+            {users.map((u) => (
+              <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={role} onValueChange={setRole}>
+          <SelectTrigger className="w-[150px] shrink-0"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {TEAM_ROLES.map((r) => (
+              <SelectItem key={r} value={r}>{TEAM_ROLE_META[r].label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button type="button" size="sm" disabled={!userId || pending} onClick={add}>
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
   );
 }
 

@@ -379,3 +379,26 @@ grant execute on function public.cutflow_invite_lookup(text) to anon;
 -- precisa de policy nova.
 alter table public.cutflow_videos add column if not exists deleted_at text;
 alter table public.cutflow_projects add column if not exists deleted_at text;
+
+-- ---------------------------------------------------------------------------
+-- Fase 8 — Equipe do vídeo: colaboradores extras além do Editor, cada um
+-- com uma função (Montagem, Motion, Colorização, Trilha sonora...)
+-- ---------------------------------------------------------------------------
+-- Puramente aditivo e informativo — não mexe em editor_id (que continua
+-- sendo "o editor responsável", o único que Minha Edição, carga de
+-- trabalho e Analytics enxergam). Isso aqui é só "quem mais colaborou
+-- nesse vídeo e em que papel". A mesma pessoa pode aparecer mais de uma
+-- vez no mesmo vídeo, com funções diferentes (ex: fez montagem E trilha).
+create table if not exists public.cutflow_video_team (
+  id text primary key,
+  video_id text not null references public.cutflow_videos(id) on delete cascade,
+  user_id text not null references public.cutflow_users(id) on delete cascade,
+  role text not null default 'OUTRO',
+  created_at text not null
+);
+
+create index if not exists cutflow_video_team_video_idx on public.cutflow_video_team(video_id);
+
+alter table public.cutflow_video_team enable row level security;
+drop policy if exists "cutflow_authenticated_all" on public.cutflow_video_team;
+create policy "cutflow_authenticated_all" on public.cutflow_video_team for all to authenticated using (true) with check (true);

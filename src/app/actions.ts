@@ -6,7 +6,7 @@ import { toRow } from "@/db/mappers";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
-import { STATUS_META } from "@/lib/domain";
+import { STATUS_META, TEAM_ROLE_META } from "@/lib/domain";
 import { redirect } from "next/navigation";
 
 function nowISO() {
@@ -281,6 +281,36 @@ export async function toggleChecklistItem(itemId: string, done: boolean) {
   // o checklist, então isso só custaria uma re-renderização cara (o
   // layout + a página de fundo inteiros) por nada — era exatamente essa a
   // causa da lentidão ao marcar um item.
+}
+
+// ---------------------------------------------------------------------------
+// Equipe do vídeo (Fase 8) — colaboradores extras além do Editor
+// responsável (editorId), cada um com uma função (Motion, Colorização,
+// Trilha sonora...). Puramente aditivo/informativo: editorId continua
+// sendo o único campo que Minha Edição, carga de trabalho (Planejar
+// Semana) e Analytics enxergam — isso aqui é só "quem mais colaborou e em
+// que papel", sem revalidateEverywhere pelo mesmo motivo do checklist e
+// dos comentários (só aparece dentro da própria aba do vídeo).
+// ---------------------------------------------------------------------------
+export async function addTeamMember(videoId: string, userId: string, role: string) {
+  if (!userId || !role) return;
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.videoTeam).insert(
+    toRow({
+      id: crypto.randomUUID(),
+      videoId,
+      userId,
+      role,
+      createdAt: nowISO(),
+    })
+  );
+  await logActivity("VIDEO", videoId, "Pessoa adicionada à equipe", `${TEAM_ROLE_META[role]?.label ?? role}`);
+}
+
+export async function removeTeamMember(memberId: string, videoId: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.videoTeam).delete().eq("id", memberId);
+  await logActivity("VIDEO", videoId, "Pessoa removida da equipe");
 }
 
 // ---------------------------------------------------------------------------

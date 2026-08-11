@@ -42,6 +42,7 @@ export function Avatar({
   src,
   size = 28,
   className,
+  title,
 }: {
   name: string;
   color?: string;
@@ -50,6 +51,12 @@ export function Avatar({
   src?: string | null;
   size?: number;
   className?: string;
+  // Tooltip override — por padrão é só o nome, mas quem precisa mostrar
+  // mais contexto (ex: "Fulano · Motion Graphics" na equipe do vídeo) pode
+  // sobrescrever sem precisar de um wrapper com title próprio (o title do
+  // elemento mais interno é o que o navegador mostra, então um title num
+  // <div> por fora deste componente seria ignorado).
+  title?: string;
 }) {
   const [errored, setErrored] = React.useState(false);
   const accent = readableAccent(color);
@@ -59,6 +66,7 @@ export function Avatar({
       <img
         src={src}
         alt={name}
+        title={title ?? name}
         onError={() => setErrored(true)}
         className={cn("rounded-full object-cover shrink-0 border border-cf-border", className)}
         style={{ width: size, height: size }}
@@ -76,7 +84,7 @@ export function Avatar({
         color: accent,
         border: `1px solid ${accent}55`,
       }}
-      title={name}
+      title={title ?? name}
     >
       {initials(name)}
     </div>
