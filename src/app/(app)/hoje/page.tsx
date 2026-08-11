@@ -1,7 +1,8 @@
-import { listVideos, listUsers, listWorkloadEntries } from "@/db/queries";
+import { listVideos, listUsers, listWorkloadEntries, listCaptures } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { Greeting } from "@/components/cutflow/greeting";
+import { FlowMessage } from "@/components/cutflow/flow-message";
 import { isOverdue, isWaitingClient, isEditing, isDone, computeDeliveryRisk, computeClientWait } from "@/lib/domain";
 import { computeAlerts } from "@/lib/alerts";
 import { fmtDateFull, fmtDateWeekday, fmtWaitingSince } from "@/lib/format";
@@ -35,7 +36,7 @@ function StatCard({ label, value, icon: Icon, tone = "default", href }: { label:
 }
 
 export default async function HojePage() {
-  const [videos, user, users] = await Promise.all([listVideos(), getCurrentUser(), listUsers()]);
+  const [videos, user, users, captures] = await Promise.all([listVideos(), getCurrentUser(), listUsers(), listCaptures()]);
   const active = videos.filter((v) => !isDone(v.status));
   const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const alerts = computeAlerts({ videos, workloadEntries, users });
@@ -73,6 +74,15 @@ export default async function HojePage() {
   const firstName = user.name.split(" ")[0];
   const todayLabel = fmtDateFull(now);
 
+  // Formato leve pro motor de personalidade (spec "IMPLEMENTAR
+  // PERSONALIDADE DINÂMICA") — só os campos que ele realmente usa pra
+  // calcular o contexto do dia, não os objetos inteiros com projeto/
+  // cliente/equipe embutidos. Ver src/lib/flow/context.ts.
+  const flowWork = {
+    videos: videos.map((v) => ({ status: v.status, finalDeadline: v.finalDeadline, updatedAt: v.updatedAt })),
+    captures: captures.map((c) => ({ status: c.status, date: c.date })),
+  };
+
   const next7Grouped = Array.from({ length: 7 }).map((_, i) => {
     const day = addDays(now, i + 1);
     const items = active.filter((v) => {
@@ -87,6 +97,7 @@ export default async function HojePage() {
       <div>
         <div className="text-xs uppercase tracking-widest text-cf-text-dim">{todayLabel}</div>
         <Greeting firstName={firstName} className="font-display text-4xl tracking-wide mt-1" />
+        <FlowMessage work={flowWork} />
         <p className="text-cf-text-dim mt-1">
           {todayDeliveries.length} {todayDeliveries.length === 1 ? "entrega" : "entregas"} hoje
           {attentionCount > 0 && (
