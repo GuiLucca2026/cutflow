@@ -41,3 +41,13 @@ export function fmtHours(h: number) {
 export function fmtCurrency(v: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
 }
+
+// Código curto de referência pra um registro (vídeo, projeto...) — os
+// nomes vêm de quem cadastra e se repetem o tempo todo na prática
+// ("VIDEO 05 - CHENILLE SLIM" duas vezes, uma vinculada a um projeto e
+// outra avulsa), então um card sozinho às vezes não tem como saber qual é
+// qual só pelo nome. Isso dá um jeito curto e único de apontar "esse aqui"
+// numa conversa ou print, sem expor o UUID inteiro.
+export function fmtShortId(id: string) {
+  return id.replace(/-/g, "").slice(-4).toUpperCase();
+}

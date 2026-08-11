@@ -5,7 +5,7 @@ import { StatusBadge, PriorityBadge, RiskBadge } from "@/components/cutflow/badg
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { Avatar } from "@/components/ui/avatar";
 import { computeDeliveryRisk, isOverdue, STATUS_META } from "@/lib/domain";
-import { fmtDateWeekday, fmtHours } from "@/lib/format";
+import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,9 +43,31 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="font-semibold text-sm truncate">{video.name}</div>
-            <div className="text-xs text-cf-text-dim truncate">
-              {video.project ? `${video.project.client?.name ?? "—"} · ${video.project.name}` : "Vídeo avulso · sem projeto"}
+            <div className="flex items-baseline gap-1.5">
+              <div className="font-semibold text-sm truncate">{video.name}</div>
+              {/* Nomes se repetem o tempo todo na prática (ver format.ts,
+                  fmtShortId) — este código curto é o jeito de apontar "esse
+                  vídeo aqui" sem ambiguidade quando dois cards têm nome
+                  igual ou parecido. */}
+              <span className="shrink-0 font-mono text-[9px] text-cf-text-dim/60 tracking-wide" title={`ID completo: ${video.id}`}>
+                #{fmtShortId(video.id)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+              {video.project ? (
+                <>
+                  {video.project.client?.color && (
+                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
+                  )}
+                  <span className="text-xs text-cf-text-dim truncate">
+                    {video.project.client?.name ?? "—"} · {video.project.name}
+                  </span>
+                </>
+              ) : (
+                <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
+                  Avulso · sem projeto
+                </span>
+              )}
             </div>
           </div>
           {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
