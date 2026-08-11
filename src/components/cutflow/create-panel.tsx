@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { createClient, createProject, createProjectQuick, createVideo, createCapture } from "@/app/actions";
+import { createClient, createProject, createProjectQuick, createVideo, createVideosBulk, createCapture } from "@/app/actions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Layers } from "lucide-react";
 import { PROJECT_TYPES, VIDEO_FORMATS } from "@/db/schema";
 import { PRIORITY_META } from "@/lib/domain";
 import { cn } from "@/lib/utils";
@@ -150,7 +152,7 @@ export function CreatePanel({
                 currentUserId={currentUserId}
                 onAddClient={addClient}
                 onAddProject={addProject}
-                onCreated={() => { toast.success("Vídeo criado."); finish(); }}
+                onCreated={(count) => { toast.success(count && count > 1 ? `${count} vídeos criados.` : "Vídeo criado."); finish(); }}
               />
             </TabsContent>
 
@@ -528,7 +530,7 @@ function VideoForm({
   users: UserLite[];
   onAddClient: (c: ClientLite) => void;
   onAddProject: (p: ProjectLite) => void;
-  onCreated: () => void;
+  onCreated: (count?: number) => void;
   currentUserId: string;
 }) {
   const [projectId, setProjectId] = React.useState("__none__");
@@ -541,9 +543,19 @@ function VideoForm({
   const [editorId, setEditorId] = React.useState(currentUserId);
   const [finalDeadline, setFinalDeadline] = React.useState("");
   const [estimatedHours, setEstimatedHours] = React.useState("4");
+  // Criar vários vídeos de uma vez, todos no mesmo projeto — em vez de
+  // repetir esse formulário 15 vezes pra 15 vídeos do mesmo lote (ex.:
+  // "Reel 01" a "Reel 15"). Os nomes finais saem numerados a partir do
+  // "nome base" digitado acima; renomeia depois um por um (lápis na ficha
+  // do vídeo) se algum precisar de nome diferente do padrão.
+  const [bulkMode, setBulkMode] = React.useState(false);
+  const [quantity, setQuantity] = React.useState("5");
   const [pending, setPending] = React.useState(false);
   const projectRef = React.useRef<PickerHandle>(null);
   const handleProjectDraft = React.useCallback((d: boolean) => setProjectDraft(d), []);
+
+  const quantityNum = Math.floor(Number(quantity));
+  const quantityValid = Number.isFinite(quantityNum) && quantityNum >= 2 && quantityNum <= 100;
 
   React.useEffect(() => {
     onDirty(Boolean(name.trim() || finalDeadline || editorId !== currentUserId || projectId !== "__none__" || projectDraft));
@@ -552,6 +564,10 @@ function VideoForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !finalDeadline || pending) return;
+    if (bulkMode && !quantityValid) {
+      toast.error("Escolha uma quantidade entre 2 e 100.");
+      return;
+    }
     setPending(true);
 
     // Projeto (e o cliente dele) digitados inline são cadastrados aqui,
@@ -566,9 +582,19 @@ function VideoForm({
     if (editorId) fd.set("editorId", editorId);
     fd.set("finalDeadline", finalDeadline);
     fd.set("estimatedHours", estimatedHours);
+
+    if (bulkMode) {
+      fd.set("quantity", String(quantityNum));
+      const result = await createVideosBulk(fd);
+      setPending(false);
+      if (result) onCreated(result.ids.length);
+      else toast.error("Não foi possível criar os vídeos.");
+      return;
+    }
+
     const id = await createVideo(fd);
     setPending(false);
-    if (id) onCreated();
+    if (id) onCreated(1);
     else toast.error("Não foi possível criar o vídeo.");
   }
 
@@ -588,9 +614,47 @@ function VideoForm({
         />
         <p className="text-[11px] text-cf-text-dim">Pode deixar &quot;Sem projeto&quot; e vincular depois.</p>
       </div>
+
+      {/* Lote — cria N vídeos de uma vez no mesmo projeto (ex.: 15 reels de
+          uma campanha), em vez de repetir esse formulário 15 vezes. Os
+          outros campos (formato, responsável, prazo, horas) valem
+          igualmente pra todos os vídeos do lote. */}
+      <div className="flex items-center gap-2.5 rounded-lg border border-cf-border bg-cf-surface-2 px-3 py-2.5">
+        <Checkbox id="v-bulk" checked={bulkMode} onCheckedChange={(v) => setBulkMode(!!v)} />
+        <Label htmlFor="v-bulk" className="flex flex-1 cursor-pointer items-center gap-1.5 text-sm font-normal">
+          <Layers className="h-3.5 w-3.5 text-cf-text-dim" />
+          Criar vários vídeos de uma vez
+        </Label>
+        {bulkMode && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Input
+              type="number"
+              min={2}
+              max={100}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="h-8 w-16 text-center text-sm"
+            />
+            <span className="text-xs text-cf-text-dim">vídeos</span>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-1.5">
-        <Label htmlFor="v-name">Nome do vídeo</Label>
-        <Input id="v-name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ex: Reel 01" />
+        <Label htmlFor="v-name">{bulkMode ? "Nome base" : "Nome do vídeo"}</Label>
+        <Input
+          id="v-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder={bulkMode ? "Ex: Reel" : "Ex: Reel 01"}
+        />
+        {bulkMode && (
+          <p className="text-[11px] text-cf-text-dim">
+            Cria &quot;{name.trim() || "Nome"} 01&quot;, &quot;{name.trim() || "Nome"} 02&quot;… até {quantityValid ? quantityNum : "N"}.
+            Renomeia cada um depois (lápis na ficha do vídeo).
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
@@ -629,7 +693,9 @@ function VideoForm({
         </div>
       </div>
       <DialogFooter>
-        <Button type="submit" disabled={pending || !name.trim() || !finalDeadline}>{pending ? "Criando…" : "Criar vídeo"}</Button>
+        <Button type="submit" disabled={pending || !name.trim() || !finalDeadline || (bulkMode && !quantityValid)}>
+          {pending ? "Criando…" : bulkMode ? `Criar ${quantityValid ? quantityNum : ""} vídeos` : "Criar vídeo"}
+        </Button>
       </DialogFooter>
     </form>
   );

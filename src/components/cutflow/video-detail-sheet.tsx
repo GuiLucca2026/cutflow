@@ -14,6 +14,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
+import { RenameDialog } from "@/components/cutflow/rename-dialog";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import {
   KANBAN_STATUSES,
@@ -38,8 +39,9 @@ import {
   addTeamMember,
   removeTeamMember,
   setVideoResponsible,
+  renameVideo,
 } from "@/app/actions";
-import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X } from "lucide-react";
+import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X, Pencil } from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
 
 type User = { id: string; name: string; avatarColor: string };
@@ -121,6 +123,7 @@ function VideoDetailBody({
 }) {
   const [commentBody, setCommentBody] = React.useState("");
   const [revisionDesc, setRevisionDesc] = React.useState("");
+  const [renaming, setRenaming] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
 
   // Checklist otimista: marcar/desmarcar responde na hora, sem esperar a
@@ -155,7 +158,26 @@ function VideoDetailBody({
             <span>Vídeo avulso · sem projeto</span>
           )}
         </div>
-        <SheetTitle>{video.name}</SheetTitle>
+        <div className="group flex items-center gap-2">
+          <SheetTitle>{video.name}</SheetTitle>
+          <button
+            type="button"
+            onClick={() => setRenaming(true)}
+            className="shrink-0 text-cf-text-dim opacity-0 transition-opacity hover:text-cf-lime group-hover:opacity-100"
+            title="Renomear vídeo"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <RenameDialog
+          open={renaming}
+          onClose={() => setRenaming(false)}
+          currentName={video.name}
+          onRename={async (next) => {
+            await renameVideo(video.id, next);
+            onMutate();
+          }}
+        />
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <StatusBadge status={video.status} />
           <PriorityBadge priority={video.priority} />

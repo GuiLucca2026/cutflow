@@ -609,6 +609,108 @@ export async function createVideo(formData: FormData) {
   return id;
 }
 
+const DEFAULT_CHECKLIST = [
+  "Ingest dos arquivos",
+  "Organização",
+  "Montagem",
+  "Trilha sonora",
+  "Colorização",
+  "Sound design",
+  "Motion / grafismos",
+  "Legendas",
+  "Revisão",
+  "Exportação",
+  "Upload / envio",
+];
+
+// Máximo por lote — generoso o bastante pra "15 vídeos de uma vez" (o caso
+// real que motivou isso) sem deixar alguém disparar um insert de milhares
+// de linhas por engano (um zero a mais na quantidade, por exemplo).
+const MAX_BULK_VIDEOS = 100;
+
+// Criação em lote (spec "criar vários vídeos de uma vez") — mesmos campos
+// do createVideo acima, aplicados a N vídeos dentro do MESMO projeto, com
+// nome "Prefixo 01", "Prefixo 02"... (renomeável depois, um por um, com
+// renameVideo — ver o botão de lápis ao lado do nome na ficha do vídeo).
+//
+// A parte que importa pra "otimizar": em vez de N idas ao banco (uma por
+// vídeo, mais 11N pro checklist padrão, mais N pro log de atividade — o
+// que createVideo faria se fosse chamado 15 vezes seguidas), aqui é
+// SEMPRE exatamente 3 inserts, não importa se N é 2 ou 100:
+//   1 insert com N linhas em cutflow_videos
+//   1 insert com N×11 linhas em cutflow_checklist_items
+//   1 insert com N linhas em cutflow_activity_logs
+export async function createVideosBulk(formData: FormData): Promise<{ ids: string[] } | undefined> {
+  const projectId = String(formData.get("projectId") || "") || null;
+  const baseName = String(formData.get("name") || "").trim();
+  const finalDeadline = String(formData.get("finalDeadline") || "");
+  const quantity = Math.floor(Number(formData.get("quantity") || 0));
+  if (!baseName || !finalDeadline || !Number.isFinite(quantity) || quantity < 2 || quantity > MAX_BULK_VIDEOS) return undefined;
+
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  const finalISO = new Date(finalDeadline).toISOString();
+  const format = String(formData.get("format") || "Horizontal");
+  // Mesma regra de sempre: sem responsável escolhido, quem criou assume —
+  // vale pros N vídeos igual valeria pra um só (ver createVideo acima).
+  const editorId = String(formData.get("editorId") || "") || user.id;
+  const estimatedHours = Number(formData.get("estimatedHours") || 4);
+  const stamp = nowISO();
+
+  // Numeração com zero à esquerda (01, 02...) — pelo menos 2 dígitos
+  // mesmo pra lotes pequenos, pra bater com a convenção "Reel 01" que a
+  // produtora já usa manualmente hoje.
+  const pad = Math.max(2, String(quantity).length);
+  const ids = Array.from({ length: quantity }, () => crypto.randomUUID());
+
+  const videoRows = ids.map((id, i) =>
+    toRow({
+      id,
+      projectId,
+      name: `${baseName} ${String(i + 1).padStart(pad, "0")}`,
+      format,
+      aspectRatio: "16:9",
+      editorId,
+      estimatedHours,
+      priority: "NORMAL",
+      finalDeadline: finalISO,
+      originalFinalDeadline: finalISO,
+      internalDeadline: finalISO,
+      status: "BACKLOG",
+      createdAt: stamp,
+      updatedAt: stamp,
+    })
+  );
+  await supabase.from(TABLES.videos).insert(videoRows);
+
+  const checklistRows = ids.flatMap((videoId) =>
+    DEFAULT_CHECKLIST.map((label, i) => toRow({ id: crypto.randomUUID(), videoId, label, order: i, done: false }))
+  );
+  await supabase.from(TABLES.checklistItems).insert(checklistRows);
+
+  // Um evento de atividade por vídeo (pra cada ficha ter seu próprio "Vídeo
+  // criado" no histórico, igual um criado individualmente), mas montado à
+  // mão num insert só — logActivity() faria isso, só que com uma consulta
+  // a getCurrentUser() e um insert POR CHAMADA, e aqui já temos o usuário.
+  await supabase.from(TABLES.activityLogs).insert(
+    videoRows.map((row) =>
+      toRow({
+        id: crypto.randomUUID(),
+        entityType: "VIDEO" as const,
+        entityId: row.id,
+        userId: user.id,
+        action: "Vídeo criado",
+        detail: `Criado em lote (${quantity} vídeos a partir de "${baseName}").`,
+        createdAt: stamp,
+      })
+    )
+  );
+
+  revalidateEverywhere();
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
+  return { ids };
+}
+
 // ---------------------------------------------------------------------------
 // Captação (Fase 4 — shoot/capture sessions, separate from video editing)
 // ---------------------------------------------------------------------------
@@ -743,6 +845,27 @@ export async function setProjectResponsible(projectId: string, userId: string) {
   await logActivity("PROJECT", projectId, "Responsável definido", person?.name ?? undefined);
   revalidateEverywhere();
   revalidatePath(`/projetos/${projectId}`);
+}
+
+// Troca o CLIENTE de um projeto — diferente de responsável: todo projeto
+// nasce vinculado a um cliente (insertProject exige clientId) e continua
+// exigindo aqui, não existe "tirar o cliente" de um projeto já criado.
+// Útil quando um projeto foi cadastrado no cliente errado ou quando um
+// cliente muda de razão social/CNPJ e vira outro registro.
+export async function setProjectClient(projectId: string, clientId: string) {
+  if (!clientId) return;
+  const supabase = await getSupabase();
+  const [{ data: project }, { data: client }] = await Promise.all([
+    supabase.from(TABLES.projects).select("client_id").eq("id", projectId).maybeSingle(),
+    supabase.from(TABLES.clients).select("name").eq("id", clientId).maybeSingle(),
+  ]);
+  if (!project || project.client_id === clientId) return;
+
+  await supabase.from(TABLES.projects).update(toRow({ clientId, updatedAt: nowISO() })).eq("id", projectId);
+  await logActivity("PROJECT", projectId, "Cliente alterado", client?.name ? `Cliente alterado para "${client.name}".` : undefined);
+  revalidateEverywhere();
+  revalidatePath(`/projetos/${projectId}`);
+  revalidatePath("/clientes");
 }
 
 // ---------------------------------------------------------------------------
