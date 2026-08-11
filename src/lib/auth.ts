@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { getSupabase } from "@/db";
 import { TABLES } from "@/db/schema";
@@ -14,7 +15,17 @@ import { createClient as createSupabaseServerClient } from "@/lib/supabase/serve
 // real Supabase session (e.g. running `npm run dev` standalone).
 const COOKIE_NAME = "cf_user_id";
 
-export async function getCurrentUser() {
+// cache() (React, não Next.js) memoiza por request — chamar getCurrentUser()
+// várias vezes na MESMA ação/página (ex: uma vez direto + de novo dentro de
+// cada logActivity()) reaproveita o mesmo resultado em vez de repetir tudo.
+// Isso importa de verdade aqui porque getLinkedUser() chama auth.getUser(),
+// que — ao contrário de auth.getSession() — sempre faz uma ida real à rede
+// pro servidor de Auth do Supabase pra revalidar o token (não é só decodificar
+// um JWT local). Marcar um item de checklist chamava isso 3x em sequência
+// (1x direto + 1x por logActivity, e o checklist chama logActivity até 2x —
+// vídeo e projeto), então virava 3 idas ao Auth só nessa função, encadeadas
+// uma depois da outra — essa era a causa real da demora de 10-15s.
+export const getCurrentUser = cache(async function getCurrentUser() {
   const linked = await getLinkedUser();
   if (linked) return linked;
 
@@ -27,7 +38,7 @@ export async function getCurrentUser() {
   }
   const { data } = await supabase.from(TABLES.users).select("*").order("created_at", { ascending: true }).limit(1).maybeSingle();
   return mapUser(data)!;
-}
+});
 
 // Resolves the current user from a real Supabase session, if any, creating
 // a CUTFLOW profile on first sight of that Supabase user — this is what

@@ -260,23 +260,28 @@ export async function toggleChecklistItem(itemId: string, done: boolean) {
   if (!item) return;
 
   const user = await getCurrentUser();
-  // Guarda quem marcou o item (e quando) — some junto se for reaberto,
-  // já que "quem fez" deixa de valer assim que volta a ficar pendente.
-  await supabase
-    .from(TABLES.checklistItems)
-    .update(toRow({ done, completedById: done ? user.id : null, completedAt: done ? nowISO() : null }))
-    .eq("id", itemId);
-
   const video = Array.isArray(item.video) ? item.video[0] : item.video;
   const action = done ? "Item do checklist concluído" : "Item do checklist reaberto";
-  await logActivity("VIDEO", item.video_id, action, item.label);
-  // Some no vídeo E no projeto (spec do usuário: "incluído no projeto
-  // junto") — quem olha só a aba do projeto também precisa ver quem fez
-  // qual parte, sem ter que abrir cada vídeo um por um. Vídeo avulso (sem
-  // projeto) não tem pra onde propagar isso.
-  if (video?.project_id) {
-    await logActivity("PROJECT", video.project_id, action, `${video.name} — ${item.label}`);
-  }
+
+  // As 3 escritas abaixo são independentes entre si (nenhuma lê o
+  // resultado da outra) — rodar em paralelo em vez de uma await por vez é
+  // o que faz essa ação responder rápido. logActivity() reaproveita o
+  // getCurrentUser() já resolvido acima (cache() em lib/auth.ts), então
+  // não repete a ida ao Auth do Supabase por chamada.
+  await Promise.all([
+    // Guarda quem marcou o item (e quando) — some junto se for reaberto,
+    // já que "quem fez" deixa de valer assim que volta a ficar pendente.
+    supabase
+      .from(TABLES.checklistItems)
+      .update(toRow({ done, completedById: done ? user.id : null, completedAt: done ? nowISO() : null }))
+      .eq("id", itemId),
+    logActivity("VIDEO", item.video_id, action, item.label),
+    // Some no vídeo E no projeto (spec do usuário: "incluído no projeto
+    // junto") — quem olha só a aba do projeto também precisa ver quem fez
+    // qual parte, sem ter que abrir cada vídeo um por um. Vídeo avulso
+    // (sem projeto) não tem pra onde propagar isso.
+    video?.project_id ? logActivity("PROJECT", video.project_id, action, `${video.name} — ${item.label}`) : null,
+  ]);
   // Sem revalidateEverywhere aqui de propósito: nada fora desta aba mostra
   // o checklist, então isso só custaria uma re-renderização cara (o
   // layout + a página de fundo inteiros) por nada — era exatamente essa a
