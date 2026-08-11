@@ -145,29 +145,31 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           (isDragging || dragging) && "opacity-60 shadow-xl"
         )}
       >
-        <div className="flex items-baseline gap-1.5">
+        {/* Mesma hierarquia Cliente → Projeto → Vídeo do VideoCard (ver
+            esse arquivo pro motivo) — mantém os dois cards consistentes,
+            já que o mesmo vídeo aparece em ambos os lugares. */}
+        {video.project ? (
+          <div className="flex items-center gap-1.5 min-w-0">
+            {video.project.client?.color && (
+              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
+            )}
+            <span className="text-[9px] font-semibold uppercase tracking-wide text-cf-text-dim truncate">
+              {video.project.client?.name ?? "—"}
+            </span>
+          </div>
+        ) : (
+          <span className="inline-block shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
+            Avulso
+          </span>
+        )}
+        {video.project && <div className="text-[11px] text-cf-text-dim truncate mt-0.5">{video.project.name}</div>}
+        <div className="flex items-baseline gap-1.5 mt-0.5">
           <div className="text-sm font-medium truncate">{video.name}</div>
           {/* Mesmo motivo do VideoCard (ver format.ts, fmtShortId): nomes
               repetidos são comuns, isso desambigua sem precisar abrir o card. */}
           <span className="shrink-0 font-mono text-[8.5px] text-cf-text-dim/60 tracking-wide" title={`ID completo: ${video.id}`}>
             #{fmtShortId(video.id)}
           </span>
-        </div>
-        <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-          {video.project ? (
-            <>
-              {video.project.client?.color && (
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
-              )}
-              <span className="text-[11px] text-cf-text-dim truncate">
-                {video.project.client?.name ?? "—"} · {video.project.name}
-              </span>
-            </>
-          ) : (
-            <span className="shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
-              Avulso
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-1.5 mt-2">
           <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />

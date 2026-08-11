@@ -43,7 +43,27 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <div className="flex items-baseline gap-1.5">
+            {/* Hierarquia de cima pra baixo = do mais genérico pro mais
+                específico (Cliente → Projeto → Vídeo), pedido explicitamente
+                depois do print mostrando confusão entre vídeos de nome
+                igual — agora quem lê já sabe "de quem"/"de qual projeto" é
+                o card antes mesmo de chegar no nome do vídeo. */}
+            {video.project ? (
+              <div className="flex items-center gap-1.5 min-w-0">
+                {video.project.client?.color && (
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
+                )}
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-cf-text-dim truncate">
+                  {video.project.client?.name ?? "—"}
+                </span>
+              </div>
+            ) : (
+              <span className="inline-block shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
+                Avulso · sem projeto
+              </span>
+            )}
+            {video.project && <div className="text-xs text-cf-text-dim truncate mt-0.5">{video.project.name}</div>}
+            <div className="flex items-baseline gap-1.5 mt-0.5">
               <div className="font-semibold text-sm truncate">{video.name}</div>
               {/* Nomes se repetem o tempo todo na prática (ver format.ts,
                   fmtShortId) — este código curto é o jeito de apontar "esse
@@ -52,22 +72,6 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               <span className="shrink-0 font-mono text-[9px] text-cf-text-dim/60 tracking-wide" title={`ID completo: ${video.id}`}>
                 #{fmtShortId(video.id)}
               </span>
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-              {video.project ? (
-                <>
-                  {video.project.client?.color && (
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
-                  )}
-                  <span className="text-xs text-cf-text-dim truncate">
-                    {video.project.client?.name ?? "—"} · {video.project.name}
-                  </span>
-                </>
-              ) : (
-                <span className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
-                  Avulso · sem projeto
-                </span>
-              )}
             </div>
           </div>
           {video.editor && <Avatar name={video.editor.name} color={video.editor.avatarColor} size={26} />}
