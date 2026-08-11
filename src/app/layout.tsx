@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { BRAND_NAME } from "@/lib/brand";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
@@ -10,7 +11,7 @@ import "@fontsource/sora/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "G2 FLOW — Planner de Edição",
+  title: `${BRAND_NAME} — Planner de Edição`,
   description: "Production / Post-Production Operating System",
 };
 

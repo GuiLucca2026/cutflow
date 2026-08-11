@@ -12,6 +12,7 @@ import { UserPlus, Copy, Ban } from "lucide-react";
 import { createInvite, revokeInvite } from "@/app/actions";
 import { ROLE_META } from "@/lib/domain";
 import { withBasePath } from "@/lib/base-path";
+import { BRAND_NAME, HAS_ADMIN_SSO } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -39,7 +40,11 @@ export function InviteSection({ invites, error }: { invites: InviteData[]; error
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="font-display text-xl tracking-wide">Convites</h2>
-          <p className="text-xs text-cf-text-dim">Gere um link pra alguém que não é admin da G2 criar login próprio no G2 FLOW.</p>
+          <p className="text-xs text-cf-text-dim">
+            {HAS_ADMIN_SSO
+              ? `Gere um link pra alguém que não é admin da G2 criar login próprio no ${BRAND_NAME}.`
+              : `Gere um link pra alguém criar login próprio no ${BRAND_NAME}.`}
+          </p>
         </div>
         <Button size="sm" className="gap-1.5" disabled={!!error} onClick={() => setDialogOpen(true)}>
           <UserPlus className="h-3.5 w-3.5" /> Convidar pessoa

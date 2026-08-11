@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/
 import { NAV_GROUPS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
+import { BRAND_NAME } from "@/lib/brand";
 
 // Sidebar some inteiramente abaixo do breakpoint `lg` (ver sidebar.tsx),
 // e até aqui não havia NENHUM jeito de trocar de página em tela pequena —
@@ -36,7 +37,7 @@ export function MobileNav() {
         style={{ background: "var(--cf-side-bg)" }}
       >
         <SheetTitle className="sr-only">Menu</SheetTitle>
-        <SheetDescription className="sr-only">Navegação principal do G2 FLOW</SheetDescription>
+        <SheetDescription className="sr-only">Navegação principal do {BRAND_NAME}</SheetDescription>
         <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--cf-side-border)" }}>
           <BrandWordmark size="sm" dark />
         </div>

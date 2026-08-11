@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
+import { HAS_ADMIN_SSO } from "@/lib/brand";
+import { cn } from "@/lib/utils";
 
 // Login por e-mail/senha — o caminho de volta pra quem entrou via /convite
 // (gente que não é admin da G2 e por isso não tem o botão "Abrir G2 FLOW"
@@ -60,10 +62,12 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="text-cf-text-dim text-xs text-center mt-4">
-          É admin da G2? Use o botão “Abrir G2 FLOW” no painel admin da G2 em vez desta tela.
-        </p>
-        <p className="text-cf-text-dim text-xs text-center mt-1">
+        {HAS_ADMIN_SSO && (
+          <p className="text-cf-text-dim text-xs text-center mt-4">
+            É admin da G2? Use o botão “Abrir G2 FLOW” no painel admin da G2 em vez desta tela.
+          </p>
+        )}
+        <p className={cn("text-cf-text-dim text-xs text-center", HAS_ADMIN_SSO ? "mt-1" : "mt-4")}>
           Esqueceu a senha? Peça pra quem te convidou gerar um novo acesso.
         </p>
       </div>

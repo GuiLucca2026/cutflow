@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { markInviteAccepted } from "@/app/actions";
 import { ROLE_META } from "@/lib/domain";
+import { BRAND_NAME } from "@/lib/brand";
 
 export function AcceptInviteForm({
   token,
@@ -79,7 +80,7 @@ export function AcceptInviteForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <p className="text-cf-text-dim text-sm text-center">
-        {inviterName ? `${inviterName} te convidou` : "Você foi convidado"} pra entrar no G2 FLOW como{" "}
+        {inviterName ? `${inviterName} te convidou` : "Você foi convidado"} pra entrar no {BRAND_NAME} como{" "}
         <span className="text-cf-text font-medium">{ROLE_META[role]?.label ?? role}</span>. Crie uma senha pra
         finalizar.
       </p>

@@ -9,6 +9,7 @@ import { VideoDetailSheetHost } from "@/components/cutflow/video-detail-sheet";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { addDays, format } from "date-fns";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
+import { BRAND_NAME, HAS_ADMIN_SSO } from "@/lib/brand";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   if (!(await hasSupabaseSession())) {
@@ -85,12 +86,18 @@ function NoSessionScreen() {
         <div className="flex justify-center mb-2">
           <BrandWordmark size="lg" />
         </div>
-        <p className="text-cf-text-dim text-sm">
-          Este link não pode ser aberto diretamente. Se você é admin da G2,
-          acesse o G2 FLOW pelo botão{" "}
-          <strong className="text-cf-text">“Abrir G2 FLOW”</strong> no
-          painel admin da G2 — ele já entra com o seu usuário automaticamente.
-        </p>
+        {HAS_ADMIN_SSO ? (
+          <p className="text-cf-text-dim text-sm">
+            Este link não pode ser aberto diretamente. Se você é admin da G2,
+            acesse o {BRAND_NAME} pelo botão{" "}
+            <strong className="text-cf-text">“Abrir {BRAND_NAME}”</strong> no
+            painel admin da G2 — ele já entra com o seu usuário automaticamente.
+          </p>
+        ) : (
+          <p className="text-cf-text-dim text-sm">
+            Sua sessão expirou ou este link não pode ser aberto diretamente.
+          </p>
+        )}
         <p className="text-cf-text-dim text-sm">
           Foi convidado por e-mail?{" "}
           <Link href="/login" className="text-cf-lime hover:underline">

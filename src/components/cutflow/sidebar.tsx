@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS } from "@/lib/nav";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
+import { BRAND_NAME } from "@/lib/brand";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -49,7 +50,7 @@ export function Sidebar() {
           className="rounded-lg px-3 py-2.5 text-[11px] text-cf-side-text/80 leading-relaxed"
           style={{ background: "var(--cf-side-surface)", border: "1px solid var(--cf-side-border)" }}
         >
-          <span className="font-semibold" style={{ color: "#A78BFA" }}>G2 FLOW</span> · Fase 1+2+3+4+5+6
+          <span className="font-semibold" style={{ color: "#A78BFA" }}>{BRAND_NAME}</span> · Fase 1+2+3+4+5+6
           <br />
           Foundation, Workflow, Planning, Calendar Sync, Intelligence & Analytics ativos
         </div>
