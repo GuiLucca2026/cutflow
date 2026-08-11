@@ -250,17 +250,19 @@ export async function permanentlyDeleteProject(projectId: string) {
 // ---------------------------------------------------------------------------
 // Checklist
 // ---------------------------------------------------------------------------
-export async function toggleChecklistItem(itemId: string, done: boolean) {
+// `ctx` vem do cliente, que já tem tudo isso carregado na própria aba do
+// vídeo (video.id/name/projectId, item.label) — antes essa função fazia um
+// SELECT só pra buscar de volta um dado que quem chamou já tinha na mão.
+// É uma simplificação segura aqui (ferramenta interna, RLS "authenticated"
+// libera geral) mas só vale pra esses 4 campos, só usados pra texto de
+// log de atividade — nada sensível/validado depende deles.
+export async function toggleChecklistItem(
+  itemId: string,
+  done: boolean,
+  ctx: { videoId: string; videoName: string; projectId: string | null; label: string }
+) {
   const supabase = await getSupabase();
-  const { data: item } = await supabase
-    .from(TABLES.checklistItems)
-    .select("video_id, label, video:cutflow_videos(project_id, name)")
-    .eq("id", itemId)
-    .maybeSingle();
-  if (!item) return;
-
   const user = await getCurrentUser();
-  const video = Array.isArray(item.video) ? item.video[0] : item.video;
   const action = done ? "Item do checklist concluído" : "Item do checklist reaberto";
 
   // As 3 escritas abaixo são independentes entre si (nenhuma lê o
@@ -275,12 +277,12 @@ export async function toggleChecklistItem(itemId: string, done: boolean) {
       .from(TABLES.checklistItems)
       .update(toRow({ done, completedById: done ? user.id : null, completedAt: done ? nowISO() : null }))
       .eq("id", itemId),
-    logActivity("VIDEO", item.video_id, action, item.label),
+    logActivity("VIDEO", ctx.videoId, action, ctx.label),
     // Some no vídeo E no projeto (spec do usuário: "incluído no projeto
     // junto") — quem olha só a aba do projeto também precisa ver quem fez
     // qual parte, sem ter que abrir cada vídeo um por um. Vídeo avulso
     // (sem projeto) não tem pra onde propagar isso.
-    video?.project_id ? logActivity("PROJECT", video.project_id, action, `${video.name} — ${item.label}`) : null,
+    ctx.projectId ? logActivity("PROJECT", ctx.projectId, action, `${ctx.videoName} — ${ctx.label}`) : null,
   ]);
   // Sem revalidateEverywhere aqui de propósito: nada fora desta aba mostra
   // o checklist, então isso só custaria uma re-renderização cara (o

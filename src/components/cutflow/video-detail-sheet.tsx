@@ -111,10 +111,19 @@ function VideoDetailBody({
   const [revisionDesc, setRevisionDesc] = React.useState("");
   const [pending, startTransition] = React.useTransition();
 
+  // Checklist otimista: marcar/desmarcar responde na hora, sem esperar a
+  // ida ao servidor + o refetch depois — a demora de rede (que ainda
+  // existe, Supabase é um serviço remoto) fica invisível pro usuário. Se a
+  // ação falhar, desfaz. Reseta pro estado real sempre que `video` mudar
+  // de referência (chega dado novo do servidor), o que também corrige
+  // sozinho qualquer divergência (ex: completedBy/completedAt reais).
+  const [checklist, setChecklist] = React.useState(video.checklist);
+  React.useEffect(() => setChecklist(video.checklist), [video.checklist]);
+
   const risk = computeDeliveryRisk(video);
   const progress = statusProgress(video.status);
   const overdue = isOverdue(video.finalDeadline, video.status);
-  const checklistDone = video.checklist.filter((c: any) => c.done).length;
+  const checklistDone = checklist.filter((c: any) => c.done).length;
 
   return (
     <>
@@ -215,7 +224,7 @@ function VideoDetailBody({
 
         <Tabs defaultValue="checklist">
           <TabsList>
-            <TabsTrigger value="checklist">Checklist ({checklistDone}/{video.checklist.length})</TabsTrigger>
+            <TabsTrigger value="checklist">Checklist ({checklistDone}/{checklist.length})</TabsTrigger>
             <TabsTrigger value="revisoes">Alterações ({video.revisions.length})</TabsTrigger>
             <TabsTrigger value="versoes">Versões ({video.versions.length})</TabsTrigger>
             <TabsTrigger value="comentarios">Comentários ({video.comments.length})</TabsTrigger>
@@ -223,17 +232,29 @@ function VideoDetailBody({
           </TabsList>
 
           <TabsContent value="checklist" className="space-y-1">
-            {video.checklist.map((item: any) => (
+            {checklist.map((item: any) => (
               <div key={item.id} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-cf-surface-2">
                 <label className="flex flex-1 min-w-0 items-center gap-2.5 cursor-pointer">
                   <Checkbox
                     checked={item.done}
-                    onCheckedChange={(v) =>
+                    onCheckedChange={(v) => {
+                      const next = !!v;
+                      setChecklist((prev: any[]) => prev.map((c) => (c.id === item.id ? { ...c, done: next } : c)));
                       startTransition(async () => {
-                        await toggleChecklistItem(item.id, !!v);
-                        onMutate();
-                      })
-                    }
+                        try {
+                          await toggleChecklistItem(item.id, next, {
+                            videoId: video.id,
+                            videoName: video.name,
+                            projectId: video.projectId ?? null,
+                            label: item.label,
+                          });
+                          onMutate();
+                        } catch {
+                          setChecklist((prev: any[]) => prev.map((c) => (c.id === item.id ? { ...c, done: !next } : c)));
+                          toast.error("Não foi possível atualizar o checklist.");
+                        }
+                      });
+                    }}
                   />
                   <span className={item.done ? "text-cf-text-dim line-through truncate" : "text-cf-text truncate"}>{item.label}</span>
                 </label>
