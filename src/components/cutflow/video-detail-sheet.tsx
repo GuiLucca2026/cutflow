@@ -44,8 +44,23 @@ import {
   renameVideo,
   updateVideoField,
 } from "@/app/actions";
-import { FolderKanban, ExternalLink, Clock, AlertTriangle, Plus, X, Pencil } from "lucide-react";
+import {
+  FolderKanban,
+  ExternalLink,
+  Clock,
+  AlertTriangle,
+  Plus,
+  X,
+  Pencil,
+  User,
+  CheckCircle2,
+  Info,
+  Users,
+  CalendarDays,
+  Link2,
+} from "lucide-react";
 import { withBasePath } from "@/lib/base-path";
+import { cn } from "@/lib/utils";
 
 type User = { id: string; name: string; avatarColor: string };
 type ProjectLite = { id: string; name: string; clientName: string | null };
@@ -410,10 +425,13 @@ function VideoDetailBody({
         {/* Barra lateral — "propriedades" do vídeo, no mesmo espírito do
             "Add to card" do Trello: quem está envolvido, os números-chave,
             prazos e links, tudo separado do conteúdo de trabalho da
-            esquerda. Fundo levemente diferente pra marcar visualmente que é
-            outra área, não mais uma seção da mesma coluna. */}
-        <div className="order-1 space-y-5 overflow-y-auto cf-scrollbar-thin bg-cf-surface-2/40 p-5 lg:order-2">
-          <SidebarSection title="Projeto">
+            esquerda. bg-cf-surface-2 cheio (não mais /40, quase
+            imperceptível) pra ficar visivelmente mais acinzentado que os
+            cards brancos de cada seção dentro dela — sem esse contraste de
+            fundo, os cards e a lateral ficavam no mesmo tom e a separação
+            sumia. */}
+        <div className="order-1 space-y-5 overflow-y-auto cf-scrollbar-thin bg-cf-surface-2 p-5 lg:order-2">
+          <SidebarSection title="Projeto" icon={FolderKanban} color="bg-indigo-100 text-indigo-600">
             <Select
               value={video.projectId ?? "__none__"}
               onValueChange={(v) =>
@@ -437,7 +455,7 @@ function VideoDetailBody({
           {/* Responsável é editável aqui (e no menu de botão direito do
               card). Não existe opção "sem responsável": todo vídeo tem que
               ter dono — ver setVideoResponsible em actions.ts. */}
-          <SidebarSection title="Responsável">
+          <SidebarSection title="Responsável" icon={User} color="bg-violet-100 text-violet-600">
             <Select
               value={video.editorId ?? ""}
               onValueChange={(v) =>
@@ -460,7 +478,7 @@ function VideoDetailBody({
           {/* Aprovador é opcional (ao contrário de Responsável) — nem todo
               vídeo já tem um aprovador definido, então "Sem aprovador" é
               uma opção válida na lista, não só o estado inicial. */}
-          <SidebarSection title="Aprovador">
+          <SidebarSection title="Aprovador" icon={CheckCircle2} color="bg-emerald-100 text-emerald-600">
             <Select
               value={video.approverId ?? "__none__"}
               onValueChange={(v) =>
@@ -488,7 +506,7 @@ function VideoDetailBody({
               direto criaria dois lugares divergentes pra a mesma
               informação (ver Hint em cada um explicando isso). Horas
               estimadas/realizadas e Complexidade são campos editáveis. */}
-          <SidebarSection title="Detalhes">
+          <SidebarSection title="Detalhes" icon={Info} color="bg-amber-100 text-amber-600">
             {/* min-w-0 em cada item do grid: sem isso o item de grid usa
                 min-width:auto (tamanho do conteúdo) por padrão, e o
                 truncate lá dentro do Fact nunca chega a agir — o texto
@@ -533,9 +551,11 @@ function VideoDetailBody({
 
           <VideoTeamSection videoId={video.id} team={video.team ?? []} users={users} onMutate={onMutate} />
 
-          {/* O modelo de datas — nunca resumir num prazo só */}
-          <SidebarSection title="Datas">
-            <div className="rounded-lg border border-cf-border bg-cf-surface p-3 space-y-2">
+          {/* O modelo de datas — nunca resumir num prazo só. space-y-2
+              direto (sem card próprio): SidebarSection já dá o card branco
+              por fora. */}
+          <SidebarSection title="Datas" icon={CalendarDays} color="bg-rose-100 text-rose-600">
+            <div className="space-y-2">
               <DateRow label="Início planejado" value={video.plannedStartDate} />
               <DateRow label="Prazo interno" value={video.internalDeadline} />
               <DateRow label="Prazo de revisão" value={video.reviewDeadline} />
@@ -550,7 +570,7 @@ function VideoDetailBody({
           </SidebarSection>
 
           {(video.frameioUrl || video.driveUrl || video.fileUrl) && (
-            <SidebarSection title="Links">
+            <SidebarSection title="Links" icon={Link2} color="bg-slate-200 text-slate-600">
               <div className="flex flex-wrap gap-2">
                 {video.frameioUrl && <LinkChip href={video.frameioUrl} label="Frame.io" />}
                 {video.driveUrl && <LinkChip href={video.driveUrl} label="Google Drive" />}
@@ -564,15 +584,36 @@ function VideoDetailBody({
   );
 }
 
-// Cabeçalho de seção padronizado pra barra lateral inteira — é o que dá a
-// hierarquia visual consistente que faltava (cada bloco tinha seu próprio
-// jeito de rotular antes). Título pequeno, maiúsculo, espaçado — mesmo
-// padrão que "Datas" já usava, agora reaplicado em todo bloco da lateral.
-function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
+// Cabeçalho de seção padronizado pra barra lateral inteira, agora com um
+// ícone colorido por categoria (Projeto, Responsável, Aprovador...) — o
+// pedido depois do fix de overflow foi "faltou cor pra separar melhor as
+// coisas": a lateral inteira (fundo + cada campo) estava em tons quase
+// idênticos de branco/cinza, então nada ali se distinguia visualmente.
+// Duas mudanças resolvem isso juntas: 1) cada seção agora é um card branco
+// (bg-cf-surface) com borda, o que já cria contraste sozinho contra o fundo
+// acinzentado da lateral (ver bg-cf-surface-2 abaixo, antes era só 40% —
+// quase imperceptível); 2) o selo colorido do ícone dá o segundo nível de
+// hierarquia, pra escanear a lateral inteira sem precisar ler cada rótulo.
+function SidebarSection({
+  title,
+  icon: Icon,
+  color,
+  children,
+}: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-cf-text-dim">{title}</div>
-      {children}
+      <div className="flex items-center gap-1.5">
+        <span className={cn("flex h-5 w-5 shrink-0 items-center justify-center rounded-md", color)}>
+          <Icon className="h-3 w-3" />
+        </span>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-cf-text-dim">{title}</div>
+      </div>
+      <div className="rounded-lg border border-cf-border bg-cf-surface p-3">{children}</div>
     </div>
   );
 }
@@ -616,8 +657,12 @@ function VideoTeamSection({
   }
 
   return (
-    <SidebarSection title={`Equipe${team.length > 0 ? ` (${team.length})` : ""}`}>
-      <div className="rounded-lg border border-cf-border bg-cf-surface p-3 space-y-2">
+    <SidebarSection
+      title={`Equipe${team.length > 0 ? ` (${team.length})` : ""}`}
+      icon={Users}
+      color="bg-sky-100 text-sky-600"
+    >
+      <div className="space-y-2">
         {team.length === 0 ? (
           <p className="text-xs text-cf-text-dim">Só o Editor responsável, por enquanto.</p>
         ) : (
