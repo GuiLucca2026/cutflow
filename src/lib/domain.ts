@@ -97,6 +97,12 @@ export const USER_ROLES = Object.keys(ROLE_META);
 
 // Quem pega trabalho de produção (e por isso entra na conta de capacidade
 // da Equipe). Atendente e Visualizador ficam de fora: não recebem vídeo.
+// Assistente também fica de fora: o papel é supervisionar e criar
+// projetos/vídeos/clientes, não editar — não gera horas de edição, então
+// não deveria contar (nem como capacidade, nem como hora agendada) na
+// conta da equipe. Ele continua podendo criar/gerenciar tudo normalmente;
+// só some do Capacity Planning, da Utilização (Analytics) e do alerta de
+// Sobrecarga.
 //
 // Isso precisa bater com quem PODE ter horas agendadas, senão a conta da
 // empresa mente: as horas de todo mundo entram no total agendado, mas a
@@ -104,7 +110,7 @@ export const USER_ROLES = Object.keys(ROLE_META);
 // atribuídos empurraria a barra pra "sobrecarga" sem existir sobrecarga
 // nenhuma. Antes daqui a lista era só EDITOR+ADMIN no código da página, o
 // que já dava esse falso positivo com qualquer freelancer.
-export const PRODUCTION_ROLES = ["ADMIN", "PRODUTOR", "EDITOR", "ASSISTENTE", "OPERADOR_CAMERA", "FREELANCER"];
+export const PRODUCTION_ROLES = ["ADMIN", "PRODUTOR", "EDITOR", "OPERADOR_CAMERA", "FREELANCER"];
 
 export function isProductionRole(role: string) {
   return PRODUCTION_ROLES.includes(role);

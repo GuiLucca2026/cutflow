@@ -4,7 +4,7 @@
 // keep in sync, no background job needed.
 import { format as formatDate } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { computeClientWait, computeDeliveryRisk, isDone, isOverdue } from "@/lib/domain";
+import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isProductionRole } from "@/lib/domain";
 
 export type AlertSeverity = "CRITICO" | "ALTO" | "MODERADO";
 
@@ -36,7 +36,7 @@ type AlertVideo = {
 };
 
 type AlertWorkloadEntry = { editorId: string; date: string; hours: number };
-type AlertUser = { id: string; name: string; dailyCapacityHours: number };
+type AlertUser = { id: string; name: string; dailyCapacityHours: number; role: string };
 
 function dfull(d: string | Date) {
   return formatDate(new Date(d), "dd/MM/yyyy", { locale: ptBR });
@@ -116,8 +116,11 @@ export function computeAlerts(opts: { videos: AlertVideo[]; workloadEntries: Ale
   }
 
   // 4. Sobrecarga — dia em que um editor tem mais horas agendadas
-  // (workload_entries) do que sua capacidade diária.
-  const capacityByUser = new Map(users.map((u) => [u.id, u]));
+  // (workload_entries) do que sua capacidade diária. Só entra quem conta
+  // pra capacidade da equipe (ver isProductionRole em lib/domain.ts) —
+  // Assistente não gera hora de edição, então nunca deveria virar
+  // "Sobrecarga: Fulano", mesmo se por engano ganhar horas agendadas.
+  const capacityByUser = new Map(users.filter((u) => isProductionRole(u.role)).map((u) => [u.id, u]));
   const hoursByEditorDay = new Map<string, Map<string, number>>(); // editorId -> date -> hours
   for (const e of workloadEntries) {
     if (!hoursByEditorDay.has(e.editorId)) hoursByEditorDay.set(e.editorId, new Map());

@@ -1,5 +1,6 @@
 import { listVideos, listUsers, listClients, listWorkloadEntries } from "@/db/queries";
 import { computeOnTimeDelivery, computeMonthlyOnTime, computeRevisionStats, computeClientWaitTime, computeUtilization } from "@/lib/analytics";
+import { isProductionRole } from "@/lib/domain";
 import { AnalyticsFilters } from "@/components/cutflow/analytics-filters";
 import { fmtHours } from "@/lib/format";
 import { subDays, format, startOfMonth, eachMonthOfInterval } from "date-fns";
@@ -43,7 +44,11 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   // Espera do cliente é sempre um retrato do AGORA — não faz sentido
   // filtrar por período, só por cliente/editor.
   const clientWait = computeClientWaitTime(videos);
-  const filteredUsers = editorId ? users.filter((u) => u.id === editorId) : users;
+  // Mesmo filtro de papel do Capacity Planning (ver isProductionRole em
+  // lib/domain.ts) — Assistente não gera hora de edição, então não deveria
+  // aparecer nem entrar no total de "Utilização da equipe" aqui.
+  const productionUsers = users.filter((u) => isProductionRole(u.role));
+  const filteredUsers = editorId ? productionUsers.filter((u) => u.id === editorId) : productionUsers;
   const utilization = computeUtilization(filteredUsers, workloadEntries, fromISO, toISO);
 
   // Tendência dos últimos 6 meses é sempre uma janela fixa, independente do
