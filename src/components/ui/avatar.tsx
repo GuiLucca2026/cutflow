@@ -4,6 +4,38 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { initials } from "@/lib/domain";
 
+// Cor de usuário é dado livre (cada pessoa escolhe a sua no perfil, e
+// quem nunca trocou ainda carrega o default do tema escuro antigo,
+// #C6FF00 — lime). O avatar sempre desenha as iniciais NA MESMA cor sobre
+// um tom bem claro dela mesma (`${color}2a`), o que só tem contraste OK
+// quando a cor de base é escura/saturada. Pra cores claras (lime, amarelo,
+// ciano claro) — texto claro sobre fundo ainda mais claro da mesma cor —
+// as iniciais praticamente somem. Em vez de confiar que toda cor
+// cadastrada é escura o bastante, calculamos a luminância e escurecemos
+// só o texto/borda quando preciso; o tom de fundo continua o original, a
+// "cor da pessoa" ainda é reconhecível, só o texto fica legível.
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const clean = hex.replace("#", "").trim();
+  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
+  const n = parseInt(full, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+function readableAccent(color: string): string {
+  const rgb = hexToRgb(color);
+  if (!rgb) return color;
+  // Luminância percebida (0–1) — acima de ~0.68 a cor é clara o bastante
+  // pra ficar ilegível sobre seu próprio tom pastel de fundo.
+  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  if (luminance <= 0.68) return color;
+  const factor = 0.5; // escurece ~50%, mantendo o matiz reconhecível
+  const r = Math.round(rgb.r * factor);
+  const g = Math.round(rgb.g * factor);
+  const b = Math.round(rgb.b * factor);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
 export function Avatar({
   name,
   color = "#7C3AED",
@@ -20,6 +52,7 @@ export function Avatar({
   className?: string;
 }) {
   const [errored, setErrored] = React.useState(false);
+  const accent = readableAccent(color);
   if (src && !errored) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -40,8 +73,8 @@ export function Avatar({
         height: size,
         fontSize: size * 0.38,
         backgroundColor: `${color}2a`,
-        color,
-        border: `1px solid ${color}55`,
+        color: accent,
+        border: `1px solid ${accent}55`,
       }}
       title={name}
     >

@@ -120,6 +120,12 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggableCard(video.id);
   const overdue = isOverdue(video.finalDeadline, video.status);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
+  // O cartão inteiro assume um tom pastel da cor do status (era só uma
+  // barrinha na borda esquerda) — --cf-card-tint alimenta a regra de
+  // bg-cf-surface no globals.css, então o cartão continua com o mesmo
+  // vidro/blur, só que tingido. Atrasado sempre vira vermelho,
+  // independente do status.
+  const accent = overdue ? "#DC2626" : statusColor;
 
   return (
     <div
@@ -129,11 +135,11 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
       onClick={() => !isDragging && onOpen(video.id)}
       style={{
         ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
-        borderLeft: `3px solid ${overdue ? "#DC2626" : statusColor}`,
+        ["--cf-card-tint" as any]: `${accent}1f`,
+        borderColor: `${accent}4d`,
       }}
       className={cn(
         "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10",
-        overdue ? "border-red-500/40" : "border-cf-border",
         (isDragging || dragging) && "opacity-60 shadow-xl"
       )}
     >

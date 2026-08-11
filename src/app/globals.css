@@ -175,7 +175,13 @@ body::before {
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 .bg-cf-surface {
-  background-color: rgba(255, 255, 255, 0.86) !important;
+  /* var(--cf-card-tint, ...) em vez de um valor fixo: por padrão cai no
+     branco-vidro de sempre, mas VideoCard/KanbanCard definem
+     --cf-card-tint por elemento (via style inline) pra colorir o cartão
+     inteiro conforme o status — sem isso o !important abaixo (necessário
+     pro blur/vidro ganhar de qualquer jeito, ver comentário da sombra)
+     bloquearia qualquer tentativa de cor de fundo por inline style. */
+  background-color: var(--cf-card-tint, rgba(255, 255, 255, 0.86)) !important;
   /* A 3ª sombra (inset) é a "borda de luz" no topo, efeito clássico de
      vidro — não usamos pseudo-elemento/position pra isso de propósito:
      esta MESMA classe bg-cf-surface é usada pelo Dialog (que precisa

@@ -27,15 +27,17 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const overdue = isOverdue(video.finalDeadline, video.status);
   const risk = computeDeliveryRisk(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
+  // Cartão inteiro tingido na cor do status (era só uma barra na borda
+  // esquerda) — --cf-card-tint alimenta a regra de bg-cf-surface no
+  // globals.css, então continua com o mesmo vidro/blur, só que colorido.
+  // Atrasado sempre vira vermelho, independente do status.
+  const accent = overdue ? "#DC2626" : statusColor;
 
   return (
     <button
       onClick={() => open(video.id)}
-      style={{ borderLeft: `3px solid ${overdue ? "#DC2626" : statusColor}` }}
-      className={cn(
-        "w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer",
-        overdue ? "border-red-500/40" : "border-cf-border"
-      )}
+      style={{ ["--cf-card-tint" as any]: `${accent}1f`, borderColor: `${accent}4d` }}
+      className="w-full text-left rounded-xl border bg-cf-surface p-3.5 transition-all hover:border-cf-lime/40 cursor-pointer"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
