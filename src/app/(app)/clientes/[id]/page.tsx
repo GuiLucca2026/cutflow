@@ -2,11 +2,10 @@ import { notFound } from "next/navigation";
 import { getClient, listProjectsByClient } from "@/db/queries";
 import { Avatar } from "@/components/ui/avatar";
 import { PriorityBadge } from "@/components/cutflow/badges";
-import { projectProgress, isOverdue } from "@/lib/domain";
-import { fmtDateWeekday } from "@/lib/format";
+import { projectProgress } from "@/lib/domain";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { Mail, Phone, MessageCircle, AlertTriangle } from "lucide-react";
+import { Mail, Phone, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +44,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {projects.map((p) => {
             const progress = projectProgress(p.videos);
-            const overdue = isOverdue(p.deadline, p.status);
             return (
               <Link key={p.id} href={`/projetos/${p.id}`} className="rounded-xl border border-cf-border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors">
                 <div className="flex items-start justify-between gap-2">
@@ -57,10 +55,6 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 </div>
                 <div className="mt-3">
                   <Progress value={progress} />
-                </div>
-                <div className="mt-2 text-xs flex items-center gap-1">
-                  {overdue && <AlertTriangle className="h-3.5 w-3.5 text-red-600" />}
-                  <span className={overdue ? "text-red-600 font-semibold" : "text-cf-text-dim"}>Prazo: {fmtDateWeekday(p.deadline)}</span>
                 </div>
               </Link>
             );

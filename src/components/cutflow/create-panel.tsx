@@ -256,20 +256,18 @@ function ProjectForm({
   const [name, setName] = React.useState("");
   const [clientId, setClientId] = React.useState("");
   const [type, setType] = React.useState("Outros");
-  const [deadline, setDeadline] = React.useState("");
   const [priority, setPriority] = React.useState("NORMAL");
   const [description, setDescription] = React.useState("");
   const [pending, setPending] = React.useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !clientId || !deadline || pending) return;
+    if (!name.trim() || !clientId || pending) return;
     setPending(true);
     const fd = new FormData();
     fd.set("name", name.trim());
     fd.set("clientId", clientId);
     fd.set("type", type);
-    fd.set("deadline", deadline);
     fd.set("priority", priority);
     if (description) fd.set("description", description);
     // createProject redirects to the new project's page on success — that
@@ -301,29 +299,23 @@ function ProjectForm({
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="p-deadline">Prazo final</Label>
-          <Input id="p-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Prioridade</Label>
-          <Select value={priority} onValueChange={setPriority}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(PRIORITY_META).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-1.5">
+        <Label>Prioridade</Label>
+        <Select value={priority} onValueChange={setPriority}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {Object.entries(PRIORITY_META).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="p-description">Descrição</Label>
         <Textarea id="p-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Briefing rápido do projeto…" />
       </div>
       <DialogFooter>
-        <Button type="submit" disabled={pending || !name.trim() || !clientId || !deadline}>
+        <Button type="submit" disabled={pending || !name.trim() || !clientId}>
           {pending ? "Criando…" : "Criar projeto"}
         </Button>
       </DialogFooter>
@@ -331,8 +323,9 @@ function ProjectForm({
   );
 }
 
-// Compact inline form (name, client, deadline — the 3 fields createProject
-// actually requires) used by ProjectPicker's "+ Criar novo projeto".
+// Compact inline form (name, client — the 2 fields createProject actually
+// requires; prazo de projeto não existe mais) used by ProjectPicker's
+// "+ Criar novo projeto".
 function InlineProjectCreate({
   clients,
   onAddClient,
@@ -346,16 +339,14 @@ function InlineProjectCreate({
 }) {
   const [name, setName] = React.useState("");
   const [clientId, setClientId] = React.useState("");
-  const [deadline, setDeadline] = React.useState("");
   const [pending, setPending] = React.useState(false);
 
   async function handleCreate() {
-    if (!name.trim() || !clientId || !deadline || pending) return;
+    if (!name.trim() || !clientId || pending) return;
     setPending(true);
     const fd = new FormData();
     fd.set("name", name.trim());
     fd.set("clientId", clientId);
-    fd.set("deadline", deadline);
     const id = await createProjectQuick(fd);
     setPending(false);
     if (id) onCreated({ id, name: name.trim(), clientId });
@@ -366,9 +357,8 @@ function InlineProjectCreate({
       <div className="text-xs font-semibold text-cf-text-dim">Novo projeto</div>
       <Input autoFocus placeholder="Nome do projeto" value={name} onChange={(e) => setName(e.target.value)} />
       <ClientPicker clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} />
-      <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
       <div className="flex gap-2">
-        <Button type="button" size="sm" onClick={handleCreate} disabled={pending || !name.trim() || !clientId || !deadline}>
+        <Button type="button" size="sm" onClick={handleCreate} disabled={pending || !name.trim() || !clientId}>
           {pending ? "Criando…" : "Adicionar projeto"}
         </Button>
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Cancelar</Button>

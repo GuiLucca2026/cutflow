@@ -452,13 +452,17 @@ export async function createClient(formData: FormData) {
 async function insertProject(formData: FormData): Promise<string | undefined> {
   const name = String(formData.get("name") || "").trim();
   const clientId = String(formData.get("clientId") || "");
-  const deadline = String(formData.get("deadline") || "");
-  if (!name || !clientId || !deadline) return undefined;
+  if (!name || !clientId) return undefined;
 
   const supabase = await getSupabase();
   const user = await getCurrentUser();
   const id = crypto.randomUUID();
-  const deadlineISO = new Date(deadline).toISOString();
+  // Projeto não tem mais prazo próprio no produto — só video.finalDeadline
+  // conta pra agendamento/atraso agora (ver isOverdue/computeDeliveryRisk).
+  // As colunas deadline/original_deadline continuam NOT NULL no banco por
+  // enquanto, então preenchemos com a data de criação como placeholder
+  // técnico; nada na UI lê mais esses dois campos.
+  const deadlineISO = nowISO();
 
   await supabase.from(TABLES.projects).insert(
     toRow({

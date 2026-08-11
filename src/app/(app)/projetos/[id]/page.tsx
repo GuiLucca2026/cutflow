@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { getProject, getProjectActivity } from "@/db/queries";
-import { projectProgress, isOverdue, PRIORITY_META } from "@/lib/domain";
-import { fmtDateFull, fmtDateTime, fmtCurrency } from "@/lib/format";
+import { projectProgress, PRIORITY_META } from "@/lib/domain";
+import { fmtDateTime, fmtCurrency } from "@/lib/format";
 import { PriorityBadge } from "@/components/cutflow/badges";
 import { Avatar, AvatarStack } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { OpenVideoOnLoad } from "@/components/cutflow/open-video-on-load";
 import { ProjectTabs } from "@/components/cutflow/project-tabs";
-import { AlertTriangle, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,6 @@ export default async function ProjectDetailPage({
   if (!project) notFound();
 
   const progress = projectProgress(project.videos);
-  const overdue = isOverdue(project.deadline, project.status);
   const editors = Array.from(
     new Map(project.videos.filter((v: any) => v.editorId).map((v: any) => [v.editorId, v.editor])).values()
   );
@@ -65,19 +64,6 @@ export default async function ProjectDetailPage({
             <span>{progress}%</span>
           </div>
           <Progress value={progress} />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-cf-border text-sm">
-          <span className={overdue ? "flex items-center gap-1 text-red-600 font-semibold" : "flex items-center gap-1"}>
-            {overdue && <AlertTriangle className="h-4 w-4" />}
-            Prazo: {fmtDateFull(project.deadline)}
-          </span>
-          {project.originalDeadline !== project.deadline && (
-            <span className="text-cf-text-dim text-xs">
-              Prazo original: {fmtDateFull(project.originalDeadline)}
-              {project.deadlineChangeReason ? ` — ${project.deadlineChangeReason}` : ""}
-            </span>
-          )}
         </div>
       </div>
 

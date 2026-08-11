@@ -174,6 +174,11 @@ export type Project = {
   type: string;
   captureDate: string | null;
   startDate: string | null;
+  // Prazo de PROJETO foi removido do produto — a única fonte de prazo
+  // agora é video.finalDeadline (cada vídeo tem o seu). Estas 3 colunas
+  // continuam existindo porque deadline/original_deadline são NOT NULL no
+  // banco (insertProject em actions.ts preenche com a data de criação como
+  // placeholder), mas nenhuma tela do app lê/mostra esses campos.
   deadline: string;
   originalDeadline: string;
   deadlineChangeReason: string | null;

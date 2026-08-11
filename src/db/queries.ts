@@ -61,11 +61,14 @@ function stripDeletedVideos(project: any): any {
 
 export async function listProjects() {
   const supabase = await getSupabase();
+  // Projeto não tem mais prazo próprio (ver video.finalDeadline), então
+  // não faz mais sentido ordenar por deadline — mais recente criado
+  // primeiro é o critério mais previsível que sobra.
   const { data, error } = await supabase
     .from(TABLES.projects)
     .select(PROJECT_SELECT)
     .is("deleted_at", null)
-    .order("deadline", { ascending: false });
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data.map((r) => stripDeletedVideos(mapProject(r)!));
 }
@@ -88,7 +91,7 @@ export async function listProjectsByClient(clientId: string) {
     .select(select)
     .eq("client_id", clientId)
     .is("deleted_at", null)
-    .order("deadline", { ascending: false });
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return data.map((r) => stripDeletedVideos(mapProject(r)!));
 }
