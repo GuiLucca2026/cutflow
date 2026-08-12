@@ -1,19 +1,11 @@
-import { listVideos, listUsers, listClients, listWorkloadEntries, listCompletedChecklistLoad } from "@/db/queries";
-import {
-  computeOnTimeDelivery,
-  computeMonthlyOnTime,
-  computeRevisionStats,
-  computeClientWaitTime,
-  computeUtilization,
-  computeChecklistLoadByPerson,
-  computeChecklistLoadByStage,
-} from "@/lib/analytics";
+import { listVideos, listUsers, listClients, listWorkloadEntries } from "@/db/queries";
+import { computeOnTimeDelivery, computeMonthlyOnTime, computeRevisionStats, computeClientWaitTime, computeUtilization } from "@/lib/analytics";
 import { isProductionRole } from "@/lib/domain";
 import { AnalyticsFilters } from "@/components/cutflow/analytics-filters";
 import { fmtHours } from "@/lib/format";
 import { subDays, format, startOfMonth, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2, Repeat, Clock, Users2, ListChecks } from "lucide-react";
+import { CheckCircle2, Repeat, Clock, Users2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -35,20 +27,10 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   const [videosRaw, users, clients] = await Promise.all([listVideos(), listUsers(), listClients()]);
   const workloadEntries = await listWorkloadEntries(fromISO, toISO);
-  // listCompletedChecklistLoad precisa de timestamp completo (não
-  // "yyyy-MM-dd" como fromISO/toISO acima) — ver o comentário na própria
-  // query, em db/queries.ts.
-  const checklistLoadRaw = await listCompletedChecklistLoad(from.toISOString(), now.toISOString());
 
   let videos = videosRaw.filter((v) => v.status !== "CANCELADO");
   if (clientId) videos = videos.filter((v) => v.project?.client?.id === clientId);
   if (editorId) videos = videos.filter((v) => v.editorId === editorId);
-
-  // Mesmos filtros de cliente/editor que as outras métricas da página já
-  // respeitam — ver os dois `if` acima.
-  let checklistLoad = checklistLoadRaw;
-  if (clientId) checklistLoad = checklistLoad.filter((i) => i.clientId === clientId);
-  if (editorId) checklistLoad = checklistLoad.filter((i) => i.completedById === editorId);
 
   // On-time / revisões: escopo dentro do período selecionado (pelo prazo
   // original — quando o vídeo deveria ter sido entregue).
@@ -68,11 +50,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const productionUsers = users.filter((u) => isProductionRole(u.role));
   const filteredUsers = editorId ? productionUsers.filter((u) => u.id === editorId) : productionUsers;
   const utilization = computeUtilization(filteredUsers, workloadEntries, fromISO, toISO);
-  // Carga REALIZADA (checklist concluído), separada de "Utilização" acima
-  // (que é carga PLANEJADA em Planejar Semana) — ver o comentário no topo
-  // de computeChecklistLoadByPerson, lib/analytics.ts.
-  const checklistLoadByPerson = computeChecklistLoadByPerson(filteredUsers, checklistLoad);
-  const checklistLoadByStage = computeChecklistLoadByStage(checklistLoad);
 
   // Tendência dos últimos 6 meses é sempre uma janela fixa, independente do
   // preset de período escolhido acima (que serve pros KPIs e rankings).
@@ -85,12 +62,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-display text-4xl tracking-wide">Analytics</h1>
-          <p className="text-cf-text-dim text-sm">KPIs de entrega, revisão, espera do cliente, utilização e carga concluída da equipe</p>
+          <p className="text-cf-text-dim text-sm">KPIs de entrega, revisão, espera do cliente e utilização da equipe</p>
         </div>
         <AnalyticsFilters clients={clients.map((c) => ({ id: c.id, name: c.name }))} editors={users.map((u) => ({ id: u.id, name: u.name }))} period={period} clientId={clientId} editorId={editorId} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <KpiCard
           label="Entrega no prazo"
           value={onTime.rate === null ? "—" : `${onTime.rate}%`}
@@ -118,13 +95,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           detail={`${fmtHours(utilization.totalScheduled)} / ${fmtHours(utilization.totalCapacity)} no período`}
           icon={Users2}
           tone={utilization.companyPct === null ? "default" : utilization.companyPct > 100 ? "danger" : utilization.companyPct >= 70 ? "good" : "warn"}
-        />
-        <KpiCard
-          label="Carga concluída"
-          value={fmtHours(checklistLoadByPerson.totalHours)}
-          detail={`${checklistLoadByPerson.totalCount} ${checklistLoadByPerson.totalCount === 1 ? "item" : "itens"} de checklist no período`}
-          icon={ListChecks}
-          tone="default"
         />
       </div>
 
@@ -195,41 +165,6 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
             ))}
           </div>
         )}
-      </div>
-
-      {/* Carga concluída (checklist) — diferente do bloco de Utilização
-          acima (que é carga PLANEJADA em Planejar Semana): isto é carga
-          REALIZADA, vinda de quem de fato marcou qual item do checklist
-          como concluído, com a carga estipulada de cada item (ver
-          lib/checklist.ts e a aba Checklist na ficha do vídeo). */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
-          <h2 className="font-display text-xl tracking-wide mb-1">Carga concluída por pessoa</h2>
-          <p className="text-xs text-cf-text-dim mb-4">Soma da carga estipulada dos itens de checklist que cada um concluiu, no período</p>
-          {checklistLoadByPerson.byUser.length === 0 ? (
-            <div className="text-sm text-cf-text-dim py-6 text-center">Nenhum item de checklist concluído no período selecionado.</div>
-          ) : (
-            <div className="space-y-2.5">
-              {checklistLoadByPerson.byUser.map((u) => (
-                <RankRow key={u.id} label={u.name} value={u.hours} maxValue={Math.max(...checklistLoadByPerson.byUser.map((x) => x.hours), 1)} suffix="h" sub={`${u.count} ${u.count === 1 ? "item" : "itens"}`} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
-          <h2 className="font-display text-xl tracking-wide mb-1">Carga concluída por etapa</h2>
-          <p className="text-xs text-cf-text-dim mb-4">Onde a carga da produtora está indo, por etapa do checklist</p>
-          {checklistLoadByStage.length === 0 ? (
-            <div className="text-sm text-cf-text-dim py-6 text-center">Nenhum item de checklist concluído no período selecionado.</div>
-          ) : (
-            <div className="space-y-2.5">
-              {checklistLoadByStage.map((s) => (
-                <RankRow key={s.label} label={s.label} value={s.hours} maxValue={Math.max(...checklistLoadByStage.map((x) => x.hours), 1)} suffix="h" sub={`${s.count} ${s.count === 1 ? "vídeo" : "vídeos"}`} />
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
