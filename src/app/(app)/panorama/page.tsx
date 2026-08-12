@@ -1,23 +1,14 @@
-import { listVideos, listUsers, listCompletedChecklistLoad } from "@/db/queries";
+import { listVideos, listUsers } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { isDone, isOverdue, isWaitingClient, isProductionRole, computeClientWait, ROLE_META } from "@/lib/domain";
-import { computeChecklistLoadByPerson } from "@/lib/analytics";
+import { isDone, isOverdue, isWaitingClient, computeClientWait, ROLE_META } from "@/lib/domain";
 import { fmtHours } from "@/lib/format";
-import { subDays } from "date-fns";
 import { AlertTriangle, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
-
-// Janela fixa pra "Carga concluída" — Panorama é sempre um retrato do
-// AGORA (mesmo padrão de "Espera do cliente" em Analytics), não tem
-// seletor de período como a página de Analytics tem. 30 dias é o mesmo
-// horizonte que Equipe/Capacity Planning já usa como o maior dos seus
-// ranges.
-const CHECKLIST_LOAD_WINDOW_DAYS = 30;
 
 // Panorama — supervisão mútua (não é relatório de chefe pra equipe).
 // Todo mundo vê a produtora inteira dividida POR PESSOA: quantos vídeos
@@ -28,14 +19,6 @@ const CHECKLIST_LOAD_WINDOW_DAYS = 30;
 export default async function PanoramaPage() {
   const [videos, users, currentUser] = await Promise.all([listVideos(), listUsers(), getCurrentUser()]);
   const active = videos.filter((v) => !isDone(v.status));
-
-  const now = new Date();
-  const checklistLoad = await listCompletedChecklistLoad(subDays(now, CHECKLIST_LOAD_WINDOW_DAYS).toISOString(), now.toISOString());
-  // Carga concluída (checklist) — igual o novo bloco de Analytics, mas numa
-  // janela fixa de 30 dias (Panorama não tem seletor de período). Só entra
-  // gente de papel de produção, mesmo filtro que Equipe/Analytics já usam.
-  const loadByPerson = computeChecklistLoadByPerson(users.filter((u) => isProductionRole(u.role)), checklistLoad);
-  const loadHoursByUserId = new Map(loadByPerson.byUser.map((u) => [u.id, u.hours]));
 
   const stats = (list: typeof active) => ({
     total: list.length,
@@ -50,7 +33,7 @@ export default async function PanoramaPage() {
   // Só quem tem vídeo ativo aparece — uma lista cheia de gente com zero em
   // tudo esconderia justamente quem precisa de atenção.
   const people = users
-    .map((u) => ({ user: u, ...stats(active.filter((v) => v.editorId === u.id)), loadHours: loadHoursByUserId.get(u.id) ?? 0 }))
+    .map((u) => ({ user: u, ...stats(active.filter((v) => v.editorId === u.id)) }))
     .filter((p) => p.total > 0)
     // Mais atrasados primeiro; empatou, quem tem mais coisa na mão.
     .sort((a, b) => b.overdue.length - a.overdue.length || b.total - a.total);
@@ -69,12 +52,11 @@ export default async function PanoramaPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat label="Vídeos ativos" value={company.total} />
         <Stat label="Atrasados" value={company.overdue.length} tone={company.overdue.length > 0 ? "danger" : "default"} />
         <Stat label="Aguardando cliente" value={company.waiting.length} tone={company.chase.length > 0 ? "warn" : "default"} />
         <Stat label="Horas restantes" value={fmtHours(company.hours)} />
-        <Stat label={`Carga concluída (${CHECKLIST_LOAD_WINDOW_DAYS}d)`} value={fmtHours(loadByPerson.totalHours)} />
       </div>
 
       {unassigned.total > 0 && (
@@ -121,7 +103,6 @@ export default async function PanoramaPage() {
                     </div>
                     <div className="text-xs text-cf-text-dim">
                       {p.total} {p.total === 1 ? "vídeo ativo" : "vídeos ativos"} · ~{fmtHours(p.hours)} restantes
-                      {p.loadHours > 0 && ` · concluiu ~${fmtHours(p.loadHours)} (${CHECKLIST_LOAD_WINDOW_DAYS}d)`}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5 ml-auto">
