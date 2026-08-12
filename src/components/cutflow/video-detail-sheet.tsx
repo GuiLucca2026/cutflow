@@ -309,6 +309,13 @@ function VideoDetailBody({
                       }}
                     />
                     <span className={item.done ? "text-cf-text-dim line-through truncate" : "text-cf-text truncate"}>{item.label}</span>
+                    {/* Carga estipulada desse passo (ver CHECKLIST_STEPS em
+                        lib/checklist.ts) — mesmo número que soma em "Carga
+                        concluída" no Panorama/Analytics quando o item é
+                        marcado, só que visível aqui, onde é gerado. */}
+                    {item.estimatedLoadHours > 0 && (
+                      <span className="shrink-0 text-[11px] text-cf-text-dim/70 tabular-nums">{fmtHours(item.estimatedLoadHours)}</span>
+                    )}
                   </label>
                   {/* Quem marcou esse item — some junto quando reaberto, já
                       que a atribuição só vale enquanto estiver feito. */}

@@ -219,5 +219,47 @@ export async function listInvites() {
   return data.map((r) => mapInvite(r)!);
 }
 
+// ---------------------------------------------------------------------------
+// Carga estipulada por item de checklist (Fase 11 — ver lib/checklist.ts)
+// ---------------------------------------------------------------------------
+// Alimenta computeChecklistLoadByPerson / computeChecklistLoadByStage em
+// lib/analytics.ts (Panorama e Analytics). fromISO/toISO precisam ser
+// timestamps completos (ISO com hora), não "yyyy-MM-dd" como
+// listWorkloadEntries usa acima — completed_at é gravado com hora exata
+// (toggleChecklistItem, actions.ts), então um "yyyy-MM-dd" cortaria o dia
+// pela metade em vez de pegar o dia inteiro.
+//
+// clientId vem do join item → vídeo → projeto → cliente porque Analytics
+// filtra "Carga concluída" pelo mesmo seletor de cliente que o resto da
+// página já respeita (ver app/analytics/page.tsx). Vídeo avulso (sem
+// projeto) ou vídeo excluído (lixeira) não entra: o primeiro não tem
+// cliente pra filtrar por, o segundo já sumiu de todo relatório.
+export type CompletedChecklistLoadItem = {
+  label: string;
+  estimatedLoadHours: number;
+  completedById: string | null;
+  clientId: string | null;
+};
+
+export async function listCompletedChecklistLoad(fromISO: string, toISO: string): Promise<CompletedChecklistLoadItem[]> {
+  const supabase = await getSupabase();
+  const select =
+    "label, completed_by_id, estimated_load_hours, video:cutflow_videos(deleted_at, project:cutflow_projects(client_id))";
+  const { data, error } = await supabase
+    .from(TABLES.checklistItems)
+    .select(select)
+    .gte("completed_at", fromISO)
+    .lte("completed_at", toISO);
+  if (error) throw error;
+  return (data as any[])
+    .filter((r) => !r.video?.deleted_at)
+    .map((r) => ({
+      label: r.label,
+      estimatedLoadHours: r.estimated_load_hours ?? 0,
+      completedById: r.completed_by_id ?? null,
+      clientId: r.video?.project?.client_id ?? null,
+    }));
+}
+
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];
 export type ProjectWithRelations = Awaited<ReturnType<typeof listProjects>>[number];

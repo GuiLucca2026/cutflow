@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
 import { STATUS_META, TEAM_ROLE_META, USER_ROLES, isWaitingClient } from "@/lib/domain";
+import { DEFAULT_CHECKLIST_LABELS, estimatedLoadHoursForLabel } from "@/lib/checklist";
 import { redirect } from "next/navigation";
 
 function nowISO() {
@@ -622,21 +623,10 @@ export async function createVideo(formData: FormData) {
     })
   );
 
-  const defaultChecklist = [
-    "Ingest dos arquivos",
-    "Organização",
-    "Montagem",
-    "Trilha sonora",
-    "Colorização",
-    "Sound design",
-    "Motion / grafismos",
-    "Legendas",
-    "Revisão",
-    "Exportação",
-    "Upload / envio",
-  ];
   await supabase.from(TABLES.checklistItems).insert(
-    defaultChecklist.map((label, i) => toRow({ id: crypto.randomUUID(), videoId: id, label, order: i, done: false }))
+    DEFAULT_CHECKLIST_LABELS.map((label, i) =>
+      toRow({ id: crypto.randomUUID(), videoId: id, label, order: i, done: false, estimatedLoadHours: estimatedLoadHoursForLabel(label) })
+    )
   );
 
   await logActivity("VIDEO", id, "Vídeo criado", name);
@@ -644,20 +634,6 @@ export async function createVideo(formData: FormData) {
   if (projectId) revalidatePath(`/projetos/${projectId}`);
   return id;
 }
-
-const DEFAULT_CHECKLIST = [
-  "Ingest dos arquivos",
-  "Organização",
-  "Montagem",
-  "Trilha sonora",
-  "Colorização",
-  "Sound design",
-  "Motion / grafismos",
-  "Legendas",
-  "Revisão",
-  "Exportação",
-  "Upload / envio",
-];
 
 // Máximo por lote — generoso o bastante pra "15 vídeos de uma vez" (o caso
 // real que motivou isso) sem deixar alguém disparar um insert de milhares
@@ -720,7 +696,9 @@ export async function createVideosBulk(formData: FormData): Promise<{ ids: strin
   await supabase.from(TABLES.videos).insert(videoRows);
 
   const checklistRows = ids.flatMap((videoId) =>
-    DEFAULT_CHECKLIST.map((label, i) => toRow({ id: crypto.randomUUID(), videoId, label, order: i, done: false }))
+    DEFAULT_CHECKLIST_LABELS.map((label, i) =>
+      toRow({ id: crypto.randomUUID(), videoId, label, order: i, done: false, estimatedLoadHours: estimatedLoadHoursForLabel(label) })
+    )
   );
   await supabase.from(TABLES.checklistItems).insert(checklistRows);
 

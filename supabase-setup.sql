@@ -428,3 +428,35 @@ alter table public.cutflow_videos add column if not exists client_sent_at text;
 -- Fica nullable por causa das captações criadas antes desta coluna existir
 -- — elas continuam válidas, só aparecem sem responsável até alguém definir.
 alter table public.cutflow_captures add column if not exists responsible_id text references public.cutflow_users(id);
+
+-- ---------------------------------------------------------------------------
+-- Fase 11 — Carga estipulada por item de checklist
+-- ---------------------------------------------------------------------------
+-- Cada um dos 11 passos do checklist padrão (ver CHECKLIST_STEPS em
+-- lib/checklist.ts) estipula uma carga em horas. A partir de agora ela é
+-- gravada no próprio item na hora da criação (createVideo/createVideosBulk
+-- em actions.ts) — um valor travado, não recalculado depois se a
+-- estimativa de uma etapa mudar (mesmo espírito de original_final_deadline
+-- acima: "o que foi combinado quando o trabalho começou").
+--
+-- Itens criados ANTES desta coluna existir ficam em 0 pelo default abaixo;
+-- o UPDATE que segue faz o backfill pelo label, pra "Carga concluída" em
+-- Panorama/Analytics (ver listCompletedChecklistLoad em db/queries.ts)
+-- também contar itens antigos já concluídos, e não só os novos.
+alter table public.cutflow_checklist_items add column if not exists estimated_load_hours numeric not null default 0;
+
+update public.cutflow_checklist_items set estimated_load_hours = case label
+  when 'Ingest dos arquivos' then 0.5
+  when 'Organização' then 0.5
+  when 'Montagem' then 4
+  when 'Trilha sonora' then 1
+  when 'Colorização' then 1.5
+  when 'Sound design' then 1
+  when 'Motion / grafismos' then 2
+  when 'Legendas' then 1
+  when 'Revisão' then 1
+  when 'Exportação' then 0.5
+  when 'Upload / envio' then 0.5
+  else 1 -- fallback: item com label fora dos 11 padrão (não deveria existir hoje)
+end
+where estimated_load_hours = 0;

@@ -334,6 +334,10 @@ export type ChecklistItem = {
   // que "quem fez" deixa de ser verdade assim que desmarca).
   completedById: string | null;
   completedAt: string | null;
+  // Carga estipulada (em horas) — travada na criação do item, a partir de
+  // CHECKLIST_STEPS em lib/checklist.ts. Ver o comentário lá pra por que
+  // isso é um valor congelado e não um lookup dinâmico por label.
+  estimatedLoadHours: number;
 };
 
 export type Comment = {

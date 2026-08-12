@@ -190,6 +190,10 @@ export function mapChecklistItem(r: any): (ChecklistItem & Record<string, any>) 
     order: r.order,
     completedById: r.completed_by_id ?? null,
     completedAt: r.completed_at ?? null,
+    // Itens criados antes desta coluna existir ficam null no banco até o
+    // backfill da migração (fase11-carga-checklist.sql) rodar — 0 aqui é
+    // só o fallback de leitura, não uma carga real de "zero horas".
+    estimatedLoadHours: r.estimated_load_hours ?? 0,
     ...(r.completedBy !== undefined ? { completedBy: mapUser(r.completedBy) } : {}),
   };
 }
@@ -339,6 +343,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   userId: "user_id",
   completedById: "completed_by_id",
   completedAt: "completed_at",
+  estimatedLoadHours: "estimated_load_hours",
   deletedAt: "deleted_at",
   clientSentAt: "client_sent_at",
 };
