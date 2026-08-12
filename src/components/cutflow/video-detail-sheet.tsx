@@ -14,6 +14,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
+import { TaskList } from "@/components/cutflow/task-list";
 import { RenameDialog } from "@/components/cutflow/rename-dialog";
 import { Hint } from "@/components/ui/tooltip";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
@@ -277,6 +278,7 @@ function VideoDetailBody({
           <Tabs defaultValue="checklist">
             <TabsList>
               <TabsTrigger value="checklist">Checklist ({checklistDone}/{checklist.length})</TabsTrigger>
+              <TabsTrigger value="tarefas">Tarefas ({video.tasks?.filter((t: any) => !t.done).length ?? 0})</TabsTrigger>
               <TabsTrigger value="revisoes">Alterações ({video.revisions.length})</TabsTrigger>
               <TabsTrigger value="versoes">Versões ({video.versions.length})</TabsTrigger>
               <TabsTrigger value="comentarios">Comentários ({video.comments.length})</TabsTrigger>
@@ -330,6 +332,15 @@ function VideoDetailBody({
                   )}
                 </div>
               ))}
+            </TabsContent>
+
+            <TabsContent value="tarefas" className="space-y-2">
+              <TaskList
+                tasks={video.tasks ?? []}
+                users={users}
+                context={{ videoId: video.id, projectId: video.projectId ?? null }}
+                onMutate={onMutate}
+              />
             </TabsContent>
 
             <TabsContent value="revisoes" className="space-y-3">

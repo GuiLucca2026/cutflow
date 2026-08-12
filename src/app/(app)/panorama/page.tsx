@@ -65,7 +65,7 @@ export default async function PanoramaPage() {
       <div>
         <h1 className="font-display text-4xl tracking-wide">Panorama</h1>
         <p className="text-cf-text-dim text-sm">
-          Como está a produtora inteira, por pessoa — todo mundo vê tudo. Sua fila pessoal continua em Minha Edição.
+          Como está a produtora inteira, por pessoa — todo mundo vê tudo. Sua fila pessoal continua em Meu Dia.
         </p>
       </div>
 

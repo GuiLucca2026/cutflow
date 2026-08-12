@@ -92,7 +92,7 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <ProjectTabs project={project} activity={activity} />
+      <ProjectTabs project={project} activity={activity} users={users.map((u) => ({ id: u.id, name: u.name }))} />
     </div>
   );
 }

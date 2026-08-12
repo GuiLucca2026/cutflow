@@ -1,11 +1,9 @@
 import {
   Sun,
-  UserRound,
   FolderKanban,
   Clapperboard,
   Camera,
   Calendar,
-  CalendarClock,
   GanttChartSquare,
   MessageSquareWarning,
   Users,
@@ -29,12 +27,12 @@ export type NavGroup = { label: string; items: NavItem[] };
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Meu dia",
-    items: [
-      { href: "/hoje", label: "Hoje", icon: Sun },
-      { href: "/minha-edicao", label: "Minha Edição", icon: UserRound },
-      { href: "/minha-semana", label: "Planejar Semana", icon: CalendarClock },
-    ],
+    // Sem label de grupo de propósito — "Meu Dia" agora é 1 item só
+    // (consolidou Hoje + Minha Edição + Planejar Semana numa página só,
+    // ver src/app/(app)/hoje/page.tsx), um cabeçalho de grupo repetindo o
+    // mesmo nome do item logo abaixo seria redundante.
+    label: "",
+    items: [{ href: "/hoje", label: "Meu Dia", icon: Sun }],
   },
   {
     label: "Produção",

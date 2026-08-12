@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Hint } from "@/components/ui/tooltip";
 import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
-import { Clock, AlertTriangle, UserX } from "lucide-react";
+import { Clock, AlertTriangle, UserX, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type VideoCardData = {
@@ -33,6 +33,11 @@ export type VideoCardData = {
   editorId?: string | null;
   // Idem, pra marcar em qual projeto o vídeo já está no menu "Mover para projeto".
   projectId?: string | null;
+  // Notificações não lidas (Fase 12 — @menção, tarefa atribuída) sobre
+  // ESTE vídeo, pro usuário atual. Opcional: só as páginas que já buscam
+  // notificações (por ora, Meu Dia) preenchem isso — nas demais o sino
+  // simplesmente não aparece, em vez de fazer uma query a mais por card.
+  pendingCount?: number;
 };
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {
@@ -99,6 +104,13 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               de selos redundantes. Atraso continua visível no rodapé. */}
           {showRisk && !isDone(video.status) && !isWaitingClient(video.status) && !clientWait && <RiskBadge risk={risk} />}
           {clientWait && <ClientWaitBadge wait={clientWait} />}
+          {!!video.pendingCount && (
+            <Hint text={`${video.pendingCount} ${video.pendingCount === 1 ? "notificação não lida" : "notificações não lidas"} neste vídeo`}>
+              <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-cf-lime/15 px-1.5 py-0.5 text-[10px] font-semibold text-cf-lime-dim">
+                <Bell className="h-2.5 w-2.5" /> {video.pendingCount}
+              </span>
+            </Hint>
+          )}
         </div>
 
         {/* Responsável com NOME, não só as iniciais num círculo no canto:

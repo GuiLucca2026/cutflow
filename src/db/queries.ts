@@ -9,6 +9,8 @@ import {
   mapWorkloadEntry,
   mapCapture,
   mapInvite,
+  mapTask,
+  mapNotification,
 } from "@/db/mappers";
 
 export async function listClients() {
@@ -76,11 +78,18 @@ export async function listProjects() {
 export async function getProject(id: string) {
   const supabase = await getSupabase();
   const select =
-    "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*)))";
+    "*, client:cutflow_clients(*), producer:cutflow_users!producer_id(*), leadEditor:cutflow_users!lead_editor_id(*), links:cutflow_project_links(*), videos:cutflow_videos(*, editor:cutflow_users!editor_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*))), " +
+    "tasks:cutflow_tasks(*, assignedTo:cutflow_users!assigned_to_id(*))";
   const { data, error } = await supabase.from(TABLES.projects).select(select).eq("id", id).maybeSingle();
   if (error) throw error;
   const mapped = mapProject(data);
-  return mapped ? stripDeletedVideos(mapped) : null;
+  if (!mapped) return null;
+  // Só tarefas SEM vídeo específico (video_id null) entram na aba do
+  // projeto — tarefa presa a um vídeo aparece na ficha daquele vídeo, não
+  // duas vezes. Ver getVideo logo abaixo pro outro lado dessa regra.
+  mapped.tasks = (mapped.tasks ?? []).filter((t: any) => !t.videoId);
+  mapped.tasks.sort((a: any, b: any) => (a.done === b.done ? (a.createdAt < b.createdAt ? 1 : -1) : a.done ? 1 : -1));
+  return stripDeletedVideos(mapped);
 }
 
 export async function listProjectsByClient(clientId: string) {
@@ -152,7 +161,8 @@ export async function getVideo(id: string) {
     "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), " +
     "checklist:cutflow_checklist_items(*, completedBy:cutflow_users!completed_by_id(*)), versions:cutflow_video_versions(*), " +
     "revisions:cutflow_revisions(*, assignedTo:cutflow_users!assigned_to_id(*), requestedBy:cutflow_users!requested_by_id(*)), " +
-    "comments:cutflow_comments(*, author:cutflow_users!author_id(*)), team:cutflow_video_team(*, user:cutflow_users!user_id(*))";
+    "comments:cutflow_comments(*, author:cutflow_users!author_id(*)), team:cutflow_video_team(*, user:cutflow_users!user_id(*)), " +
+    "tasks:cutflow_tasks(*, assignedTo:cutflow_users!assigned_to_id(*))";
   const { data, error } = await supabase.from(TABLES.videos).select(select).eq("id", id).maybeSingle();
   if (error) throw error;
   const video = mapVideo(data);
@@ -164,6 +174,7 @@ export async function getVideo(id: string) {
   video.revisions?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
   video.comments?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
   video.team?.sort((a: any, b: any) => (a.createdAt < b.createdAt ? -1 : 1));
+  video.tasks?.sort((a: any, b: any) => (a.done === b.done ? (a.createdAt < b.createdAt ? 1 : -1) : a.done ? 1 : -1));
   return video;
 }
 
@@ -259,6 +270,43 @@ export async function listCompletedChecklistLoad(fromISO: string, toISO: string)
       completedById: r.completed_by_id ?? null,
       clientId: r.video?.project?.client_id ?? null,
     }));
+}
+
+// ---------------------------------------------------------------------------
+// Tarefas (Fase 12) — ver lib/checklist.ts pro contraste com o checklist
+// fixo. "Minhas tarefas" (Meu Dia) é o único ponto de entrada que cruza
+// TODAS as tarefas atribuídas a alguém, de qualquer projeto/vídeo — dentro
+// da ficha de um vídeo/projeto específico, getVideo/getProject acima já
+// embutem as tarefas daquele item só.
+export async function listMyTasks(userId: string) {
+  const supabase = await getSupabase();
+  const select =
+    "*, video:cutflow_videos(id, name, project_id), project:cutflow_projects(id, name)";
+  const { data, error } = await supabase
+    .from(TABLES.tasks)
+    .select(select)
+    .eq("assigned_to_id", userId)
+    .eq("done", false)
+    .order("due_at", { ascending: true, nullsFirst: false });
+  if (error) throw error;
+  return (data as any[]).map((r) => mapTask(r)!);
+}
+
+// ---------------------------------------------------------------------------
+// Notificações (Fase 12) — @menção (comentário ou tarefa) e atribuição de
+// tarefa. Uma chamada só alimenta tanto a aba "Atividade" do sino (lista
+// completa) quanto o indicador por card (agrupando por entityId no lado
+// de quem chama) — ver NotificationBell/VideoCard.
+export async function listNotifications(userId: string) {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from(TABLES.notifications)
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data.map((r) => mapNotification(r)!);
 }
 
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];

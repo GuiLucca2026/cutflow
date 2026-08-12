@@ -17,6 +17,8 @@ import type {
   WorkloadEntry,
   Capture,
   Invite,
+  Task,
+  Notification,
 } from "./schema";
 
 export function mapUser(r: any): User | null {
@@ -88,6 +90,7 @@ export function mapProject(r: any): (Project & Record<string, any>) | null {
     ...(r.leadEditor !== undefined ? { leadEditor: mapUser(r.leadEditor) } : {}),
     ...(r.videos !== undefined ? { videos: r.videos.map(mapVideo) } : {}),
     ...(r.links !== undefined ? { links: r.links.map(mapProjectLink) } : {}),
+    ...(r.tasks !== undefined ? { tasks: r.tasks.map(mapTask) } : {}),
   };
 }
 
@@ -132,6 +135,7 @@ export function mapVideo(r: any): (Video & Record<string, any>) | null {
     ...(r.revisions !== undefined ? { revisions: r.revisions.map(mapRevision) } : {}),
     ...(r.comments !== undefined ? { comments: r.comments.map(mapComment) } : {}),
     ...(r.team !== undefined ? { team: r.team.map(mapVideoTeamMember) } : {}),
+    ...(r.tasks !== undefined ? { tasks: r.tasks.map(mapTask) } : {}),
   };
 }
 
@@ -195,6 +199,46 @@ export function mapChecklistItem(r: any): (ChecklistItem & Record<string, any>) 
     // só o fallback de leitura, não uma carga real de "zero horas".
     estimatedLoadHours: r.estimated_load_hours ?? 0,
     ...(r.completedBy !== undefined ? { completedBy: mapUser(r.completedBy) } : {}),
+  };
+}
+
+export function mapTask(r: any): (Task & Record<string, any>) | null {
+  if (!r) return null;
+  return {
+    id: r.id,
+    projectId: r.project_id ?? null,
+    videoId: r.video_id ?? null,
+    title: r.title,
+    description: r.description ?? null,
+    assignedToId: r.assigned_to_id ?? null,
+    createdById: r.created_by_id ?? null,
+    dueAt: r.due_at ?? null,
+    done: r.done,
+    completedAt: r.completed_at ?? null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    ...(r.assignedTo !== undefined ? { assignedTo: mapUser(r.assignedTo) } : {}),
+    // listMyTasks (db/queries.ts) embute um recorte leve de vídeo/projeto
+    // só pra dar contexto ("qual vídeo/projeto é essa tarefa mesmo") na
+    // lista "Minhas tarefas" do Meu Dia — não passa por mapVideo/mapProject
+    // de propósito, view raso demais pra precisar do mapper inteiro.
+    ...(r.video !== undefined ? { video: r.video ? { id: r.video.id, name: r.video.name, projectId: r.video.project_id } : null } : {}),
+    ...(r.project !== undefined ? { project: r.project ? { id: r.project.id, name: r.project.name } : null } : {}),
+  };
+}
+
+export function mapNotification(r: any): (Notification & Record<string, any>) | null {
+  if (!r) return null;
+  return {
+    id: r.id,
+    userId: r.user_id,
+    type: r.type,
+    title: r.title,
+    body: r.body ?? null,
+    read: r.read,
+    entityType: r.entity_type ?? null,
+    entityId: r.entity_id ?? null,
+    createdAt: r.created_at,
   };
 }
 
@@ -344,6 +388,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   completedById: "completed_by_id",
   completedAt: "completed_at",
   estimatedLoadHours: "estimated_load_hours",
+  createdById: "created_by_id",
   deletedAt: "deleted_at",
   clientSentAt: "client_sent_at",
 };

@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { StatusBadge } from "@/components/cutflow/badges";
 import { EditableNotes } from "@/components/cutflow/editable-notes";
+import { TaskList } from "@/components/cutflow/task-list";
 import { updateProjectNotes } from "@/app/actions";
 import { fmtDateTime, fmtDateFull } from "@/lib/format";
 import { ExternalLink, Link2, Film, Clapperboard, FileText } from "lucide-react";
@@ -15,11 +16,13 @@ const LINK_CATEGORY_LABEL: Record<string, string> = {
   REFERENCIA: "Referências",
 };
 
-export function ProjectTabs({ project, activity }: { project: any; activity: any[] }) {
+export function ProjectTabs({ project, activity, users }: { project: any; activity: any[]; users: { id: string; name: string }[] }) {
+  const openTasks = (project.tasks ?? []).filter((t: any) => !t.done).length;
   return (
     <Tabs defaultValue="videos">
       <TabsList>
         <TabsTrigger value="videos">Vídeos ({project.videos.length})</TabsTrigger>
+        <TabsTrigger value="tarefas">Tarefas ({openTasks})</TabsTrigger>
         <TabsTrigger value="arquivos">Arquivos ({project.links.length})</TabsTrigger>
         <TabsTrigger value="info">Briefing</TabsTrigger>
         <TabsTrigger value="atividade">Atividade</TabsTrigger>
@@ -40,6 +43,10 @@ export function ProjectTabs({ project, activity }: { project: any; activity: any
             ))}
           </div>
         )}
+      </TabsContent>
+
+      <TabsContent value="tarefas">
+        <TaskList tasks={project.tasks ?? []} users={users} context={{ projectId: project.id }} />
       </TabsContent>
 
       <TabsContent value="arquivos">

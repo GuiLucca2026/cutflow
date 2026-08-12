@@ -22,6 +22,7 @@ import { switchUser } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Alert } from "@/lib/alerts";
+import type { Notification } from "@/db/schema";
 
 export function Topbar({
   currentUser,
@@ -31,6 +32,7 @@ export function Topbar({
   title,
   linkedAccount,
   alerts = [],
+  notifications = [],
 }: {
   currentUser: { id: string; name: string; avatarColor: string; avatarUrl?: string | null; icsToken?: string | null; role: string };
   users: { id: string; name: string; avatarColor: string; role: string }[];
@@ -45,6 +47,10 @@ export function Topbar({
   // Fase 5: computed fresh in the layout from the same data every other
   // screen reads (see src/lib/alerts.ts) — conflicts, overload, risk.
   alerts?: Alert[];
+  // Fase 12: notificações reais (menção @, tarefa atribuída) — diferente
+  // dos alerts acima, que são risco CALCULADO pelo sistema; isto é evento
+  // HUMANO (ver o comentário no topo de notification-bell.tsx).
+  notifications?: Notification[];
 }) {
   const [paletteOpenSignal, setPaletteOpenSignal] = React.useState(0);
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -77,7 +83,7 @@ export function Topbar({
         <Plus className="h-4 w-4" /> Criar
       </Button>
 
-      <NotificationBell alerts={alerts} />
+      <NotificationBell alerts={alerts} notifications={notifications} />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

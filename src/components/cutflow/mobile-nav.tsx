@@ -44,7 +44,7 @@ export function MobileNav() {
         <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-3 space-y-4">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
-              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-side-text/50">{group.label}</div>
+              {group.label && <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-side-text/50">{group.label}</div>}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = pathname === item.href || pathname.startsWith(item.href + "/");

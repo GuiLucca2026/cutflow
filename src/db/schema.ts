@@ -33,6 +33,7 @@ export const TABLES = {
   captures: "cutflow_captures",
   invites: "cutflow_invites",
   videoTeam: "cutflow_video_team",
+  tasks: "cutflow_tasks",
 } as const;
 
 export const CAPTURE_STATUSES = ["AGENDADA", "CONCLUIDA", "CANCELADA"] as const;
@@ -374,4 +375,41 @@ export type WorkloadEntry = {
   videoId: string | null;
   date: string;
   hours: number;
+};
+
+// Tarefa avulsa (Fase 12) — ação de uma linha que não se encaixa num dos
+// 11 passos fixos do checklist (ver lib/checklist.ts). Presa a um vídeo,
+// a um projeto sem vídeo específico, ou às vezes os dois (tarefa de um
+// vídeo específico dentro de um projeto — videoId então implica o
+// projectId dele, mas guardamos os dois pra não depender de join só pra
+// filtrar "tarefas deste projeto, incluindo as de vídeos específicos").
+export type Task = {
+  id: string;
+  projectId: string | null;
+  videoId: string | null;
+  title: string;
+  description: string | null;
+  assignedToId: string | null;
+  createdById: string | null;
+  dueAt: string | null;
+  done: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Notificação real (Fase 12) — a tabela cutflow_notifications já existia
+// desde o pacote inicial (preparada, nunca usada). Dois tipos por agora:
+// menção (@Nome num comentário ou numa tarefa) e atribuição de tarefa.
+export const NOTIFICATION_TYPES = ["MENCAO", "TAREFA_ATRIBUIDA"] as const;
+export type Notification = {
+  id: string;
+  userId: string;
+  type: (typeof NOTIFICATION_TYPES)[number] | string;
+  title: string;
+  body: string | null;
+  read: boolean;
+  entityType: "VIDEO" | "PROJECT" | "TASK" | null;
+  entityId: string | null;
+  createdAt: string;
 };

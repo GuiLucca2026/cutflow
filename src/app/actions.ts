@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
 import { STATUS_META, TEAM_ROLE_META, USER_ROLES, isWaitingClient } from "@/lib/domain";
 import { DEFAULT_CHECKLIST_LABELS, estimatedLoadHoursForLabel } from "@/lib/checklist";
+import { extractMentions } from "@/lib/mentions";
 import { redirect } from "next/navigation";
 
 function nowISO() {
@@ -30,10 +31,62 @@ async function logActivity(entityType: "PROJECT" | "VIDEO", entityId: string, ac
   );
 }
 
+// ---------------------------------------------------------------------------
+// Notificações (Fase 12) — @menção em texto livre (comentário, descrição
+// de tarefa). Não notifica o próprio autor se ele se mencionar (não tem
+// sentido avisar alguém de algo que ele mesmo acabou de escrever).
+// entityType/entityId apontam pro vídeo/projeto onde a menção aconteceu —
+// é isso que permite o sino da ficha e o indicador no card saberem que
+// tarefa é essa (ver listNotifications em db/queries.ts).
+async function notifyMentions(text: string, entityType: "VIDEO" | "PROJECT", entityId: string, title: string) {
+  if (!text?.trim()) return;
+  const supabase = await getSupabase();
+  const actor = await getCurrentUser();
+  const { data: users } = await supabase.from(TABLES.users).select("id, name");
+  const mentioned = extractMentions(text, users ?? []).filter((id) => id !== actor.id);
+  if (mentioned.length === 0) return;
+
+  await supabase.from(TABLES.notifications).insert(
+    mentioned.map((userId) =>
+      toRow({
+        id: crypto.randomUUID(),
+        userId,
+        type: "MENCAO",
+        title,
+        body: text.length > 140 ? `${text.slice(0, 140)}…` : text,
+        read: false,
+        entityType,
+        entityId,
+        createdAt: nowISO(),
+      })
+    )
+  );
+}
+
+async function notifyTaskAssigned(assignedToId: string | null, entityType: "VIDEO" | "PROJECT", entityId: string, taskTitle: string) {
+  if (!assignedToId) return;
+  const actor = await getCurrentUser();
+  if (assignedToId === actor.id) return;
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.notifications).insert(
+    toRow({
+      id: crypto.randomUUID(),
+      userId: assignedToId,
+      type: "TAREFA_ATRIBUIDA",
+      title: `${actor.name} te atribuiu uma tarefa`,
+      body: taskTitle,
+      read: false,
+      entityType,
+      entityId,
+      createdAt: nowISO(),
+    })
+  );
+}
+
 function revalidateEverywhere() {
   revalidatePath("/hoje");
   revalidatePath("/panorama");
-  revalidatePath("/minha-edicao");
+  revalidatePath("/hoje");
   revalidatePath("/kanban");
   revalidatePath("/videos");
   revalidatePath("/projetos");
@@ -388,8 +441,103 @@ export async function addComment(videoId: string, body: string) {
     })
   );
   await logActivity("VIDEO", videoId, "Comentário adicionado");
+  await notifyMentions(body, "VIDEO", videoId, `${user.name} te mencionou num comentário`);
   // Comentário só aparece dentro da própria aba — mesma lógica do
   // checklist, sem revalidateEverywhere.
+}
+
+// ---------------------------------------------------------------------------
+// Tarefa avulsa (Fase 12) — ver o comentário no topo de lib/checklist.ts
+// pro contraste com o checklist fixo. Presa a um vídeo OU a um projeto
+// (sem vídeo específico); o formulário sempre manda um dos dois.
+// ---------------------------------------------------------------------------
+export async function createTask(input: {
+  videoId?: string | null;
+  projectId?: string | null;
+  title: string;
+  description?: string;
+  assignedToId?: string | null;
+  dueAt?: string | null;
+}) {
+  const title = input.title.trim();
+  if (!title) return;
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  const id = crypto.randomUUID();
+
+  await supabase.from(TABLES.tasks).insert(
+    toRow({
+      id,
+      videoId: input.videoId ?? null,
+      projectId: input.projectId ?? null,
+      title,
+      description: input.description?.trim() || null,
+      assignedToId: input.assignedToId || null,
+      createdById: user.id,
+      dueAt: input.dueAt || null,
+      done: false,
+      createdAt: nowISO(),
+      updatedAt: nowISO(),
+    })
+  );
+
+  const entityType = input.videoId ? "VIDEO" : "PROJECT";
+  const entityId = (input.videoId || input.projectId)!;
+  await logActivity(entityType, entityId, "Tarefa criada", title);
+  if (input.description) await notifyMentions(input.description, entityType, entityId, `${user.name} te mencionou numa tarefa`);
+  await notifyTaskAssigned(input.assignedToId ?? null, entityType, entityId, title);
+
+  // Tarefa de vídeo aparece na ficha do vídeo, que se atualiza via refetch
+  // do cliente (mesmo padrão do checklist — ver onMutate em
+  // video-detail-sheet.tsx), não via revalidatePath. Tarefa de projeto
+  // aparece na aba "Tarefas" da página do projeto, que É renderizada no
+  // servidor — essa precisa mesmo do revalidatePath.
+  if (input.projectId && !input.videoId) revalidatePath(`/projetos/${input.projectId}`);
+  revalidatePath("/hoje");
+}
+
+export async function toggleTask(taskId: string, done: boolean, projectId?: string | null) {
+  const supabase = await getSupabase();
+  await supabase
+    .from(TABLES.tasks)
+    .update(toRow({ done, completedAt: done ? nowISO() : null, updatedAt: nowISO() }))
+    .eq("id", taskId);
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
+  revalidatePath("/hoje");
+}
+
+export async function deleteTask(taskId: string, projectId?: string | null) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.tasks).delete().eq("id", taskId);
+  if (projectId) revalidatePath(`/projetos/${projectId}`);
+  revalidatePath("/hoje");
+}
+
+// ---------------------------------------------------------------------------
+// Notificações — marcar como lida (ao abrir a ficha do vídeo/projeto que a
+// notificação aponta, ou ao clicar nela no sino).
+// ---------------------------------------------------------------------------
+export async function markNotificationRead(id: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.notifications).update(toRow({ read: true })).eq("id", id);
+}
+
+export async function markEntityNotificationsRead(entityType: "VIDEO" | "PROJECT", entityId: string) {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  await supabase
+    .from(TABLES.notifications)
+    .update(toRow({ read: true }))
+    .eq("user_id", user.id)
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId)
+    .eq("read", false);
+}
+
+export async function markAllNotificationsRead() {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  await supabase.from(TABLES.notifications).update(toRow({ read: true })).eq("user_id", user.id).eq("read", false);
 }
 
 // ---------------------------------------------------------------------------
@@ -503,7 +651,7 @@ export async function applyWeekPlan(entries: { videoId: string; date: string; ho
     .from(TABLES.workloadEntries)
     .insert(entries.map((e) => toRow({ id: crypto.randomUUID(), editorId: user.id, videoId: e.videoId, date: e.date, hours: e.hours })));
 
-  revalidatePath("/minha-semana");
+  revalidatePath("/hoje");
   revalidatePath("/equipe");
 }
 

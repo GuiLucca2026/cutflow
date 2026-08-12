@@ -460,3 +460,34 @@ update public.cutflow_checklist_items set estimated_load_hours = case label
   else 1 -- fallback: item com label fora dos 11 padrão (não deveria existir hoje)
 end
 where estimated_load_hours = 0;
+
+-- ---------------------------------------------------------------------------
+-- Fase 12 — Tarefa avulsa + notificações reais (menção @, atribuição)
+-- ---------------------------------------------------------------------------
+-- Tarefa avulsa: diferente do checklist (sempre os mesmos 11 passos fixos,
+-- ver lib/checklist.ts), isto é uma ação de uma linha que não se encaixa
+-- num passo padrão ("enviar contrato", "confirmar horário com o cliente").
+-- Pode estar presa a um vídeo, a um projeto (sem vídeo específico), ou
+-- teoricamente nenhum dos dois — a tela sempre cria com pelo menos um.
+create table if not exists public.cutflow_tasks (
+  id text primary key,
+  project_id text references public.cutflow_projects(id) on delete cascade,
+  video_id text references public.cutflow_videos(id) on delete cascade,
+  title text not null,
+  description text,
+  assigned_to_id text references public.cutflow_users(id),
+  created_by_id text references public.cutflow_users(id),
+  due_at text,
+  done boolean not null default false,
+  completed_at text,
+  created_at text not null,
+  updated_at text not null
+);
+alter table public.cutflow_tasks enable row level security;
+drop policy if exists "cutflow_authenticated_all" on public.cutflow_tasks;
+create policy "cutflow_authenticated_all" on public.cutflow_tasks for all to authenticated using (true) with check (true);
+
+-- cutflow_notifications já existia (criada desde o pacote inicial, nunca
+-- tinha código nenhum lendo/escrevendo nela) — passa a ser usada agora
+-- pra menção (@Nome num comentário ou numa tarefa) e atribuição de tarefa.
+-- Nenhuma coluna nova precisa ser criada nela.
