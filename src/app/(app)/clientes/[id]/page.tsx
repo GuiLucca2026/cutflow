@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getClient, listProjectsByClient } from "@/db/queries";
 import { Avatar } from "@/components/ui/avatar";
 import { PriorityBadge } from "@/components/cutflow/badges";
+import { EditableNotes } from "@/components/cutflow/editable-notes";
+import { updateClientNotes } from "@/app/actions";
 import { projectProgress } from "@/lib/domain";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
@@ -37,6 +39,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </a>
           )}
         </div>
+      </div>
+
+      <div className="rounded-xl border border-cf-border bg-cf-surface p-4 max-w-2xl">
+        <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">Observações</div>
+        <EditableNotes value={client.notes ?? null} onSave={(notes) => updateClientNotes(client.id, notes)} />
       </div>
 
       <div>

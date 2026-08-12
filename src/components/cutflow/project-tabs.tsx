@@ -3,6 +3,8 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { StatusBadge } from "@/components/cutflow/badges";
+import { EditableNotes } from "@/components/cutflow/editable-notes";
+import { updateProjectNotes } from "@/app/actions";
 import { fmtDateTime, fmtDateFull } from "@/lib/format";
 import { ExternalLink, Link2, Film, Clapperboard, FileText } from "lucide-react";
 
@@ -19,6 +21,7 @@ export function ProjectTabs({ project, activity }: { project: any; activity: any
       <TabsList>
         <TabsTrigger value="videos">Vídeos ({project.videos.length})</TabsTrigger>
         <TabsTrigger value="arquivos">Arquivos ({project.links.length})</TabsTrigger>
+        <TabsTrigger value="info">Briefing</TabsTrigger>
         <TabsTrigger value="atividade">Atividade</TabsTrigger>
       </TabsList>
 
@@ -65,6 +68,13 @@ export function ProjectTabs({ project, activity }: { project: any; activity: any
               </div>
             );
           })}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="info">
+        <div className="rounded-xl border border-cf-border bg-cf-surface p-4 max-w-2xl">
+          <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">Briefing / Observações</div>
+          <EditableNotes value={project.notes ?? null} onSave={(notes) => updateProjectNotes(project.id, notes)} />
         </div>
       </TabsContent>
 

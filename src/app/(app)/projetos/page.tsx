@@ -1,15 +1,24 @@
-import Link from "next/link";
 import { listProjects } from "@/db/queries";
-import { projectProgress } from "@/lib/domain";
-import { PriorityBadge } from "@/components/cutflow/badges";
-import { ProjectContextMenu } from "@/components/cutflow/project-context-menu";
-import { Avatar, AvatarStack } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { ProjectsExplorer } from "@/components/cutflow/projects-explorer";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProjetosPage() {
   const projects = await listProjects();
+
+  const light = projects.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    type: p.type,
+    priority: p.priority,
+    client: p.client ? { id: p.client.id, name: p.client.name, color: p.client.color } : null,
+    videos: p.videos.map((v: any) => ({
+      status: v.status,
+      finalDeadline: v.finalDeadline,
+      editorId: v.editorId,
+      editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,
+    })),
+  }));
 
   return (
     <div className="cf-fade-in space-y-5 pb-16">
@@ -17,51 +26,7 @@ export default async function ProjetosPage() {
         <h1 className="font-display text-4xl tracking-wide">Projetos</h1>
         <p className="text-cf-text-dim text-sm">{projects.length} projetos ativos e arquivados</p>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {projects.map((p) => {
-          const progress = projectProgress(p.videos);
-          // Prazo de projeto foi removido do produto (fonte única de prazo
-          // agora é video.finalDeadline, mostrado no card de cada vídeo) —
-          // esse card só resume progresso/equipe, sem indicar atraso.
-          const editors = Array.from(new Map(p.videos.filter((v: any) => v.editorId).map((v: any) => [v.editorId, v])).values());
-
-          return (
-            <ProjectContextMenu key={p.id} project={{ id: p.id, name: p.name }} href={`/projetos/${p.id}`}>
-              <Link
-                href={`/projetos/${p.id}`}
-                className="rounded-xl border border-cf-border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors block"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.client?.color }} />
-                      <span className="text-xs text-cf-text-dim truncate">{p.client?.name}</span>
-                    </div>
-                    <h3 className="font-semibold mt-0.5 truncate">{p.name}</h3>
-                    <div className="text-xs text-cf-text-dim mt-0.5">{p.type} · {p.videos.length} vídeos</div>
-                  </div>
-                  <PriorityBadge priority={p.priority} />
-                </div>
-
-                <div className="mt-3">
-                  <div className="flex items-center justify-between text-xs text-cf-text-dim mb-1">
-                    <span>Progresso</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <Progress value={progress} />
-                </div>
-
-                {editors.length > 0 && (
-                  <div className="flex items-center justify-end mt-3 pt-3 border-t border-cf-border">
-                    <AvatarStack people={editors.map((v: any) => ({ name: v.editor?.name ?? "?", color: v.editor?.avatarColor }))} />
-                  </div>
-                )}
-              </Link>
-            </ProjectContextMenu>
-          );
-        })}
-      </div>
+      <ProjectsExplorer projects={light} />
     </div>
   );
 }

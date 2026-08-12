@@ -533,6 +533,14 @@ export async function createClient(formData: FormData) {
   return id;
 }
 
+// Observações do cliente (Client.notes) — mesmo achado do Project.notes
+// acima: campo existia no banco, nunca tinha UI.
+export async function updateClientNotes(clientId: string, notes: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.clients).update(toRow({ notes: notes || null, updatedAt: nowISO() })).eq("id", clientId);
+  revalidatePath(`/clientes/${clientId}`);
+}
+
 // Shared by createProject (top-level "Projeto" tab, redirects to the new
 // project afterward) and createProjectQuick (inline "+ Criar novo projeto"
 // from inside the video form, which must NOT navigate away mid-form).
@@ -880,6 +888,15 @@ export async function setProjectClient(projectId: string, clientId: string) {
   revalidateEverywhere();
   revalidatePath(`/projetos/${projectId}`);
   revalidatePath("/clientes");
+}
+
+// Observações/briefing do projeto (Project.notes) — existia no schema desde
+// sempre mas não tinha edição em lugar nenhum (achado na auditoria de UX).
+// Salva no blur, não a cada tecla (ver EditableNotes no componente).
+export async function updateProjectNotes(projectId: string, notes: string) {
+  const supabase = await getSupabase();
+  await supabase.from(TABLES.projects).update(toRow({ notes: notes || null, updatedAt: nowISO() })).eq("id", projectId);
+  revalidatePath(`/projetos/${projectId}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -139,80 +139,29 @@ body {
 }
 
 /* ============================================================
-   "Liquid glass" — efeito de vidro translúcido pedido pra reforma
-   visual (reforço em cima do rebrand anterior, que só trocou cores).
-   Duas peças:
-
-   1) Um fundo com "manchas" de gradiente roxo/azul/rosa bem suaves,
-      fixo atrás de tudo — sem isso o blur dos cards não tem o que
-      borrar e o efeito de vidro fica invisível.
-   2) Regras SEM @layer (por baixo do CSS gerado pelo Tailwind, fora de
-      qualquer @layer) aplicadas direto em cima das classes utilitárias
-      `bg-cf-surface` / `bg-cf-surface-2` já usadas em ~30 arquivos —
-      regra fora de @layer sempre "ganha" de regra dentro de @layer no
-      CSS moderno, então isso adiciona blur+sombra a todo card/painel/
-      dropdown do app de uma vez, sem precisar editar cada arquivo. Só
-      soma propriedades (blur, sombra) — não mexe em background-color
-      nem quebra nada que o Tailwind já define.
+   Superfícies planas — cor comunica só status/prioridade/risco/categoria,
+   nunca decoração. Havia um efeito "liquid glass" aqui (gradiente de fundo
+   fixo atrás de tudo + backdrop-filter blur em todo bg-cf-surface/-2 +
+   hover com elevação e sombra colorida em ~30 arquivos, via hack de
+   seletor de classe Tailwind) — removido por decisão de produto (auditoria
+   de UX/UI): contradizia a diretriz de evitar glassmorphism, gradiente
+   gratuito e sombra em excesso, e o blur repetido em toda tela tinha custo
+   de render real, não só estético.
    ============================================================ */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(680px circle at 12% -8%, rgba(124, 58, 237, 0.14), transparent 60%),
-    radial-gradient(560px circle at 100% 8%, rgba(59, 130, 246, 0.10), transparent 55%),
-    radial-gradient(620px circle at 30% 115%, rgba(236, 72, 153, 0.08), transparent 55%),
-    radial-gradient(500px circle at 90% 100%, rgba(34, 197, 94, 0.06), transparent 55%),
-    var(--cf-black);
-  pointer-events: none;
-}
-
-.bg-cf-surface,
-.bg-cf-surface-2 {
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-}
 .bg-cf-surface {
-  /* var(--cf-card-tint, ...) em vez de um valor fixo: por padrão cai no
-     branco-vidro de sempre, mas VideoCard/KanbanCard definem
-     --cf-card-tint por elemento (via style inline) pra colorir o cartão
-     inteiro conforme o status — sem isso o !important abaixo (necessário
-     pro blur/vidro ganhar de qualquer jeito, ver comentário da sombra)
-     bloquearia qualquer tentativa de cor de fundo por inline style. */
-  background-color: var(--cf-card-tint, rgba(255, 255, 255, 0.86)) !important;
-  /* A 3ª sombra (inset) é a "borda de luz" no topo, efeito clássico de
-     vidro — não usamos pseudo-elemento/position pra isso de propósito:
-     esta MESMA classe bg-cf-surface é usada pelo Dialog (que precisa
-     ficar `position: fixed`), e uma regra sem @layer que setasse
-     `position` aqui sempre "ganharia" da utility `fixed` do Tailwind e
-     quebraria a centralização do modal. Sombra evita esse risco. */
-  box-shadow:
-    0 1px 2px rgba(17, 19, 25, 0.04),
-    0 14px 32px -16px rgba(76, 29, 149, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  /* var(--cf-card-tint, ...) continua existindo: VideoCard/KanbanCard
+     tingem o fundo do card conforme a cor do status — isso é cor
+     comunicando informação (uso legítimo), não decoração. Só trocou de
+     "vidro colorido" pra "sólido colorido". */
+  background-color: var(--cf-card-tint, var(--cf-surface)) !important;
+  box-shadow: 0 1px 2px rgba(17, 19, 25, 0.04);
 }
 .bg-cf-surface-2 {
-  background-color: rgba(241, 241, 246, 0.75) !important;
-}
-
-/* Elevação "líquida" no hover — a classe hover:border-cf-lime/40 já é
-   usada em praticamente todo card clicável do app (VideoCard, cards de
-   Projeto/Cliente, KPIs da Hoje, linhas de Revisão/Calendário etc), então
-   ganchar nela aqui dá o mesmo hover consistente em todo lugar de uma vez
-   só, sem precisar tocar arquivo por arquivo. */
-.hover\:border-cf-lime\/40 {
-  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.22s ease, border-color 0.22s ease;
-}
-.hover\:border-cf-lime\/40:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 22px 40px -16px rgba(124, 58, 237, 0.30), 0 6px 14px -6px rgba(17, 19, 25, 0.10);
+  background-color: var(--cf-surface-2) !important;
 }
 
 .cf-side-active {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 55%, #6D28D9 100%);
-  box-shadow: 0 6px 18px -6px rgba(124, 58, 237, 0.55);
+  background: var(--cf-lime);
 }
 
 /* Menu mobile (Sheet) fica escuro — mesma moldura da Sidebar — mas o botão

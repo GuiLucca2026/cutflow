@@ -93,7 +93,7 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-xl border bg-cf-surface/70 backdrop-blur-md transition-colors",
+        "flex w-72 shrink-0 flex-col rounded-xl border bg-cf-surface transition-colors",
         isOver ? "border-cf-lime/60 bg-cf-surface" : "border-cf-border"
       )}
     >
@@ -143,7 +143,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           borderColor: `${accent}4d`,
         }}
         className={cn(
-          "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/10",
+          "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-colors hover:border-cf-lime/40",
           (isDragging || dragging) && "opacity-60 shadow-xl"
         )}
       >

@@ -110,6 +110,11 @@ export default async function HojePage() {
             </>
           )}
         </p>
+        {/* "Hoje" mostra a produtora inteira, não só o que é seu — a
+            saudação pessoal ali em cima já confundia gente nova nesse
+            sentido (achava que era a fila pessoal). Sua fila fica em
+            Minha Edição; isto aqui é o retrato do dia pra quem supervisiona. */}
+        <p className="text-cf-text-dim/70 text-xs mt-0.5">Visão da produtora inteira · sua fila pessoal fica em Minha Edição</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
