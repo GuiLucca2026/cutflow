@@ -161,6 +161,49 @@ export function isEditing(status: string) {
   return ["EDITANDO", "EM_ALTERACAO", "CORRECAO_INTERNA"].includes(status);
 }
 
+// ---------------------------------------------------------------------------
+// Progresso pessoal do mês — rodapé da Sidebar/menu mobile (Fase 15),
+// visível em toda página, não só no Meu Dia. Pedido do usuário: um "sistema
+// de recompensa" simples — ver a fila pessoal encolhendo (barra enchendo)
+// conforme ele entrega, sem virar gamificação (sem badge, sem streak, sem
+// confete — só o número real do trabalho em andamento).
+// ---------------------------------------------------------------------------
+export type PersonalMonthProgress = {
+  total: number;
+  delivered: number;
+  editing: number;
+  waitingClient: number;
+  queue: number;
+};
+
+const PROGRESS_DELIVERED_STATUSES = ["ENTREGUE", "ARQUIVADO"];
+
+/** monthKey: "yyyy-MM". Escopo é o prazo FINAL cair nesse mês — mesmo
+ * critério que a Analytics já usa pra período (ver originalFinalDeadline
+ * em lib/analytics.ts), só que aqui é sempre o mês corrente. CANCELADO
+ * fica de fora dos dois lados: não foi entregue, mas também não é
+ * trabalho "devido" — contar contra ou a favor do usuário seria injusto. */
+export function computePersonalMonthProgress(
+  videos: { editorId: string | null; status: string; finalDeadline: string }[],
+  userId: string,
+  monthKey: string
+): PersonalMonthProgress {
+  const mineMonth = videos.filter(
+    (v) => v.editorId === userId && v.status !== "CANCELADO" && v.finalDeadline.slice(0, 7) === monthKey
+  );
+  const delivered = mineMonth.filter((v) => PROGRESS_DELIVERED_STATUSES.includes(v.status));
+  const remaining = mineMonth.filter((v) => !PROGRESS_DELIVERED_STATUSES.includes(v.status));
+  const editing = remaining.filter((v) => isEditing(v.status));
+  const waitingClient = remaining.filter((v) => isWaitingClient(v.status));
+  return {
+    total: mineMonth.length,
+    delivered: delivered.length,
+    editing: editing.length,
+    waitingClient: waitingClient.length,
+    queue: remaining.length - editing.length - waitingClient.length,
+  };
+}
+
 export function isInAlteration(status: string) {
   return ["ALTERACAO_SOLICITADA", "EM_ALTERACAO"].includes(status);
 }

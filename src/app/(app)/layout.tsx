@@ -4,6 +4,7 @@ import { Topbar } from "@/components/cutflow/topbar";
 import { getCurrentUser, getAllUsers } from "@/lib/auth";
 import { listClients, listProjects, listVideos, listWorkloadEntries, listNotifications } from "@/db/queries";
 import { computeAlerts } from "@/lib/alerts";
+import { computePersonalMonthProgress } from "@/lib/domain";
 import { VideoDetailProvider } from "@/components/cutflow/video-detail-context";
 import { VideoDetailSheetHost } from "@/components/cutflow/video-detail-sheet";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
@@ -38,6 +39,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // catch overload alerts a few weeks out without over-fetching.
   const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const alerts = computeAlerts({ videos, workloadEntries, users });
+  // Rodapé da Sidebar/menu mobile (Fase 15) — ver computePersonalMonthProgress
+  // em lib/domain.ts pro porquê do escopo ser "mês corrente".
+  const progress = computePersonalMonthProgress(videos, currentUser.id, format(new Date(), "yyyy-MM"));
 
   const usersLite = users.map((u) => ({ id: u.id, name: u.name, avatarColor: u.avatarColor }));
   // Cliente já resolvido aqui (não só clientId) pra "mover para projeto" no
@@ -52,7 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <VideoDetailProvider users={usersLite} projects={projectsLite}>
       <div className="flex min-h-screen w-full">
-        <Sidebar />
+        <Sidebar progress={progress} />
         <div className="flex-1 flex flex-col min-w-0">
           <Topbar
             currentUser={currentUser}
@@ -62,6 +66,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             linkedAccount={!!currentUser.supabaseUserId}
             alerts={alerts}
             notifications={notifications}
+            progress={progress}
           />
           <main className="flex-1 p-5 lg:p-7 max-w-[1600px] w-full mx-auto">{children}</main>
         </div>

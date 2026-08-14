@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Alert } from "@/lib/alerts";
 import type { Notification } from "@/db/schema";
+import type { PersonalMonthProgress } from "@/lib/domain";
 
 export function Topbar({
   currentUser,
@@ -33,6 +34,7 @@ export function Topbar({
   linkedAccount,
   alerts = [],
   notifications = [],
+  progress,
 }: {
   currentUser: { id: string; name: string; avatarColor: string; avatarUrl?: string | null; icsToken?: string | null; role: string };
   users: { id: string; name: string; avatarColor: string; role: string }[];
@@ -51,6 +53,9 @@ export function Topbar({
   // dos alerts acima, que são risco CALCULADO pelo sistema; isto é evento
   // HUMANO (ver o comentário no topo de notification-bell.tsx).
   notifications?: Notification[];
+  // Fase 15: mesmo indicador do rodapé da Sidebar, só que no menu mobile
+  // (a Sidebar some abaixo do breakpoint lg, ver sidebar.tsx).
+  progress?: PersonalMonthProgress;
 }) {
   const [paletteOpenSignal, setPaletteOpenSignal] = React.useState(0);
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -65,7 +70,7 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-cf-border bg-white/65 backdrop-blur-xl backdrop-saturate-150 px-5 py-3">
-      <MobileNav />
+      <MobileNav progress={progress} />
       {title && <h1 className="font-display text-2xl tracking-wide mr-2 hidden sm:block">{title}</h1>}
 
       <button

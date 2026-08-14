@@ -9,6 +9,8 @@ import { NAV_GROUPS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
 import { BRAND_NAME } from "@/lib/brand";
+import { PersonalProgressWidget } from "@/components/cutflow/personal-progress";
+import type { PersonalMonthProgress } from "@/lib/domain";
 
 // Sidebar some inteiramente abaixo do breakpoint `lg` (ver sidebar.tsx),
 // e até aqui não havia NENHUM jeito de trocar de página em tela pequena —
@@ -16,7 +18,7 @@ import { BRAND_NAME } from "@/lib/brand";
 // abre no celular (bem comum: freelancer/produtor conferindo status fora
 // do computador). Este menu reaproveita o mesmo NAV_GROUPS da Sidebar,
 // então os dois nunca ficam dessincronizados.
-export function MobileNav() {
+export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
@@ -69,6 +71,9 @@ export function MobileNav() {
             </div>
           ))}
         </nav>
+        <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
+          <PersonalProgressWidget progress={progress} />
+        </div>
       </SheetContent>
     </Sheet>
   );

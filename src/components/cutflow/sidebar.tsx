@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_GROUPS } from "@/lib/nav";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
-import { BRAND_NAME } from "@/lib/brand";
+import { PersonalProgressWidget } from "@/components/cutflow/personal-progress";
+import type { PersonalMonthProgress } from "@/lib/domain";
 
-export function Sidebar() {
+export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
   const pathname = usePathname();
   return (
     <aside
@@ -46,14 +47,7 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
-        <div
-          className="rounded-lg px-3 py-2.5 text-[11px] text-cf-side-text/80 leading-relaxed"
-          style={{ background: "var(--cf-side-surface)", border: "1px solid var(--cf-side-border)" }}
-        >
-          <span className="font-semibold" style={{ color: "#A78BFA" }}>{BRAND_NAME}</span> · Fase 1+2+3+4+5+6
-          <br />
-          Foundation, Workflow, Planning, Calendar Sync, Intelligence & Analytics ativos
-        </div>
+        <PersonalProgressWidget progress={progress} />
       </div>
     </aside>
   );
