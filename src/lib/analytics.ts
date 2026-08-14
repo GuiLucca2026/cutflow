@@ -5,6 +5,22 @@
 import { isWaitingClient } from "@/lib/domain";
 import { brazilDateKey } from "@/lib/flow/time";
 
+// Prazo (finalDeadline/originalFinalDeadline) é gravado a partir da DATA
+// escolhida no DatePicker — "yyyy-MM-dd", ou meia-noite UTC desse mesmo
+// dia quando passa por `new Date(str).toISOString()` na criação (ver
+// createVideo em actions.ts). Não é um instante real, é uma data
+// "carimbada" em UTC. Passar isso pelo brazilDateKey (pensado pra
+// TIMESTAMPS de verdade, tipo updatedAt) subtrai 3h do fuso de Brasília e
+// empurra a data pro dia ANTERIOR ao que foi escolhido — é por isso que um
+// vídeo entregue no dia certo aparecia como atrasado. A data do PRAZO sai
+// direto dos 10 primeiros caracteres da string (já é a data certa, sem
+// conversão de fuso); só a data da ENTREGA (updatedAt, um timestamp real)
+// precisa do brazilDateKey pra saber em que dia, no fuso de Brasília, a
+// entrega aconteceu de fato.
+function deadlineDateKey(iso: string) {
+  return iso.slice(0, 10);
+}
+
 type AnalyticsVideo = {
   id: string;
   name: string;
@@ -43,7 +59,7 @@ function clientName(v: AnalyticsVideo) {
 // entrega").
 export function computeOnTimeDelivery(videos: AnalyticsVideo[]) {
   const delivered = videos.filter((v) => DELIVERED_STATUSES.includes(v.status));
-  const onTime = delivered.filter((v) => brazilDateKey(v.updatedAt) <= brazilDateKey(v.originalFinalDeadline));
+  const onTime = delivered.filter((v) => brazilDateKey(v.updatedAt) <= deadlineDateKey(v.originalFinalDeadline));
   return {
     delivered: delivered.length,
     onTime: onTime.length,
@@ -56,7 +72,7 @@ export function computeMonthlyOnTime(videos: AnalyticsVideo[], months: string[])
   // months: array of "yyyy-MM" keys, oldest first.
   return months.map((month) => {
     const inMonth = videos.filter((v) => DELIVERED_STATUSES.includes(v.status) && v.originalFinalDeadline.slice(0, 7) === month);
-    const onTime = inMonth.filter((v) => brazilDateKey(v.updatedAt) <= brazilDateKey(v.originalFinalDeadline));
+    const onTime = inMonth.filter((v) => brazilDateKey(v.updatedAt) <= deadlineDateKey(v.originalFinalDeadline));
     return {
       month,
       delivered: inMonth.length,
