@@ -147,6 +147,16 @@ export function isEditing(status: string) {
 
 export function isOverdue(finalDeadline: string, status: string) {
   if (isDone(status)) return false;
+  // Enquanto a bola está com o cliente (enviado / aguardando feedback /
+  // aguardando aprovação), o prazo passado não é mais um problema NOSSO —
+  // a edição já entregou a parte dela, não tem nada pra "atrasar" desse
+  // lado. Mesma exceção que computeDeliveryRisk já fazia (ver logo abaixo)
+  // mas que faltava aqui: sem isso, um vídeo enviado ontem com prazo de
+  // ontem continuava aparecendo em "Atrasados" com selo vermelho — days
+  // depois de a edição ter feito a parte dela. isWaitingClient de propósito
+  // (não isDone): ALTERACAO_SOLICITADA/EM_ALTERACAO (bola voltou pra nós)
+  // continuam contando como atraso normalmente.
+  if (isWaitingClient(status)) return false;
   return new Date(finalDeadline).getTime() < Date.now();
 }
 
@@ -218,6 +228,20 @@ export const CLIENT_WAIT_META: Record<"COBRAR_FEEDBACK" | "AGUARDANDO_ALTERACAO"
   COBRAR_FEEDBACK: { label: "Cobrar feedback", color: "#B45309", hint: "Já passou do prazo razoável de resposta — vale entrar em contato com o cliente." },
   AGUARDANDO_ALTERACAO: { label: "Aguardando alteração", color: "#E11D48", hint: "Cliente já respondeu pedindo mudança — a bola voltou pra nós, ainda não começamos." },
 };
+
+// Tingimento do CARD (VideoCard/KanbanCard, via --cf-card-tint) enquanto o
+// vídeo está com o cliente (ver isWaitingClient acima) — substitui tanto o
+// vermelho de atraso (que não faz mais sentido nesse estado, ver isOverdue)
+// quanto a cor própria de cada sub-status (azul de "Enviado", âmbar de
+// "Aguardando feedback"/"Aguardando aprovação"), pra todo card "bola com o
+// cliente" ler visualmente igual — calmo, não uma cor de alerta — não
+// importa em qual das 3 sub-fases exatas ele está (isso continua
+// diferenciado no BADGE de status, só o fundo do card fica uniforme).
+// Roxo de propósito, mas um tom DIFERENTE do roxo da marca (--cf-lime,
+// #7C3AED, usado em botão primário/item ativo/EDITANDO) e do roxo de
+// Revisão interna (#7E22CE) — mistura-los faria um card "aguardando
+// cliente" parecer clicável/ativo ou parecer em revisão.
+export const CLIENT_WAIT_ACCENT_COLOR = "#A855F7";
 
 // Desde quando o cliente está com o vídeo. clientSentAt é gravado por
 // updateVideoStatus() no momento em que o vídeo entra num status de espera

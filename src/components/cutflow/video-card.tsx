@@ -6,7 +6,7 @@ import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip, type TeamMemberLite } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
 import { Hint } from "@/components/ui/tooltip";
-import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META } from "@/lib/domain";
+import { computeClientWait, computeDeliveryRisk, isDone, isOverdue, isWaitingClient, STATUS_META, CLIENT_WAIT_ACCENT_COLOR } from "@/lib/domain";
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { Clock, AlertTriangle, UserX, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,11 +46,12 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const risk = computeDeliveryRisk(video);
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
-  // Cartão inteiro tingido na cor do status (era só uma barra na borda
+  // Cartão inteiro tingido conforme o estado (era só uma barra na borda
   // esquerda) — --cf-card-tint alimenta a regra de bg-cf-surface no
-  // globals.css, então continua com o mesmo vidro/blur, só que colorido.
-  // Atrasado sempre vira vermelho, independente do status.
-  const accent = overdue ? "#DC2626" : statusColor;
+  // globals.css. Prioridade: atrasado (vermelho) > bola com o cliente
+  // (roxo calmo, ver CLIENT_WAIT_ACCENT_COLOR — nunca os dois ao mesmo
+  // tempo, já que isOverdue exclui isWaitingClient) > cor do status.
+  const accent = overdue ? "#DC2626" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusColor;
 
   return (
     <VideoContextMenu video={video} onOpen={() => open(video.id)}>

@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { KANBAN_STATUSES, STATUS_META, computeClientWait, computeDeliveryRisk, isOverdue } from "@/lib/domain";
+import { KANBAN_STATUSES, STATUS_META, computeClientWait, computeDeliveryRisk, isOverdue, isWaitingClient, CLIENT_WAIT_ACCENT_COLOR } from "@/lib/domain";
 import { fmtDateWeekday, fmtShortId } from "@/lib/format";
 import { updateVideoStatus } from "@/app/actions";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
@@ -123,12 +123,9 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
   const overdue = isOverdue(video.finalDeadline, video.status);
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
-  // O cartão inteiro assume um tom pastel da cor do status (era só uma
-  // barrinha na borda esquerda) — --cf-card-tint alimenta a regra de
-  // bg-cf-surface no globals.css, então o cartão continua com o mesmo
-  // vidro/blur, só que tingido. Atrasado sempre vira vermelho,
-  // independente do status.
-  const accent = overdue ? "#DC2626" : statusColor;
+  // Mesma regra do VideoCard (ver esse arquivo pro motivo completo):
+  // atrasado > bola com o cliente (roxo calmo) > cor do status.
+  const accent = overdue ? "#DC2626" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusColor;
 
   return (
     <VideoContextMenu video={video} onOpen={() => onOpen(video.id)}>
