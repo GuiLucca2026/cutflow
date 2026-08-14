@@ -11,7 +11,8 @@ import { computeAlerts } from "@/lib/alerts";
 import { isOverdue, isWaitingClient, isDone, isEditing, computeClientWait } from "@/lib/domain";
 import { fmtDateFull, fmtWaitingSince, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
-import { AlertTriangle, TriangleAlert, Info, Clock, Send, ListChecks, CalendarClock } from "lucide-react";
+import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock } from "lucide-react";
+import { Hint } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,7 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
   const mine = videos.filter((v) => v.editorId === user.id && !isDone(v.status));
   const overdueMine = mine.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
   const todayMine = mine.filter((v) => isToday(new Date(v.finalDeadline)) || isToday(new Date(v.internalDeadline ?? v.finalDeadline)));
+  const editingMine = mine.filter((v) => isEditing(v.status));
   const waitingMine = mine.filter((v) => isWaitingClient(v.status));
   const thisWeekMine = mine.filter((v) => {
     const d = differenceInCalendarDays(new Date(v.finalDeadline), now);
@@ -103,12 +105,51 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
+      {/* Cada card responde uma pergunta específica de "o que eu faço agora"
+          — antes tinha "Hoje" sem dizer o que contava, "Tarefas
+          atribuídas" (0 quase sempre, e a lista completa já existe embaixo
+          em #minhas-tarefas) e "Horas restantes" somando TODO vídeo ativo
+          (inclusive um que só vence daqui a 3 semanas — número grande e
+          pouco acionável). Trocado por "Horas hoje", que é o que o
+          planejamento automático (aba "Planejar semana") sugere pra hoje
+          especificamente. */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard label="Hoje" value={todayMine.length} icon={Send} tone={todayMine.length > 0 ? "good" : "default"} />
-        <StatCard label="Atrasados" value={overdueMine.length} icon={AlertTriangle} tone={overdueMine.length > 0 ? "danger" : "default"} />
-        <StatCard label="Aguardando cliente" value={waitingMine.length} icon={Clock} tone="warn" />
-        <StatCard label="Tarefas atribuídas" value={myTasks.length} icon={ListChecks} tone={myTasks.length > 0 ? "warn" : "default"} href="#minhas-tarefas" />
-        <StatCard label="Horas restantes" value={fmtHours(totalHoursLeftMine)} icon={Clock} tone="default" />
+        <StatCard
+          label="Atrasados"
+          value={overdueMine.length}
+          icon={AlertTriangle}
+          tone={overdueMine.length > 0 ? "danger" : "default"}
+          hint="Vídeos seus com o prazo final já vencido."
+        />
+        <StatCard
+          label="Vence hoje"
+          value={todayMine.length}
+          icon={Send}
+          tone={todayMine.length > 0 ? "good" : "default"}
+          hint="Prazo final ou revisão interna caem hoje."
+        />
+        <StatCard
+          label="Editando"
+          value={editingMine.length}
+          icon={Scissors}
+          tone={editingMine.length > 0 ? "good" : "default"}
+          hint="Vídeos seus em edição ou alteração agora."
+        />
+        <StatCard
+          label="Aguardando cliente"
+          value={waitingMine.length}
+          icon={Clock}
+          tone="warn"
+          hint="Já mandou, esperando feedback ou aprovação do cliente."
+        />
+        <StatCard
+          label="Horas hoje"
+          value={fmtHours(planDays[0]?.allocatedHours ?? 0)}
+          icon={CalendarClock}
+          tone="default"
+          href="/hoje?tab=semana"
+          hint="Sugestão do planejamento automático pra hoje, pela sua capacidade diária."
+        />
       </div>
 
       <Tabs defaultValue={defaultTab}>
@@ -229,15 +270,17 @@ function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { 
     good: "text-cf-success border-cf-success/30",
   };
   const body = (
-    <div className={cn("rounded-xl border bg-cf-surface p-4 flex items-center gap-3 transition-colors", href && "hover:border-cf-lime/40")}>
-      <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg bg-cf-surface-2", toneMap[tone])}>
-        <Icon className="h-5 w-5" />
+    <Hint text={hint}>
+      <div className={cn("rounded-xl border bg-cf-surface p-4 flex items-center gap-3 transition-colors", href && "hover:border-cf-lime/40")}>
+        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg bg-cf-surface-2", toneMap[tone])}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="font-display text-3xl leading-none">{value}</div>
+          <div className="text-xs text-cf-text-dim mt-0.5">{label}</div>
+        </div>
       </div>
-      <div>
-        <div className="font-display text-3xl leading-none">{value}</div>
-        <div className="text-xs text-cf-text-dim mt-0.5">{label}</div>
-      </div>
-    </div>
+    </Hint>
   );
   return href ? <Link href={href}>{body}</Link> : body;
 }
