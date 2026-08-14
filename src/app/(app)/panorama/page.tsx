@@ -39,7 +39,7 @@ export default async function PanoramaPage() {
 
   const stats = (list: typeof active) => ({
     total: list.length,
-    overdue: list.filter((v) => isOverdue(v.finalDeadline, v.status)),
+    overdue: list.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt)),
     waiting: list.filter((v) => isWaitingClient(v.status)),
     chase: list.filter((v) => computeClientWait(v)?.kind === "COBRAR_FEEDBACK"),
     hours: list.reduce((acc, v) => acc + Math.max(0, v.estimatedHours - v.actualHours), 0),

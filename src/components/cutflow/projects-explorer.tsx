@@ -18,7 +18,7 @@ type ProjectLite = {
   type: string;
   priority: string;
   client: { id: string; name: string; color: string } | null;
-  videos: { status: string; finalDeadline: string; editorId: string | null; editor: { name: string; avatarColor: string } | null }[];
+  videos: { status: string; finalDeadline: string; editorId: string | null; editor: { name: string; avatarColor: string } | null; alterationStartedAt?: string | null }[];
 };
 
 // Mesmo padrão de filtro do VideosExplorer (busca + selects), aplicado aqui
@@ -96,7 +96,7 @@ export function ProjectsExplorer({ projects }: { projects: ProjectLite[] }) {
           {filtered.map((p) => {
             const progress = projectProgress(p.videos);
             const active = p.videos.filter((v) => !isDone(v.status));
-            const overdue = active.filter((v) => isOverdue(v.finalDeadline, v.status));
+            const overdue = active.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
             const editors = Array.from(
               new Map(p.videos.filter((v) => v.editorId && v.editor).map((v) => [v.editorId as string, v.editor!])).values()
             );

@@ -16,6 +16,7 @@ export default async function KanbanPage() {
     estimatedHours: v.estimatedHours,
     actualHours: v.actualHours,
     revisionCount: v.revisionCount,
+    alterationStartedAt: v.alterationStartedAt,
     editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,
     project: v.project ? { name: v.project.name, client: v.project.client ? { name: v.project.client.name, color: v.project.client.color } : null } : null,
   }));

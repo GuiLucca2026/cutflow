@@ -18,7 +18,7 @@ export default async function EntregasPage() {
     const d = differenceInCalendarDays(new Date(v.finalDeadline), new Date());
     return !isDone(v.status) && d > 7 && d <= 14;
   });
-  const atrasadas = videos.filter((v) => isOverdue(v.finalDeadline, v.status));
+  const atrasadas = videos.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
   const entregues = videos.filter((v) => v.status === "ENTREGUE").slice(0, 12);
 
   const groups = [

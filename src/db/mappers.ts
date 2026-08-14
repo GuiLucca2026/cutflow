@@ -126,6 +126,7 @@ export function mapVideo(r: any): (Video & Record<string, any>) | null {
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     clientSentAt: r.client_sent_at ?? null,
+    alterationStartedAt: r.alteration_started_at ?? null,
     deletedAt: r.deleted_at ?? null,
     ...(r.project !== undefined ? { project: mapProject(r.project) } : {}),
     ...(r.editor !== undefined ? { editor: mapUser(r.editor) } : {}),
@@ -391,6 +392,7 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   createdById: "created_by_id",
   deletedAt: "deleted_at",
   clientSentAt: "client_sent_at",
+  alterationStartedAt: "alteration_started_at",
 };
 
 export function toRow<T extends Record<string, any>>(obj: T): Record<string, any> {

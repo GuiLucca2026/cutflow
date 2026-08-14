@@ -33,7 +33,7 @@ export function VideosExplorer({
     if (editor !== "all" && v.editorId !== editor) return false;
     if (client !== "all" && v.clientId !== client) return false;
     if (priority !== "all" && v.priority !== priority) return false;
-    if (onlyOverdue && !isOverdue(v.finalDeadline, v.status)) return false;
+    if (onlyOverdue && !isOverdue(v.finalDeadline, v.status, v.alterationStartedAt)) return false;
     if (onlyWaiting && !isWaitingClient(v.status)) return false;
     return true;
   });

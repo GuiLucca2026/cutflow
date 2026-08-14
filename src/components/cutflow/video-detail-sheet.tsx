@@ -181,7 +181,7 @@ function VideoDetailBody({
   const risk = computeDeliveryRisk(video);
   const clientWait = computeClientWait(video);
   const progress = statusProgress(video.status);
-  const overdue = isOverdue(video.finalDeadline, video.status);
+  const overdue = isOverdue(video.finalDeadline, video.status, video.alterationStartedAt);
   const checklistDone = checklist.filter((c: any) => c.done).length;
 
   return (

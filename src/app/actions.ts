@@ -6,7 +6,7 @@ import { toRow } from "@/db/mappers";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getCurrentUser, COOKIE_NAME } from "@/lib/auth";
-import { STATUS_META, TEAM_ROLE_META, USER_ROLES, isWaitingClient } from "@/lib/domain";
+import { STATUS_META, TEAM_ROLE_META, USER_ROLES, isWaitingClient, isInAlteration } from "@/lib/domain";
 import { DEFAULT_CHECKLIST_LABELS, estimatedLoadHoursForLabel } from "@/lib/checklist";
 import { extractMentions } from "@/lib/mentions";
 import { redirect } from "next/navigation";
@@ -123,9 +123,17 @@ export async function updateVideoStatus(videoId: string, newStatus: string) {
   const nowWaiting = isWaitingClient(newStatus);
   const clientSentAt = nowWaiting && !wasWaiting ? nowISO() : !nowWaiting && wasWaiting ? null : undefined;
 
+  // Mesmo padrão acima, pra carência de 1 dia útil de ALTERACAO_SOLICITADA/
+  // EM_ALTERACAO (Fase 13, ver ALTERATION_GRACE_BUSINESS_DAYS em
+  // lib/domain.ts). Andar entre os dois status de alteração não reinicia o
+  // relógio — é a mesma rodada de alteração continuando.
+  const wasAltering = isInAlteration(oldStatus);
+  const nowAltering = isInAlteration(newStatus);
+  const alterationStartedAt = nowAltering && !wasAltering ? nowISO() : !nowAltering && wasAltering ? null : undefined;
+
   await supabase
     .from(TABLES.videos)
-    .update(toRow({ status: newStatus, clientSentAt, updatedAt: nowISO() }))
+    .update(toRow({ status: newStatus, clientSentAt, alterationStartedAt, updatedAt: nowISO() }))
     .eq("id", videoId);
 
   const oldLabel = STATUS_META[oldStatus]?.label ?? oldStatus;
@@ -553,12 +561,18 @@ export async function addRevision(input: {
   const supabase = await getSupabase();
   const { data: video } = await supabase
     .from(TABLES.videos)
-    .select("revision_count, editor_id, current_version, project_id")
+    .select("revision_count, editor_id, current_version, project_id, status")
     .eq("id", input.videoId)
     .maybeSingle();
   if (!video) return;
 
   const nextNumber = video.revision_count + 1;
+  const newVideoStatus = input.type === "CLIENTE" ? "ALTERACAO_SOLICITADA" : "CORRECAO_INTERNA";
+  // Mesmo relógio de carência do updateVideoStatus (ver lá) — aqui o
+  // status muda por fora dessa função, então precisa do mesmo cálculo.
+  const wasAltering = isInAlteration(video.status);
+  const nowAltering = isInAlteration(newVideoStatus);
+  const alterationStartedAt = nowAltering && !wasAltering ? nowISO() : !nowAltering && wasAltering ? null : undefined;
 
   await supabase.from(TABLES.revisions).insert(
     toRow({
@@ -581,7 +595,8 @@ export async function addRevision(input: {
     .update(
       toRow({
         revisionCount: nextNumber,
-        status: input.type === "CLIENTE" ? "ALTERACAO_SOLICITADA" : "CORRECAO_INTERNA",
+        status: newVideoStatus,
+        alterationStartedAt,
         updatedAt: nowISO(),
       })
     )

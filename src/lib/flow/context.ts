@@ -14,6 +14,7 @@ export type FlowVideoLite = {
   status: string;
   finalDeadline: string;
   updatedAt: string;
+  alterationStartedAt?: string | null;
 };
 
 export type FlowCaptureLite = {
@@ -63,7 +64,7 @@ export function computeWorkContext(input: FlowWorkInput, now: Date = new Date())
     }
     if (!done) {
       if (deadlineKey === tomorrowKey) deadlineTomorrowCount++;
-      if (isOverdue(v.finalDeadline, v.status)) overdueCount++;
+      if (isOverdue(v.finalDeadline, v.status, v.alterationStartedAt)) overdueCount++;
       if (isWaitingClient(v.status)) waitingClientCount++;
       if (isEditing(v.status)) editingCount++;
     }
@@ -78,7 +79,10 @@ export function computeWorkContext(input: FlowWorkInput, now: Date = new Date())
   }
 
   const activeJobsCount = input.videos.filter((v) => !isDone(v.status)).length;
-  const waitingApprovalCount = input.videos.filter((v) => !isDone(v.status) && v.status === "AGUARDANDO_APROVACAO").length;
+  // AGUARDANDO_APROVACAO foi unido em AGUARDANDO_FEEDBACK (Fase 14) — o
+  // status sobrevivente cobre os dois sentidos ("esperando 1ª resposta" e
+  // "esperando aprovação da alteração"), então é ele que conta aqui agora.
+  const waitingApprovalCount = input.videos.filter((v) => !isDone(v.status) && v.status === "AGUARDANDO_FEEDBACK").length;
 
   const shootingCount = input.captures.filter((c) => c.status !== "CANCELADA" && brazilDateKey(c.date) === todayKey).length;
 

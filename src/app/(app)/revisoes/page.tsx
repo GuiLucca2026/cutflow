@@ -12,15 +12,16 @@ export default async function RevisoesPage() {
   const revisaoInterna = videos.filter((v) => v.status === "REVISAO_INTERNA");
   const correcaoInterna = videos.filter((v) => v.status === "CORRECAO_INTERNA");
   const alteracaoSolicitada = videos.filter((v) => v.status === "ALTERACAO_SOLICITADA" || v.status === "EM_ALTERACAO");
+  // Aguardando feedback e Aguardando aprovação eram status separados;
+  // foram unidos (Fase 14, ver STATUS_META em lib/domain.ts) por serem
+  // redundantes na prática — mesmo tratamento em todo o app.
   const aguardandoFeedback = videos.filter((v) => v.status === "AGUARDANDO_FEEDBACK" || v.status === "ENVIADO_AO_CLIENTE");
-  const aguardandoAprovacao = videos.filter((v) => v.status === "AGUARDANDO_APROVACAO");
 
   const groups = [
     { title: "Revisão interna", items: revisaoInterna },
     { title: "Correção interna", items: correcaoInterna },
     { title: "Alterações solicitadas pelo cliente", items: alteracaoSolicitada },
-    { title: "Aguardando feedback do cliente", items: aguardandoFeedback, showWaiting: true },
-    { title: "Aguardando aprovação", items: aguardandoAprovacao },
+    { title: "Aguardando retorno do cliente", items: aguardandoFeedback, showWaiting: true },
   ];
 
   return (

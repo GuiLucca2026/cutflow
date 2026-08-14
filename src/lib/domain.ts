@@ -2,6 +2,8 @@
 // Centralizing this is what keeps the Kanban, Dashboard, Delivery Center and
 // Project view all agreeing on what a status "means".
 
+import { addBusinessDays } from "date-fns";
+
 export type VideoStatus = (typeof import("@/db/schema").VIDEO_STATUSES)[number];
 
 export const STATUS_META: Record<
@@ -36,16 +38,20 @@ export const STATUS_META: Record<
   REVISAO_INTERNA: { label: "Revisão interna", color: "#7E22CE", bg: "#F3E8FF", order: 5, group: "review", hint: "Sendo revisado pela própria equipe, antes de mandar pro cliente." },
   CORRECAO_INTERNA: { label: "Correção interna", color: "#BE185D", bg: "#FCE7F3", order: 6, group: "review", hint: "Corrigindo algo que a revisão interna apontou." },
   ENVIADO_AO_CLIENTE: { label: "Enviado ao cliente", color: "#1D4ED8", bg: "#DBEAFE", order: 7, group: "client", hint: "Já foi enviado — aguardando o cliente abrir/assistir." },
-  AGUARDANDO_FEEDBACK: { label: "Aguardando feedback", color: "#B45309", bg: "#FEF3C7", order: 8, group: "client", hint: "O cliente recebeu, estamos esperando o retorno dele." },
+  // Union de dois status que existiam separados (Aguardando feedback /
+  // Aguardando aprovação) — eram redundantes na prática: mesma cor, mesmo
+  // isWaitingClient, mesmo tratamento em todo o app. A diferença real (1ª
+  // rodada vs. depois de uma alteração) já é visível pelo histórico de
+  // revisões (revisionCount) e não precisa de um status à parte.
+  AGUARDANDO_FEEDBACK: { label: "Aguardando retorno do cliente", color: "#B45309", bg: "#FEF3C7", order: 8, group: "client", hint: "O cliente recebeu (envio ou alteração) e estamos esperando a resposta dele — feedback ou aprovação." },
   ALTERACAO_SOLICITADA: { label: "Alteração solicitada", color: "#E11D48", bg: "#FFE4E6", order: 9, group: "client", hint: "O cliente pediu alteração — ainda não começamos a mexer." },
   EM_ALTERACAO: { label: "Em alteração", color: "#E11D48", bg: "#FFE4E6", order: 10, group: "editing", hint: "Mexendo na alteração que o cliente pediu." },
-  AGUARDANDO_APROVACAO: { label: "Aguardando aprovação", color: "#B45309", bg: "#FEF3C7", order: 11, group: "client", hint: "Alteração feita — esperando o cliente aprovar." },
-  APROVADO: { label: "Aprovado", color: "#16A34A", bg: "#DCFCE7", order: 12, group: "done", hint: "O cliente aprovou. Falta só exportar e entregar." },
-  EXPORTANDO: { label: "Exportando", color: "#1D4ED8", bg: "#DBEAFE", order: 13, group: "done", hint: "Aprovado — gerando o arquivo final agora." },
-  UPLOAD_ENVIO: { label: "Upload / envio", color: "#1D4ED8", bg: "#DBEAFE", order: 14, group: "done", hint: "Arquivo pronto, subindo/enviando pro destino final." },
-  ENTREGUE: { label: "Entregue", color: "#0F172A", bg: "#F1F5F9", order: 15, group: "done", hint: "Concluído e entregue ao cliente." },
-  ARQUIVADO: { label: "Arquivado", color: "#6B7280", bg: "#F1F2F4", order: 16, group: "done", hint: "Finalizado e arquivado — não conta mais como trabalho ativo." },
-  CANCELADO: { label: "Cancelado", color: "#DC2626", bg: "#FEE2E2", order: 17, group: "done", hint: "Cancelado — não vai ser produzido." },
+  APROVADO: { label: "Aprovado", color: "#16A34A", bg: "#DCFCE7", order: 11, group: "done", hint: "O cliente aprovou. Falta só exportar e entregar." },
+  EXPORTANDO: { label: "Exportando", color: "#1D4ED8", bg: "#DBEAFE", order: 12, group: "done", hint: "Aprovado — gerando o arquivo final agora." },
+  UPLOAD_ENVIO: { label: "Upload / envio", color: "#1D4ED8", bg: "#DBEAFE", order: 13, group: "done", hint: "Arquivo pronto, subindo/enviando pro destino final." },
+  ENTREGUE: { label: "Entregue", color: "#0F172A", bg: "#F1F5F9", order: 14, group: "done", hint: "Concluído e entregue ao cliente." },
+  ARQUIVADO: { label: "Arquivado", color: "#6B7280", bg: "#F1F2F4", order: 15, group: "done", hint: "Finalizado e arquivado — não conta mais como trabalho ativo." },
+  CANCELADO: { label: "Cancelado", color: "#DC2626", bg: "#FEE2E2", order: 16, group: "done", hint: "Cancelado — não vai ser produzido." },
 };
 
 export const KANBAN_STATUSES: string[] = [
@@ -58,7 +64,6 @@ export const KANBAN_STATUSES: string[] = [
   "ENVIADO_AO_CLIENTE",
   "AGUARDANDO_FEEDBACK",
   "EM_ALTERACAO",
-  "AGUARDANDO_APROVACAO",
   "APROVADO",
   "ENTREGUE",
 ];
@@ -138,7 +143,7 @@ export function isDone(status: string) {
 }
 
 export function isWaitingClient(status: string) {
-  return ["ENVIADO_AO_CLIENTE", "AGUARDANDO_FEEDBACK", "AGUARDANDO_APROVACAO"].includes(status);
+  return ["ENVIADO_AO_CLIENTE", "AGUARDANDO_FEEDBACK"].includes(status);
 }
 
 // Cliente já aprovou — o que falta (exportar, subir/enviar) é trabalho
@@ -156,20 +161,46 @@ export function isEditing(status: string) {
   return ["EDITANDO", "EM_ALTERACAO", "CORRECAO_INTERNA"].includes(status);
 }
 
-export function isOverdue(finalDeadline: string, status: string) {
+export function isInAlteration(status: string) {
+  return ["ALTERACAO_SOLICITADA", "EM_ALTERACAO"].includes(status);
+}
+
+// Carência que a produção ganha assim que uma alteração começa — o time
+// acabou de receber a bola de volta (ver isInAlteration acima), não é
+// justo que o vídeo já nasça "atrasado e crítico" no mesmo instante em que
+// o cliente pediu o ajuste, mesmo que o prazo final já tenha estourado.
+export const ALTERATION_GRACE_BUSINESS_DAYS = 1;
+
+// video.alterationStartedAt é gravado por updateVideoStatus() ao entrar em
+// ALTERACAO_SOLICITADA/EM_ALTERACAO (mesmo padrão do clientSentAt — usar
+// updatedAt pra isso seria errado, qualquer edição no vídeo reiniciaria o
+// relógio). Sem esse timestamp (vídeo antigo, antes da coluna existir),
+// cai no comportamento anterior: só o prazo original vale.
+function alterationGraceDeadline(finalDeadline: string, status: string, alterationStartedAt?: string | null): Date {
+  const original = new Date(finalDeadline);
+  if (!isInAlteration(status) || !alterationStartedAt) return original;
+  const grace = addBusinessDays(new Date(alterationStartedAt), ALTERATION_GRACE_BUSINESS_DAYS);
+  // Nunca ENCURTA o prazo: se o prazo original só vence depois da
+  // carência, ele continua valendo — a carência só socorre quem já estava
+  // em cima da hora (ou atrasado) no momento em que a alteração começou.
+  return grace.getTime() > original.getTime() ? grace : original;
+}
+
+export function isOverdue(finalDeadline: string, status: string, alterationStartedAt?: string | null) {
   if (isDone(status)) return false;
   // Duas fases em que o prazo estourado deixa de ser um problema NOSSO:
-  //   isWaitingClient  — bola com o cliente (enviado / aguardando feedback
-  //                      / aguardando aprovação). A edição já fez a parte
-  //                      dela; não tem o que "atrasar" desse lado.
+  //   isWaitingClient  — bola com o cliente (enviado / aguardando retorno).
+  //                      A edição já fez a parte dela; não tem o que
+  //                      "atrasar" desse lado.
   //   isPostApproval   — cliente já aprovou (aprovado / exportando /
   //                      upload). O risco criativo/de aprovação já se
   //                      resolveu a favor; o que resta é mecânico.
-  // ALTERACAO_SOLICITADA/EM_ALTERACAO ficam de fora de propósito: nesses
-  // dois a bola voltou pra nós, então continuam contando como atraso
-  // normalmente se o prazo passou.
+  // ALTERACAO_SOLICITADA/EM_ALTERACAO ficam de fora dessa exceção — a bola
+  // voltou pra nós, então continuam contando como atraso — mas ganham 1
+  // dia útil de carência a partir de quando a alteração começou (ver
+  // alterationGraceDeadline acima), em vez de já nascerem atrasados.
   if (isWaitingClient(status) || isPostApproval(status)) return false;
-  return new Date(finalDeadline).getTime() < Date.now();
+  return alterationGraceDeadline(finalDeadline, status, alterationStartedAt).getTime() < Date.now();
 }
 
 export function hoursUntil(dateStr: string) {
@@ -196,6 +227,7 @@ export function computeDeliveryRisk(video: {
   estimatedHours: number;
   actualHours: number;
   revisionCount: number;
+  alterationStartedAt?: string | null;
 }): RiskLevel {
   if (isDone(video.status)) return "BAIXO";
   // Enquanto a bola está com o cliente, "risco de entrega" não mede mais
@@ -213,7 +245,10 @@ export function computeDeliveryRisk(video: {
   // que mudava de status, mesmo sem nenhum trabalho de edição pendente.
   if (isPostApproval(video.status)) return "BAIXO";
 
-  const hLeft = hoursUntil(video.finalDeadline);
+  // Mesma carência de 1 dia útil do isOverdue (ver alterationGraceDeadline)
+  // aplicada aqui também — senão um vídeo em alteração virava CRÍTICO de
+  // novo na hora, mesmo isento de "atrasado" no card.
+  const hLeft = (alterationGraceDeadline(video.finalDeadline, video.status, video.alterationStartedAt).getTime() - Date.now()) / 3_600_000;
   const workRemaining = Math.max(0, video.estimatedHours - video.actualHours);
 
   if (hLeft < 0) return "CRITICO";
@@ -298,7 +333,6 @@ export function statusProgress(status: string): number {
     AGUARDANDO_FEEDBACK: 65,
     ALTERACAO_SOLICITADA: 70,
     EM_ALTERACAO: 75,
-    AGUARDANDO_APROVACAO: 85,
     APROVADO: 90,
     EXPORTANDO: 94,
     UPLOAD_ENVIO: 97,

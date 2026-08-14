@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
-import { isOverdue, isWaitingClient, isDone, computeClientWait } from "@/lib/domain";
+import { isOverdue, isWaitingClient, isDone, isEditing, computeClientWait } from "@/lib/domain";
 import { fmtDateFull, fmtWaitingSince, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
 import { AlertTriangle, TriangleAlert, Info, Clock, Send, ListChecks, CalendarClock } from "lucide-react";
@@ -50,7 +50,7 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
   // Recorte pessoal (era Minha Edição) — só vídeos do usuário logado.
   // ---------------------------------------------------------------------
   const mine = videos.filter((v) => v.editorId === user.id && !isDone(v.status));
-  const overdueMine = mine.filter((v) => isOverdue(v.finalDeadline, v.status));
+  const overdueMine = mine.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
   const todayMine = mine.filter((v) => isToday(new Date(v.finalDeadline)) || isToday(new Date(v.internalDeadline ?? v.finalDeadline)));
   const waitingMine = mine.filter((v) => isWaitingClient(v.status));
   const thisWeekMine = mine.filter((v) => {
@@ -74,7 +74,7 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
   }
 
   const flowWork = {
-    videos: videos.map((v) => ({ status: v.status, finalDeadline: v.finalDeadline, updatedAt: v.updatedAt })),
+    videos: videos.map((v) => ({ status: v.status, finalDeadline: v.finalDeadline, updatedAt: v.updatedAt, alterationStartedAt: v.alterationStartedAt })),
     captures: captures.map((c) => ({ status: c.status, date: c.date })),
   };
 
@@ -168,7 +168,7 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
             )}
           </Section>
 
-          <Group title="Esta semana" videos={withPending(thisWeekMine)} emptyText="Nada programado para os próximos 7 dias." />
+          <GroupedByStatus title="Esta semana" videos={withPending(thisWeekMine)} emptyText="Nada programado para os próximos 7 dias." />
           <Group title="Próximo" videos={withPending(nextMine)} emptyText="Sem vídeos futuros atribuídos." />
 
           {alerts.length > 0 && (
@@ -264,6 +264,49 @@ function Group({ title, videos, emptyText, tone }: { title: string; videos: any[
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {videos.map((v) => (
             <VideoCard key={v.id} video={v} />
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+// Igual ao Group acima, mas em vez de uma grade única, separa por "o que
+// esse vídeo precisa de mim agora" — pedido explícito do usuário: uma
+// visão de tudo que está em edição e outra do que está parado com o
+// cliente (esses dois status foram unidos, ver STATUS_META em
+// lib/domain.ts), em vez de uma lista só ordenada por prazo. O resto
+// (fila, revisão interna, alteração ainda não iniciada, pós-aprovação)
+// cai no terceiro bloco — não tem ação de edição pendente nem está
+// bloqueado pelo cliente, então não precisa de destaque próprio.
+function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: any[]; emptyText: string }) {
+  const editing = videos.filter((v) => isEditing(v.status));
+  const withClient = videos.filter((v) => isWaitingClient(v.status));
+  const rest = videos.filter((v) => !isEditing(v.status) && !isWaitingClient(v.status));
+
+  const buckets = [
+    { label: "Editando", items: editing },
+    { label: "Com o cliente", items: withClient },
+    { label: "Fila e revisão", items: rest },
+  ].filter((b) => b.items.length > 0);
+
+  return (
+    <Section title={title} count={videos.length}>
+      {videos.length === 0 ? (
+        <EmptyState text={emptyText} />
+      ) : (
+        <div className="space-y-5">
+          {buckets.map((b) => (
+            <div key={b.label}>
+              <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">
+                {b.label} <span className="normal-case font-normal">· {b.items.length}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {b.items.map((v) => (
+                  <VideoCard key={v.id} video={v} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}

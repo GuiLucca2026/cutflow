@@ -17,6 +17,7 @@ export default async function ProjetosPage() {
       finalDeadline: v.finalDeadline,
       editorId: v.editorId,
       editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,
+      alterationStartedAt: v.alterationStartedAt,
     })),
   }));
 

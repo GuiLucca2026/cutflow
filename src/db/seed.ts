@@ -318,7 +318,7 @@ async function main() {
       }
 
       // Revisions/alterations for videos currently in an alteration loop
-      if (["ALTERACAO_SOLICITADA", "EM_ALTERACAO", "AGUARDANDO_FEEDBACK", "AGUARDANDO_APROVACAO"].includes(v.status)) {
+      if (["ALTERACAO_SOLICITADA", "EM_ALTERACAO", "AGUARDANDO_FEEDBACK"].includes(v.status)) {
         const { error } = await supabase.from(TABLES.revisions).insert(
           toRow({
             id: crypto.randomUUID(),
@@ -512,7 +512,7 @@ async function main() {
     status: "EM_ANDAMENTO",
     budget: 9000,
     videosSeed: [
-      { name: "Reel Receita 01", format: "Reel", aspectRatio: "9:16", status: "AGUARDANDO_APROVACAO", priority: "NORMAL", editor: joao, estimatedHours: 3, actualHours: 3, revisionCount: 1, finalDeadlineOffsetDays: 1, internalOffsetDays: -1, startedDaysAgo: 4 },
+      { name: "Reel Receita 01", format: "Reel", aspectRatio: "9:16", status: "AGUARDANDO_FEEDBACK", priority: "NORMAL", editor: joao, estimatedHours: 3, actualHours: 3, revisionCount: 1, finalDeadlineOffsetDays: 1, internalOffsetDays: -1, startedDaysAgo: 4 },
       { name: "Reel Receita 02", format: "Reel", aspectRatio: "9:16", status: "EXPORTANDO", priority: "NORMAL", editor: joao, estimatedHours: 3, actualHours: 3, revisionCount: 0, finalDeadlineOffsetDays: 0, internalOffsetDays: -1, startedDaysAgo: 3 },
       { name: "Stories Cardápio", format: "Story", aspectRatio: "9:16", status: "ENTREGUE", priority: "BAIXA", editor: maria, estimatedHours: 1, actualHours: 1, revisionCount: 0, finalDeadlineOffsetDays: -4, internalOffsetDays: -5, startedDaysAgo: 8 },
     ],

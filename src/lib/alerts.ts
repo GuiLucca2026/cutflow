@@ -33,6 +33,8 @@ type AlertVideo = {
   // Espera do cliente (Fase 9) — ver computeClientWait em lib/domain.ts.
   clientSentAt?: string | null;
   updatedAt?: string | null;
+  // Carência de alteração (Fase 13) — ver isOverdue/computeDeliveryRisk em lib/domain.ts.
+  alterationStartedAt?: string | null;
 };
 
 type AlertWorkloadEntry = { editorId: string; date: string; hours: number };
@@ -49,7 +51,7 @@ export function computeAlerts(opts: { videos: AlertVideo[]; workloadEntries: Ale
 
   // 1. Atrasados — ação imediata.
   for (const v of active) {
-    if (!isOverdue(v.finalDeadline, v.status)) continue;
+    if (!isOverdue(v.finalDeadline, v.status, v.alterationStartedAt)) continue;
     alerts.push({
       id: `overdue-${v.id}`,
       severity: "CRITICO",
@@ -62,7 +64,7 @@ export function computeAlerts(opts: { videos: AlertVideo[]; workloadEntries: Ale
   // 2. Risco crítico de prazo (mesma fórmula da ficha de vídeo — spec 28),
   // mesmo pra quem ainda não passou do prazo.
   for (const v of active) {
-    if (isOverdue(v.finalDeadline, v.status)) continue; // já coberto acima
+    if (isOverdue(v.finalDeadline, v.status, v.alterationStartedAt)) continue; // já coberto acima
     if (computeDeliveryRisk(v) !== "CRITICO") continue;
     alerts.push({
       id: `risk-${v.id}`,

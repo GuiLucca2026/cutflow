@@ -96,7 +96,6 @@ export const VIDEO_STATUSES = [
   "AGUARDANDO_FEEDBACK",
   "ALTERACAO_SOLICITADA",
   "EM_ALTERACAO",
-  "AGUARDANDO_APROVACAO",
   "APROVADO",
   "EXPORTANDO",
   "UPLOAD_ENVIO",
@@ -117,7 +116,6 @@ export const STATUS_PROGRESS_WEIGHT: Record<string, number> = {
   AGUARDANDO_FEEDBACK: 65,
   ALTERACAO_SOLICITADA: 70,
   EM_ALTERACAO: 75,
-  AGUARDANDO_APROVACAO: 85,
   APROVADO: 90,
   EXPORTANDO: 94,
   UPLOAD_ENVIO: 97,
@@ -235,11 +233,17 @@ export type Video = {
   updatedAt: string;
   // Quando o vídeo foi PRA MÃO DO CLIENTE (Fase 9) — gravado por
   // updateVideoStatus ao entrar num status de espera (ENVIADO_AO_CLIENTE,
-  // AGUARDANDO_FEEDBACK, AGUARDANDO_APROVACAO) e limpo ao sair. É daqui
-  // que sai a contagem de "sem retorno há X dias" (ver computeClientWait
-  // em lib/domain.ts) — usar updatedAt pra isso seria errado, já que
-  // qualquer edição no vídeo reiniciaria o relógio.
+  // AGUARDANDO_FEEDBACK). É daqui que sai a contagem de "sem retorno há X
+  // dias" (ver computeClientWait em lib/domain.ts) — usar updatedAt pra
+  // isso seria errado, já que qualquer edição no vídeo reiniciaria o
+  // relógio.
   clientSentAt: string | null;
+  // Mesmo padrão do clientSentAt acima, só que pra ALTERACAO_SOLICITADA/
+  // EM_ALTERACAO (Fase 13) — desde quando a alteração começou. É o que
+  // isOverdue()/computeDeliveryRisk() usam pra dar 1 dia útil de carência
+  // antes do vídeo voltar a contar como atrasado (ver
+  // ALTERATION_GRACE_BUSINESS_DAYS em lib/domain.ts).
+  alterationStartedAt: string | null;
   // Lixeira (soft delete) — ver o mesmo campo em Project acima.
   deletedAt: string | null;
 };

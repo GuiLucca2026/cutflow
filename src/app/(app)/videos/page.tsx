@@ -16,6 +16,7 @@ export default async function VideosPage() {
     estimatedHours: v.estimatedHours,
     actualHours: v.actualHours,
     revisionCount: v.revisionCount,
+    alterationStartedAt: v.alterationStartedAt,
     editorId: v.editorId,
     clientId: v.project?.client?.id,
     editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,

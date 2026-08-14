@@ -10,7 +10,7 @@ export default async function ClientesPage() {
   const light = clients.map((c) => {
     const clientProjects = projects.filter((p) => p.clientId === c.id);
     const activeVideos = clientProjects.flatMap((p) => p.videos).filter((v: any) => !isDone(v.status));
-    const overdueVideos = clientProjects.flatMap((p) => p.videos).filter((v: any) => isOverdue(v.finalDeadline, v.status));
+    const overdueVideos = clientProjects.flatMap((p) => p.videos).filter((v: any) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
     return {
       id: c.id,
       name: c.name,

@@ -491,3 +491,27 @@ create policy "cutflow_authenticated_all" on public.cutflow_tasks for all to aut
 -- tinha código nenhum lendo/escrevendo nela) — passa a ser usada agora
 -- pra menção (@Nome num comentário ou numa tarefa) e atribuição de tarefa.
 -- Nenhuma coluna nova precisa ser criada nela.
+
+-- ---------------------------------------------------------------------------
+-- Fase 13 — Carência de 1 dia útil pra Alteração solicitada / Em alteração
+-- ---------------------------------------------------------------------------
+-- Mesmo padrão do client_sent_at (Fase 9): grava QUANDO o vídeo entrou em
+-- ALTERACAO_SOLICITADA/EM_ALTERACAO, pra isOverdue()/computeDeliveryRisk()
+-- (lib/domain.ts) darem 1 dia útil de carência antes de voltar a contar
+-- como atrasado — sem isso, um vídeo com prazo já estourado nascia
+-- "atrasado e crítico" no mesmo instante em que o cliente pedia a
+-- alteração. updated_at não serve pra isso (qualquer edição no vídeo
+-- reinicia o relógio).
+alter table public.cutflow_videos add column if not exists alteration_started_at text;
+
+-- ---------------------------------------------------------------------------
+-- Fase 14 — Unir "Aguardando aprovação" em "Aguardando feedback"
+-- ---------------------------------------------------------------------------
+-- Os dois status eram redundantes na prática (mesma cor, mesmo
+-- isWaitingClient, mesmo tratamento em todo o app) — só marcavam se a
+-- espera era da 1ª rodada ou de uma rodada de alteração, distinção que já
+-- fica visível pelo revision_count. Vídeos existentes em
+-- AGUARDANDO_APROVACAO migram pra AGUARDANDO_FEEDBACK (status sobrevivente,
+-- agora com o rótulo "Aguardando retorno do cliente" — ver STATUS_META em
+-- lib/domain.ts).
+update public.cutflow_videos set status = 'AGUARDANDO_FEEDBACK' where status = 'AGUARDANDO_APROVACAO';

@@ -29,6 +29,8 @@ export type VideoCardData = {
   // Contagem da espera do cliente (Fase 9) — ver computeClientWait.
   clientSentAt?: string | null;
   updatedAt?: string | null;
+  // Carência de alteração (Fase 13) — ver isOverdue/computeDeliveryRisk.
+  alterationStartedAt?: string | null;
   // Usado pelo menu de botão direito pra marcar quem é o responsável atual.
   editorId?: string | null;
   // Idem, pra marcar em qual projeto o vídeo já está no menu "Mover para projeto".
@@ -42,7 +44,7 @@ export type VideoCardData = {
 
 export function VideoCard({ video, showRisk = true, compact = false }: { video: VideoCardData; showRisk?: boolean; compact?: boolean }) {
   const { open } = useVideoDetail();
-  const overdue = isOverdue(video.finalDeadline, video.status);
+  const overdue = isOverdue(video.finalDeadline, video.status, video.alterationStartedAt);
   const risk = computeDeliveryRisk(video);
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";

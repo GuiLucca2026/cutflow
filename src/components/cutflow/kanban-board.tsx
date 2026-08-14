@@ -120,7 +120,7 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
 
 function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen: (id: string) => void; dragging?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggableCard(video.id);
-  const overdue = isOverdue(video.finalDeadline, video.status);
+  const overdue = isOverdue(video.finalDeadline, video.status, video.alterationStartedAt);
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
   // Mesma regra do VideoCard (ver esse arquivo pro motivo completo):
