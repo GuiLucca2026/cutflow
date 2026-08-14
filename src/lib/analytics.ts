@@ -3,6 +3,7 @@
 // no nightly job. Pure functions so the page component stays a thin fetch
 // + render shell.
 import { isWaitingClient } from "@/lib/domain";
+import { brazilDateKey } from "@/lib/flow/time";
 
 type AnalyticsVideo = {
   id: string;
@@ -33,9 +34,16 @@ function clientName(v: AnalyticsVideo) {
 // prazo atual, que já pode ter sido empurrado. Como o banco não guarda um
 // timestamp de "entregue em" separado, usamos a última atualização do
 // vídeo como aproximação de quando ele virou ENTREGUE/ARQUIVADO.
+//
+// Comparação por DIA (fuso de São Paulo, ver brazilDateKey), não por
+// timestamp exato — um vídeo entregue às 20h do dia do prazo é no prazo,
+// mesmo que o prazo esteja gravado como meia-noite daquele dia. Só conta
+// como atrasado se a entrega cair num dia civil DEPOIS do prazo (spec do
+// usuário: "só deve constar atrasado se passar da meia-noite do dia da
+// entrega").
 export function computeOnTimeDelivery(videos: AnalyticsVideo[]) {
   const delivered = videos.filter((v) => DELIVERED_STATUSES.includes(v.status));
-  const onTime = delivered.filter((v) => new Date(v.updatedAt) <= new Date(v.originalFinalDeadline));
+  const onTime = delivered.filter((v) => brazilDateKey(v.updatedAt) <= brazilDateKey(v.originalFinalDeadline));
   return {
     delivered: delivered.length,
     onTime: onTime.length,
@@ -48,7 +56,7 @@ export function computeMonthlyOnTime(videos: AnalyticsVideo[], months: string[])
   // months: array of "yyyy-MM" keys, oldest first.
   return months.map((month) => {
     const inMonth = videos.filter((v) => DELIVERED_STATUSES.includes(v.status) && v.originalFinalDeadline.slice(0, 7) === month);
-    const onTime = inMonth.filter((v) => new Date(v.updatedAt) <= new Date(v.originalFinalDeadline));
+    const onTime = inMonth.filter((v) => brazilDateKey(v.updatedAt) <= brazilDateKey(v.originalFinalDeadline));
     return {
       month,
       delivered: inMonth.length,
