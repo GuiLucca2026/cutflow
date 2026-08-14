@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { KANBAN_STATUSES, STATUS_META, computeClientWait, computeDeliveryRisk, isOverdue, isWaitingClient, CLIENT_WAIT_ACCENT_COLOR } from "@/lib/domain";
 import { fmtDateWeekday, fmtShortId } from "@/lib/format";
 import { updateVideoStatus } from "@/app/actions";
+import { toastStatusChange } from "@/lib/celebrate";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 import { StatusBadge, PriorityBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
@@ -54,7 +55,7 @@ export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] 
 
     updateVideoStatus(videoId, newStatus)
       .then(() => {
-        toast.success(`${video.name} → ${STATUS_META[newStatus]?.label}`);
+        toastStatusChange(video.name, newStatus, oldStatus);
         refresh();
         router.refresh();
       })

@@ -30,6 +30,7 @@ import {
   isOverdue,
   isWaitingClient,
 } from "@/lib/domain";
+import { toastStatusChange } from "@/lib/celebrate";
 import { fmtDateFull, fmtDateTime, fmtRelative, fmtWaitingSince, fmtHours } from "@/lib/format";
 import {
   updateVideoStatus,
@@ -252,8 +253,9 @@ function VideoDetailBody({
               value={video.status}
               onValueChange={(v) =>
                 startTransition(async () => {
+                  const oldStatus = video.status;
                   await updateVideoStatus(video.id, v);
-                  toast.success(`Status alterado para ${STATUS_META[v]?.label ?? v}`);
+                  toastStatusChange(video.name, v, oldStatus);
                   onStatusChange();
                 })
               }

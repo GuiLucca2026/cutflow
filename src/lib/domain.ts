@@ -204,6 +204,21 @@ export function computePersonalMonthProgress(
   };
 }
 
+// Texto de marco por faixa de progresso — pedido do usuário: "achei que
+// ficou discreto sem entusiasmo, pode gamificar". Mensagem muda junto com
+// a barra, sem virar celebração o tempo todo (só o topo — 100% — ganha
+// ícone/animação, ver personal-progress.tsx).
+export function personalProgressMilestone(progress: PersonalMonthProgress): string | null {
+  if (progress.total === 0) return null;
+  const pct = progress.delivered / progress.total;
+  if (pct >= 1) return "Mês fechado!";
+  if (pct >= 0.75) return "Reta final — quase lá.";
+  if (pct >= 0.5) return "Mais da metade do mês.";
+  if (pct >= 0.25) return "Pegando embalo.";
+  if (progress.delivered > 0) return "Primeira entrega do mês!";
+  return "Começando o mês.";
+}
+
 export function isInAlteration(status: string) {
   return ["ALTERACAO_SOLICITADA", "EM_ALTERACAO"].includes(status);
 }

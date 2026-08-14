@@ -26,6 +26,7 @@ import {
   setVideoProject,
 } from "@/app/actions";
 import { KANBAN_STATUSES, STATUS_META, PRIORITY_META } from "@/lib/domain";
+import { toastStatusChange } from "@/lib/celebrate";
 import { PRIORITIES } from "@/db/schema";
 import { FolderOpen, Pencil, Flag, ListChecks, Trash2, UserRound, FolderKanban } from "lucide-react";
 
@@ -152,7 +153,12 @@ export function VideoContextMenu({
               {KANBAN_STATUSES.map((status) => (
                 <ContextMenuItem
                   key={status}
-                  onSelect={() => updateVideoStatus(video.id, status).then(() => router.refresh())}
+                  onSelect={() =>
+                    updateVideoStatus(video.id, status).then(() => {
+                      toastStatusChange(video.name, status, video.status);
+                      router.refresh();
+                    })
+                  }
                   className="gap-2"
                 >
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_META[status]?.color }} />
