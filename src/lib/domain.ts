@@ -210,13 +210,18 @@ export function computePersonalMonthProgress(
 // ícone/animação, ver personal-progress.tsx).
 export function personalProgressMilestone(progress: PersonalMonthProgress): string | null {
   if (progress.total === 0) return null;
-  const pct = progress.delivered / progress.total;
+  const { delivered, total } = progress;
+  const pct = delivered / total;
+  // "Primeira entrega do mês!" é sobre CONTAGEM (delivered === 1), não
+  // faixa de %  — checa antes dos "pct >= X" abaixo, senão qualquer
+  // entrega abaixo de 25% (mesmo a 5ª, 10ª...) cai nessa frase por engano.
+  if (delivered === 0) return "Começando o mês.";
   if (pct >= 1) return "Mês fechado!";
+  if (delivered === 1) return "Primeira entrega do mês!";
   if (pct >= 0.75) return "Reta final — quase lá.";
   if (pct >= 0.5) return "Mais da metade do mês.";
   if (pct >= 0.25) return "Pegando embalo.";
-  if (progress.delivered > 0) return "Primeira entrega do mês!";
-  return "Começando o mês.";
+  return "No ritmo.";
 }
 
 export function isInAlteration(status: string) {
