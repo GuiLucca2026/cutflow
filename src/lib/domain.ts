@@ -141,22 +141,34 @@ export function isWaitingClient(status: string) {
   return ["ENVIADO_AO_CLIENTE", "AGUARDANDO_FEEDBACK", "AGUARDANDO_APROVACAO"].includes(status);
 }
 
+// Cliente já aprovou — o que falta (exportar, subir/enviar) é trabalho
+// MECÂNICO, não criativo/de aprovação. Continua "ativo" de propósito
+// (isDone() continua false pra estes 3: ainda tem passo real pendente,
+// ainda aparece na fila de quem precisa exportar/subir) — só não é mais
+// "risco de atraso" no sentido que importa (vai atrasar a ENTREGA porque o
+// cliente pode pedir mais uma rodada de alteração?). Isso já foi
+// respondido: não vai. Falta só burocracia.
+export function isPostApproval(status: string) {
+  return ["APROVADO", "EXPORTANDO", "UPLOAD_ENVIO"].includes(status);
+}
+
 export function isEditing(status: string) {
   return ["EDITANDO", "EM_ALTERACAO", "CORRECAO_INTERNA"].includes(status);
 }
 
 export function isOverdue(finalDeadline: string, status: string) {
   if (isDone(status)) return false;
-  // Enquanto a bola está com o cliente (enviado / aguardando feedback /
-  // aguardando aprovação), o prazo passado não é mais um problema NOSSO —
-  // a edição já entregou a parte dela, não tem nada pra "atrasar" desse
-  // lado. Mesma exceção que computeDeliveryRisk já fazia (ver logo abaixo)
-  // mas que faltava aqui: sem isso, um vídeo enviado ontem com prazo de
-  // ontem continuava aparecendo em "Atrasados" com selo vermelho — days
-  // depois de a edição ter feito a parte dela. isWaitingClient de propósito
-  // (não isDone): ALTERACAO_SOLICITADA/EM_ALTERACAO (bola voltou pra nós)
-  // continuam contando como atraso normalmente.
-  if (isWaitingClient(status)) return false;
+  // Duas fases em que o prazo estourado deixa de ser um problema NOSSO:
+  //   isWaitingClient  — bola com o cliente (enviado / aguardando feedback
+  //                      / aguardando aprovação). A edição já fez a parte
+  //                      dela; não tem o que "atrasar" desse lado.
+  //   isPostApproval   — cliente já aprovou (aprovado / exportando /
+  //                      upload). O risco criativo/de aprovação já se
+  //                      resolveu a favor; o que resta é mecânico.
+  // ALTERACAO_SOLICITADA/EM_ALTERACAO ficam de fora de propósito: nesses
+  // dois a bola voltou pra nós, então continuam contando como atraso
+  // normalmente se o prazo passou.
+  if (isWaitingClient(status) || isPostApproval(status)) return false;
   return new Date(finalDeadline).getTime() < Date.now();
 }
 
@@ -194,6 +206,12 @@ export function computeDeliveryRisk(video: {
   // nessa fase é outra coisa (há quanto tempo o cliente está sentado em
   // cima), e isso é computeClientWait() logo abaixo.
   if (isWaitingClient(video.status)) return "BAIXO";
+  // Mesma lógica, uma fase adiante: cliente já aprovou (ver isPostApproval
+  // acima). O risco que esse cálculo mede — vai atrasar por causa de
+  // trabalho/revisão que falta? — já se resolveu a favor. Sem isso, um
+  // vídeo aprovado ontem com prazo de ontem virava CRÍTICO de novo assim
+  // que mudava de status, mesmo sem nenhum trabalho de edição pendente.
+  if (isPostApproval(video.status)) return "BAIXO";
 
   const hLeft = hoursUntil(video.finalDeadline);
   const workRemaining = Math.max(0, video.estimatedHours - video.actualHours);
