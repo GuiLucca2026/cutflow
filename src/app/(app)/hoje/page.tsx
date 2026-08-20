@@ -1,6 +1,7 @@
 import { listVideos, listUsers, listWorkloadEntries, listCaptures, listNotifications, listMyTasks } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
+import { WaitingRow } from "@/components/cutflow/waiting-row";
 import { Greeting } from "@/components/cutflow/greeting";
 import { FlowMessage } from "@/components/cutflow/flow-message";
 import { Avatar } from "@/components/ui/avatar";
@@ -8,8 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
-import { isOverdue, isWaitingClient, isDone, isEditing, computeClientWait } from "@/lib/domain";
-import { fmtDateFull, fmtWaitingSince, fmtHours } from "@/lib/format";
+import { isOverdue, isWaitingClient, isDone, isEditing } from "@/lib/domain";
+import { fmtDateFull, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
 import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock } from "lucide-react";
 import { Hint } from "@/components/ui/tooltip";
@@ -361,17 +362,4 @@ function EmptyState({ text }: { text: string }) {
   return <div className="rounded-xl border border-dashed border-cf-border p-6 text-center text-sm text-cf-text-dim">{text}</div>;
 }
 
-function WaitingRow({ video }: { video: any }) {
-  const chase = computeClientWait(video)?.kind === "COBRAR_FEEDBACK";
-  return (
-    <div className={cn("flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5", chase ? "border-amber-500/40" : "border-cf-border")}>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">{video.project?.client?.name} — {video.name}</div>
-        <div className="text-xs text-cf-text-dim truncate">{video.project?.name}</div>
-      </div>
-      <div className={cn("text-xs font-semibold whitespace-nowrap", chase ? "text-amber-600" : "text-cf-text-dim")}>
-        {chase && "⚠ Cobrar · "}Aguardando há {fmtWaitingSince(video.clientSentAt ?? video.updatedAt)}
-      </div>
-    </div>
-  );
-}
+
