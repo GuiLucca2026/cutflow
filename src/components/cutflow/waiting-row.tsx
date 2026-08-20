@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { computeClientWait } from "@/lib/domain";
 import { fmtWaitingSince } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -28,7 +29,10 @@ export type WaitingRowVideo = {
 // Mesmo padrão do VideoCard: clique abre a ficha completa (onde dá pra
 // mudar o status pelo Select, além de tudo mais), botão direito abre o
 // atalho rápido "Definir status" do VideoContextMenu — sem precisar abrir
-// a ficha só pra isso.
+// a ficha só pra isso. O hover antes só mudava a cor da borda (sutil
+// demais pra avisar que dá pra clicar, segundo o usuário) — agora também
+// tinge o fundo e revela uma seta, mesma linguagem de "isso é uma linha
+// clicável" que o resto do app já usa em menu/dropdown.
 export function WaitingRow({ video }: { video: WaitingRowVideo }) {
   const { open } = useVideoDetail();
   const chase = computeClientWait(video)?.kind === "COBRAR_FEEDBACK";
@@ -39,7 +43,7 @@ export function WaitingRow({ video }: { video: WaitingRowVideo }) {
         type="button"
         onClick={() => open(video.id)}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 text-left transition-colors hover:border-cf-lime/40",
+          "group flex w-full items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 text-left transition-colors hover:bg-cf-surface-2 hover:border-cf-lime/40 cursor-pointer",
           chase ? "border-amber-500/40" : "border-cf-border"
         )}
       >
@@ -52,6 +56,7 @@ export function WaitingRow({ video }: { video: WaitingRowVideo }) {
         <div className={cn("text-xs font-semibold whitespace-nowrap", chase ? "text-amber-600" : "text-cf-text-dim")}>
           {chase && "⚠ Cobrar · "}Aguardando há {fmtWaitingSince(video.clientSentAt ?? video.updatedAt)}
         </div>
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-cf-text-dim/40 transition-transform group-hover:translate-x-0.5 group-hover:text-cf-text-dim" />
       </button>
     </VideoContextMenu>
   );
