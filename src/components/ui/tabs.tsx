@@ -9,7 +9,7 @@ const Tabs = TabsPrimitive.Root;
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn("inline-flex items-center gap-1 rounded-lg bg-cf-surface-2 p-1 border border-cf-border", className)}
+      className={cn("inline-flex items-center gap-1 rounded-[10px] border border-cf-border bg-cf-surface-2/70 p-1", className)}
       {...props}
     />
   );
@@ -19,7 +19,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium text-cf-text-dim transition-all outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-cf-canvas data-[state=active]:bg-cf-primary data-[state=active]:text-cf-on-accent data-[state=active]:font-semibold hover:text-cf-text",
+        "inline-flex min-h-9 items-center justify-center whitespace-nowrap rounded-[7px] border border-transparent px-3 py-1.5 text-sm font-medium text-cf-text-dim transition-[color,background-color,border-color] duration-[var(--cf-dur-hover)] outline-none hover:text-cf-text focus-visible:border-cf-primary/35 focus-visible:ring-2 focus-visible:ring-cf-primary/20 data-[state=active]:border-cf-border data-[state=active]:bg-cf-surface data-[state=active]:text-cf-text data-[state=active]:font-semibold",
         className
       )}
       {...props}
@@ -28,7 +28,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
 }
 
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
-  return <TabsPrimitive.Content className={cn("mt-4 outline-none", className)} {...props} />;
+  return <TabsPrimitive.Content className={cn("mt-4 outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/20", className)} {...props} />;
 }
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };

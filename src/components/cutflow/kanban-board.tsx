@@ -23,8 +23,9 @@ import { ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
+import { atmosphericAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, UserX } from "lucide-react";
+import { AlertTriangle, GripVertical, UserX } from "lucide-react";
 import type { VideoCardData } from "@/components/cutflow/video-card";
 
 export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] }) {
@@ -69,8 +70,8 @@ export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] 
 
   return (
     <DndContext id="cutflow-kanban" sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex-1 overflow-x-auto cf-scrollbar-thin pb-4">
-        <div className="flex gap-3 min-w-max">
+      <div className="flex-1 overflow-x-auto pb-4 cf-scrollbar-thin">
+        <div className="flex min-w-max snap-x snap-mandatory gap-3">
           {KANBAN_STATUSES.map((status) => (
             <Column
               key={status}
@@ -81,7 +82,9 @@ export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] 
           ))}
         </div>
       </div>
-      <DragOverlay>{activeVideo && <KanbanCard video={activeVideo} dragging onOpen={() => {}} />}</DragOverlay>
+      <DragOverlay dropAnimation={{ duration: 180, easing: "var(--cf-ease)" }}>
+        {activeVideo && <KanbanCard video={activeVideo} dragging onOpen={() => {}} />}
+      </DragOverlay>
     </DndContext>
   );
 }
@@ -89,27 +92,40 @@ export function KanbanBoard({ initialVideos }: { initialVideos: VideoCardData[] 
 function Column({ status, videos, onOpen }: { status: string; videos: VideoCardData[]; onOpen: (id: string) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const meta = STATUS_META[status];
+  const tint = `color-mix(in srgb, ${meta.color} ${isOver ? 10 : 5}%, var(--cf-surface))`;
 
   return (
-    <div
+    <section
       ref={setNodeRef}
+      aria-label={`${meta.label}: ${videos.length} vídeos`}
       className={cn(
-        "flex w-72 shrink-0 flex-col border border-cf-border bg-transparent transition-colors",
-        isOver ? "border-cf-primary/50" : "border-cf-border"
+        "flex w-[min(82vw,310px)] shrink-0 snap-start flex-col overflow-hidden rounded-[var(--cf-radius-card)] border bg-cf-surface transition-[border-color,background-color,transform] duration-[var(--cf-dur-hover)] sm:w-[292px]",
+        isOver ? "scale-[1.008] border-cf-primary/45" : "border-cf-border"
       )}
+      style={{ background: tint }}
     >
-      <div className="sticky top-0 flex items-baseline gap-2 border-b border-cf-border bg-cf-canvas px-3 py-3">
-        <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
-        <span className="cf-micro" style={{ color: meta.color }}>{meta.label}</span>
-        <span className="ml-auto text-sm font-semibold tabular-nums text-cf-text-dim">{videos.length}</span>
+      <div className="sticky top-0 z-10 border-b border-cf-border bg-cf-surface/92 px-3 py-3 backdrop-blur-[6px]">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full" style={{ background: meta.color }} />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: meta.color }}>{meta.label}</span>
+          <span className="ml-auto inline-flex min-w-6 items-center justify-center rounded-[6px] bg-black/[0.045] px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-cf-text-dim">{videos.length}</span>
+        </div>
+        <div className="mt-2 h-[2px] overflow-hidden rounded-full bg-black/[0.055]">
+          <div className="h-full rounded-full opacity-75" style={{ width: `${Math.min(100, Math.max(12, videos.length * 13))}%`, background: meta.color }} />
+        </div>
       </div>
-      <div className="flex-1 space-y-2 p-2 min-h-[120px] max-h-[calc(100vh-260px)] overflow-y-auto cf-scrollbar-thin">
+
+      <div className="min-h-[150px] flex-1 space-y-2 overflow-y-auto p-2 cf-scrollbar-thin sm:max-h-[calc(100vh-270px)]">
         {videos.map((v) => (
           <KanbanCard key={v.id} video={v} onOpen={onOpen} />
         ))}
-        {videos.length === 0 && <div className="text-center text-xs text-cf-text-dim/50 py-6">Vazio</div>}
+        {videos.length === 0 && (
+          <div className={cn("flex min-h-[112px] items-center justify-center rounded-[10px] border border-dashed px-4 text-center text-xs", isOver ? "border-cf-primary/35 bg-white/65 text-cf-primary" : "border-black/10 bg-white/30 text-cf-text-dim/65") }>
+            {isOver ? "Solte o vídeo aqui" : "Nenhum vídeo neste estágio"}
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -118,9 +134,8 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
   const overdue = isOverdue(video.finalDeadline, video.status, video.alterationStartedAt);
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
-  // Mesma regra do VideoCard (ver esse arquivo pro motivo completo):
-  // atrasado > bola com o cliente (roxo calmo) > cor do status.
   const accent = overdue ? "#DC2626" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusColor;
+  const projectAccent = atmosphericAccentForSeed(video.projectId ?? video.project?.name ?? video.id);
 
   return (
     <VideoContextMenu video={video} onOpen={() => onOpen(video.id)}>
@@ -129,66 +144,60 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
         {...listeners}
         {...attributes}
         onClick={() => !isDragging && onOpen(video.id)}
+        onKeyDown={(event) => {
+          if ((event.key === "Enter" || event.key === " ") && !isDragging) {
+            event.preventDefault();
+            onOpen(video.id);
+          }
+        }}
         style={{
           ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
           borderColor: overdue ? `${accent}55` : "var(--cf-border)",
         }}
         className={cn(
-          "relative cursor-grab overflow-hidden active:cursor-grabbing rounded-[var(--cf-radius-card)] border bg-cf-surface p-3 text-left transition-colors hover:border-black/25",
-          (isDragging || dragging) && "opacity-60 shadow-xl"
+          "relative cursor-grab overflow-hidden rounded-[var(--cf-radius-card)] border bg-cf-surface p-3 pt-[15px] text-left transition-[border-color,background-color,transform] duration-[var(--cf-dur-hover)] hover:border-black/25 hover:bg-white/78 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/28 active:cursor-grabbing",
+          (isDragging || dragging) && "scale-[1.015] opacity-75 shadow-[0_16px_42px_rgba(8,10,14,.18)]"
         )}
       >
-        <span className="absolute bottom-0 left-0 top-0 w-[2px]" style={{ backgroundColor: accent }} aria-hidden />
-        {/* Mesma hierarquia Cliente → Projeto → Vídeo do VideoCard (ver
-            esse arquivo pro motivo) — mantém os dois cards consistentes,
-            já que o mesmo vídeo aparece em ambos os lugares. */}
-        {video.project ? (
-          <div className="flex items-center gap-1.5 min-w-0">
-            {video.project.client?.color && (
-              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: video.project.client.color }} />
+        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ background: projectAccent }} aria-hidden />
+        <span className="absolute bottom-0 left-0 top-[3px] w-[2px]" style={{ backgroundColor: accent }} aria-hidden />
+
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            {video.project ? (
+              <div className="flex min-w-0 items-center gap-1.5">
+                {video.project.client?.color && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: video.project.client.color }} />}
+                <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim truncate">{video.project.client?.name ?? "—"}</span>
+              </div>
+            ) : (
+              <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-amber-700">AVULSO</span>
             )}
-            <span className="text-[9px] font-semibold uppercase tracking-wide text-cf-text-dim truncate">
-              {video.project.client?.name ?? "—"}
-            </span>
+            {video.project && <div className="mt-0.5 truncate text-[11px] text-cf-text-dim">{video.project.name}</div>}
           </div>
-        ) : (
-          <span className="inline-block shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-700 bg-amber-100">
-            Avulso
-          </span>
-        )}
-        {video.project && <div className="text-[11px] text-cf-text-dim truncate mt-0.5">{video.project.name}</div>}
-        <div className="flex items-baseline gap-1.5 mt-0.5">
-          <div className="text-sm font-medium truncate">{video.name}</div>
-          {/* Mesmo motivo do VideoCard (ver format.ts, fmtShortId): nomes
-              repetidos são comuns, isso desambigua sem precisar abrir o card. */}
-          <span className="shrink-0 font-mono text-[8.5px] text-cf-text-dim/60 tracking-wide" title={`ID completo: ${video.id}`}>
-            #{fmtShortId(video.id)}
-          </span>
+          <GripVertical className="mt-0.5 h-4 w-4 shrink-0 text-cf-text-dim/45" aria-hidden />
         </div>
-        <div className="flex items-center gap-1.5 mt-2">
+
+        <div className="mt-2 flex items-baseline gap-1.5">
+          <div className="line-clamp-2 text-sm font-medium leading-[1.25] text-cf-text">{video.name}</div>
+          <span className="shrink-0 font-mono text-[8.5px] tracking-wide text-cf-text-dim/55" title={`ID completo: ${video.id}`}>#{fmtShortId(video.id)}</span>
+        </div>
+
+        <div className="mt-3 flex items-center gap-1.5 border-t border-cf-border pt-2.5">
           {video.priority !== "NORMAL" && <span className="cf-micro text-cf-text-dim">{video.priority}</span>}
           {overdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
-          <span className={cn("ml-auto text-[11px]", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
-            {fmtDateWeekday(video.finalDeadline)}
-          </span>
+          <span className={cn("ml-auto text-[11px]", overdue ? "font-semibold text-red-600" : "text-cf-text-dim")}>{fmtDateWeekday(video.finalDeadline)}</span>
         </div>
-        {/* Espera do cliente (ver lib/domain.ts) — só aparece quando já tem
-            ação pendente (cobrar retorno / alteração pra começar), então
-            não polui a maioria dos cards. */}
-        {clientWait && <ClientWaitBadge wait={clientWait} className="mt-1.5 text-[9px] px-1.5 py-0" />}
-        {/* Sempre mostra a linha do responsável, mesmo sem editor: um card
-            sem ninguém atribuído é justamente o que precisa saltar aos
-            olhos (ver o mesmo trecho em video-card.tsx). */}
-        <div className="flex items-center justify-between gap-1.5 mt-2">
+
+        {clientWait && <ClientWaitBadge wait={clientWait} className="mt-2 text-[9px] px-1.5 py-0" />}
+
+        <div className="mt-2.5 flex items-center justify-between gap-1.5">
           {video.editor ? (
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex min-w-0 items-center gap-1.5">
               <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />
-              <span className="text-[11px] text-cf-text-dim truncate">{video.editor.name}</span>
+              <span className="truncate text-[11px] text-cf-text-dim">{video.editor.name}</span>
             </div>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700">
-              <UserX className="h-3 w-3" /> Sem responsável
-            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700"><UserX className="h-3 w-3" /> Sem responsável</span>
           )}
           <TeamStrip team={video.team} size={15} />
         </div>

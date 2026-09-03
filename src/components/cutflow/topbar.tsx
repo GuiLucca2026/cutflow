@@ -70,30 +70,32 @@ export function Topbar({
 
   return (
     <header className="sticky top-0 z-30 border-b border-cf-border bg-cf-canvas">
-      <div className="cf-page-shell flex min-h-[54px] items-center gap-3 py-2">
+      <div className="cf-page-shell flex min-h-[54px] items-center gap-2 py-2 sm:gap-3">
         <MobileNav progress={progress} />
         {title && <h1 className="font-display mr-2 hidden text-2xl tracking-wide sm:block">{title}</h1>}
 
         <button
+          type="button"
+          aria-label="Abrir pesquisa"
           onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-          className="flex max-w-[330px] flex-1 items-center gap-2 border-b border-cf-border/80 bg-transparent px-0 py-1.5 text-sm text-cf-text-dim transition-colors hover:border-cf-text/30 hover:text-cf-text"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-[7px] text-sm text-cf-text-dim transition-[background-color,color,border-color] hover:bg-cf-surface-2 hover:text-cf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25 sm:w-auto sm:max-w-[330px] sm:flex-1 sm:justify-start sm:rounded-none sm:border-b sm:border-cf-border/80 sm:bg-transparent sm:px-0 sm:py-1.5 sm:hover:border-cf-text/30 sm:hover:bg-transparent"
         >
           <Search className="h-4 w-4" />
-          <span className="flex-1 text-left">Pesquisar…</span>
-          <kbd className="px-1 py-0.5 text-[10px] text-cf-text-dim">⌘K</kbd>
+          <span className="hidden flex-1 text-left sm:block">Pesquisar…</span>
+          <kbd className="hidden px-1 py-0.5 text-[10px] text-cf-text-dim lg:inline">⌘K</kbd>
         </button>
 
         <div className="flex-1" />
 
-        <Button size="sm" className="gap-1.5 rounded-[7px] shadow-none" onClick={() => openCreate("video")}>
-          <Plus className="h-4 w-4" /> Criar
+        <Button size="sm" className="h-9 w-9 gap-1.5 rounded-[7px] px-0 shadow-none sm:w-auto sm:px-3" onClick={() => openCreate("video")} aria-label="Criar novo item">
+          <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Criar</span>
         </Button>
 
         <NotificationBell alerts={alerts} notifications={notifications} />
 
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-lg pl-1 pr-2 py-1 hover:bg-cf-surface-2 transition-colors">
+          <button className="flex min-h-9 items-center gap-2 rounded-[8px] pl-1 pr-1.5 py-1 transition-colors hover:bg-cf-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25 sm:pr-2">
             <Avatar name={currentUser.name} color={currentUser.avatarColor} src={currentUser.avatarUrl} size={30} />
             <div className="hidden md:flex flex-col items-start leading-tight">
               <span className="text-sm font-medium">{currentUser.name.split(" ")[0]}</span>

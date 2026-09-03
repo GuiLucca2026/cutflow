@@ -112,7 +112,7 @@ export default async function HojePage() {
         <FlowMessage work={flowWork} className="mt-4 max-w-2xl" />
       </header>
 
-      <div className="grid grid-cols-1 gap-3 border-b border-cf-border pb-5 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 border-b border-cf-border pb-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
         <StatCard
           label="Atrasados"
           value={overdueMine.length}
@@ -172,7 +172,7 @@ export default async function HojePage() {
             </div>
             <Link href="/projetos" className="shrink-0 text-xs font-medium text-cf-primary hover:underline">Ver todos →</Link>
           </div>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {projectPreviews.map((project: any, index: number) => (
               <ProjectStatusPreview key={project.id} project={project} index={index} />
             ))}

@@ -473,3 +473,59 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cf-skeleton::after { animation: none !important; display: none; }
 }
+
+/* ============================================================
+   Product UX final pass — responsive + interaction discipline.
+   The visual language stays expressive in project context, while controls
+   use predictable hit targets, focus states and mobile spacing.
+   ============================================================ */
+
+@media (max-width: 640px) {
+  :root {
+    --cf-page-gutter: 14px;
+  }
+
+  .cf-page-shell {
+    padding-inline: var(--cf-page-gutter);
+  }
+
+  .cf-masthead {
+    gap: 18px;
+  }
+
+  .cf-masthead__title {
+    font-size: clamp(38px, 12vw, 50px);
+    line-height: 0.98;
+  }
+
+  .cf-masthead__aside {
+    align-items: center;
+    gap: 14px;
+  }
+
+  .cf-masthead__actions {
+    max-width: 100%;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .cf-masthead__actions::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (hover: none) {
+  .cf-card-enter:hover,
+  .cf-project-poster:hover {
+    transform: none;
+  }
+}
+
+/* Native focus fallback for interactive elements that do not use one of
+   the UI primitives. Components may override this with their own ring. */
+:where(a, button, [role="button"]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cf-primary) 38%, transparent);
+  outline-offset: 2px;
+}

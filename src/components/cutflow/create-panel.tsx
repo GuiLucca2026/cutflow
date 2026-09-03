@@ -13,7 +13,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { createClient, createProject, createProjectQuick, createVideo, createVideosBulk, createCapture } from "@/app/actions";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Layers } from "lucide-react";
+import { Building2, CalendarPlus, Film, FolderPlus, Layers } from "lucide-react";
 import { PROJECT_TYPES, VIDEO_FORMATS } from "@/db/schema";
 import { PRIORITY_META } from "@/lib/domain";
 import { cn } from "@/lib/utils";
@@ -113,7 +113,7 @@ export function CreatePanel({
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => !v && requestClose()}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Criar</DialogTitle>
             <DialogDescription>
@@ -123,12 +123,23 @@ export function CreatePanel({
           </DialogHeader>
 
           <Tabs value={tab} onValueChange={(v) => onTabChange(v as CreateTab)}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="video">Vídeo</TabsTrigger>
-              <TabsTrigger value="captacao">Captação</TabsTrigger>
-              <TabsTrigger value="projeto">Projeto</TabsTrigger>
-              <TabsTrigger value="cliente">Cliente</TabsTrigger>
-            </TabsList>
+            <div className="mb-4">
+              <div className="cf-micro mb-2 text-cf-text-dim">O QUE VOCÊ QUER CRIAR?</div>
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-cf-surface-2/60 p-1.5 sm:grid-cols-4">
+                <TabsTrigger value="video" className="min-h-[48px] gap-2 px-3 text-xs sm:text-sm">
+                  <Film className="h-4 w-4" /> Vídeo
+                </TabsTrigger>
+                <TabsTrigger value="captacao" className="min-h-[48px] gap-2 px-3 text-xs sm:text-sm">
+                  <CalendarPlus className="h-4 w-4" /> Captação
+                </TabsTrigger>
+                <TabsTrigger value="projeto" className="min-h-[48px] gap-2 px-3 text-xs sm:text-sm">
+                  <FolderPlus className="h-4 w-4" /> Projeto
+                </TabsTrigger>
+                <TabsTrigger value="cliente" className="min-h-[48px] gap-2 px-3 text-xs sm:text-sm">
+                  <Building2 className="h-4 w-4" /> Cliente
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="cliente">
               <ClientForm
@@ -231,7 +242,7 @@ function ClientForm({ formRef, onDirty, onCreated }: FormBase & { onCreated: (c:
         <Label htmlFor="c-name">Nome / Razão social</Label>
         <Input id="c-name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder="Ex: Vortex Sportwear" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="c-tradeName">Nome fantasia</Label>
           <Input id="c-tradeName" value={tradeName} onChange={(e) => setTradeName(e.target.value)} placeholder="Vortex" />
@@ -241,7 +252,7 @@ function ClientForm({ formRef, onDirty, onCreated }: FormBase & { onCreated: (c:
           <Input id="c-contactName" value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Renata Souza" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="c-email">E-mail</Label>
           <Input id="c-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="contato@cliente.com" />
@@ -381,7 +392,7 @@ function ProjectForm({
         <Label htmlFor="p-name">Nome do projeto</Label>
         <Input id="p-name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus placeholder="Ex: Campanha Verão 2026" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Cliente</Label>
           <ClientPicker ref={clientRef} clients={clients} value={clientId} onChange={setClientId} onCreated={onAddClient} onDraft={handleClientDraft} />
@@ -656,7 +667,7 @@ function VideoForm({
           </p>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label>Formato</Label>
           <Select value={format} onValueChange={setFormat}>
@@ -682,7 +693,7 @@ function VideoForm({
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="v-finalDeadline">Prazo de entrega</Label>
           <DatePicker id="v-finalDeadline" value={finalDeadline} onChange={setFinalDeadline} placeholder="Escolher prazo" />
@@ -814,7 +825,7 @@ function CaptureForm({
           onDraft={handleProjectDraft}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="cap-title">Título</Label>
           <Input id="cap-title" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus placeholder="Ex: Captação — Evento de lançamento" />
@@ -833,7 +844,7 @@ function CaptureForm({
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label htmlFor="cap-date">Data</Label>
           <DatePicker id="cap-date" value={date} onChange={setDate} placeholder="Escolher data" />

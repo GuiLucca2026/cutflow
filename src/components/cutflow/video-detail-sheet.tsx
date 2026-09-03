@@ -115,9 +115,9 @@ export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; 
   return (
     <DialogPrimitive.Root open={!!openVideoId} onOpenChange={(v) => !v && close()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#090A0D]/62 backdrop-blur-[3px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
-          className="fixed left-1/2 top-1/2 z-50 flex h-[88vh] w-[95vw] max-w-5xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-cf-border bg-cf-surface shadow-2xl duration-150 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
+          className="fixed inset-0 z-50 flex h-dvh w-full flex-col overflow-hidden bg-cf-surface duration-[var(--cf-dur-panel)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 focus:outline-none sm:left-1/2 sm:top-1/2 sm:inset-auto sm:h-[90vh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[18px] sm:border sm:border-cf-border sm:shadow-[0_28px_90px_rgba(8,10,14,.24)] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95"
         >
           {loading && !data ? (
             <div className="p-6 space-y-3">
@@ -140,7 +140,7 @@ export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; 
               Vídeo não encontrado.
             </div>
           )}
-          <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-md p-1.5 text-cf-text-dim opacity-70 transition-opacity hover:opacity-100 hover:bg-cf-surface-2 focus:outline-none">
+          <DialogPrimitive.Close className="absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-cf-text-dim transition-[background-color,color] hover:bg-cf-surface-2 hover:text-cf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/30 sm:right-4 sm:top-4">
             <X className="h-4 w-4" />
             <span className="sr-only">Fechar</span>
           </DialogPrimitive.Close>
@@ -189,12 +189,12 @@ function VideoDetailBody({
     <>
       {/* Cabeçalho fixo — breadcrumb, título, badges. Não rola junto com o
           conteúdo (igual o topo do card do Trello fica sempre visível). */}
-      <div className="shrink-0 border-b border-cf-border p-5 pr-12">
+      <div className="shrink-0 border-b border-cf-border px-4 pb-4 pt-5 pr-14 sm:p-5 sm:pr-14">
         <div className="flex items-center gap-2 text-xs text-cf-text-dim">
           <FolderKanban className="h-3.5 w-3.5" />
           {video.project ? (
             <>
-              <Link href={`/projetos/${video.projectId}`} className="hover:text-cf-lime transition-colors">
+              <Link href={`/projetos/${video.projectId}`} className="transition-colors hover:text-cf-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25">
                 {video.project.name}
               </Link>
               <span>·</span>
@@ -205,11 +205,11 @@ function VideoDetailBody({
           )}
         </div>
         <div className="group flex items-center gap-2 mt-1">
-          <DialogPrimitive.Title className="font-display text-2xl tracking-wide text-cf-text">{video.name}</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="max-w-[90%] text-[22px] font-semibold leading-tight tracking-[-0.035em] text-cf-text sm:text-2xl">{video.name}</DialogPrimitive.Title>
           <button
             type="button"
             onClick={() => setRenaming(true)}
-            className="shrink-0 text-cf-text-dim opacity-0 transition-opacity hover:text-cf-lime group-hover:opacity-100"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-cf-text-dim opacity-100 transition-colors hover:bg-cf-surface-2 hover:text-cf-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
             title="Renomear vídeo"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -245,9 +245,9 @@ function VideoDetailBody({
           barra lateral à direita. Em telas estreitas empilha em coluna
           única, com a lateral primeiro (é o resumo rápido do vídeo) e as
           abas de trabalho depois. */}
-      <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_300px]">
-        <div className="order-2 space-y-5 overflow-y-auto cf-scrollbar-thin p-5 lg:order-1 lg:border-r lg:border-cf-border">
-          <div className="flex items-center gap-3">
+      <div className="grid flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_320px] lg:overflow-hidden">
+        <div className="order-1 space-y-5 p-4 sm:p-5 lg:overflow-y-auto lg:border-r lg:border-cf-border">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:gap-3">
             <span className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim shrink-0">Status</span>
             <Select
               value={video.status}
@@ -260,7 +260,7 @@ function VideoDetailBody({
                 })
               }
             >
-              <SelectTrigger className="w-auto min-w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full min-w-0 sm:w-auto sm:min-w-[200px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(STATUS_META).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v.label}</SelectItem>
@@ -278,14 +278,16 @@ function VideoDetailBody({
           </div>
 
           <Tabs defaultValue="checklist">
-            <TabsList>
+            <div className="-mx-1 overflow-x-auto px-1 pb-1 cf-scrollbar-thin">
+              <TabsList className="w-max min-w-full">
               <TabsTrigger value="checklist">Checklist ({checklistDone}/{checklist.length})</TabsTrigger>
               <TabsTrigger value="tarefas">Tarefas ({video.tasks?.filter((t: any) => !t.done).length ?? 0})</TabsTrigger>
               <TabsTrigger value="revisoes">Alterações ({video.revisions.length})</TabsTrigger>
               <TabsTrigger value="versoes">Versões ({video.versions.length})</TabsTrigger>
               <TabsTrigger value="comentarios">Comentários ({video.comments.length})</TabsTrigger>
               <TabsTrigger value="atividade">Atividade</TabsTrigger>
-            </TabsList>
+              </TabsList>
+            </div>
 
             <TabsContent value="checklist" className="space-y-1">
               {checklist.map((item: any) => (
@@ -450,7 +452,7 @@ function VideoDetailBody({
             cards brancos de cada seção dentro dela — sem esse contraste de
             fundo, os cards e a lateral ficavam no mesmo tom e a separação
             sumia. */}
-        <div className="order-1 space-y-5 overflow-y-auto cf-scrollbar-thin bg-cf-surface-2 p-5 lg:order-2">
+        <div className="order-2 space-y-4 border-t border-cf-border bg-cf-surface-2 p-4 sm:p-5 lg:overflow-y-auto lg:border-t-0">
           <SidebarSection title="Projeto" icon={FolderKanban} color="bg-indigo-100 text-indigo-600">
             <Select
               value={video.projectId ?? "__none__"}
@@ -829,7 +831,7 @@ function LinkChip({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1.5 rounded-md border border-cf-border bg-cf-surface-2 px-2.5 py-1 text-xs text-cf-text-dim hover:text-cf-lime hover:border-cf-lime/40 transition-colors"
+      className="inline-flex min-h-8 items-center gap-1.5 rounded-[7px] border border-cf-border bg-cf-surface px-2.5 py-1 text-xs text-cf-text-dim transition-colors hover:border-cf-primary/30 hover:bg-white hover:text-cf-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/20"
     >
       {label} <ExternalLink className="h-3 w-3" />
     </a>
@@ -837,7 +839,7 @@ function LinkChip({ href, label }: { href: string; label: string }) {
 }
 
 function EmptyHint({ text }: { text: string }) {
-  return <div className="text-sm text-cf-text-dim text-center py-6 border border-dashed border-cf-border rounded-lg">{text}</div>;
+  return <div className="rounded-[var(--cf-radius-card)] border border-dashed border-cf-border bg-white/28 py-6 text-center text-sm text-cf-text-dim">{text}</div>;
 }
 
 function NewRevisionForm({ videoId, users, defaultEditorId, onDone }: { videoId: string; users: User[]; defaultEditorId?: string; onDone: () => void }) {
@@ -850,7 +852,7 @@ function NewRevisionForm({ videoId, users, defaultEditorId, onDone }: { videoId:
     <div className="rounded-lg border border-dashed border-cf-border p-3 space-y-2">
       <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim">Registrar alteração</div>
       <Textarea placeholder='Ex: "Trocar a música e remover a cena aos 00:34."' value={desc} onChange={(e) => setDesc(e.target.value)} />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Select value={type} onValueChange={(v: any) => setType(v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>

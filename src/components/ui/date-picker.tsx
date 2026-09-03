@@ -76,8 +76,8 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full items-center gap-2 rounded-lg border border-cf-border bg-cf-surface px-3 text-sm text-left transition-colors",
-            "hover:border-cf-lime/40 focus:outline-none focus:ring-2 focus:ring-cf-lime/40 disabled:opacity-50",
+            "flex h-9 w-full items-center gap-2 rounded-[var(--cf-radius-input)] border border-cf-border bg-cf-surface px-3 text-left text-sm transition-[border-color,background-color,box-shadow]",
+            "hover:border-cf-border-strong focus:border-cf-primary/45 focus:outline-none focus:ring-2 focus:ring-cf-primary/16 disabled:opacity-50",
             !selected && "text-cf-text-dim",
             className
           )}
@@ -99,7 +99,7 @@ export function DatePicker({
               key={s.label}
               type="button"
               onClick={() => pickIn(s.days)}
-              className="rounded-full border border-cf-border px-2.5 py-1 text-[11px] font-medium text-cf-text-dim hover:border-cf-lime/50 hover:text-cf-text transition-colors"
+              className="rounded-[7px] border border-cf-border px-2.5 py-1.5 text-[11px] font-medium text-cf-text-dim transition-colors hover:border-cf-primary/30 hover:bg-cf-primary/5 hover:text-cf-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/20"
             >
               {s.label}
             </button>
@@ -134,10 +134,10 @@ export function DatePicker({
             day: "w-9 h-9 p-0",
             day_button:
               "w-9 h-9 rounded-lg text-sm font-medium hover:bg-cf-surface transition-colors disabled:opacity-30 disabled:hover:bg-transparent",
-            today: "[&>button]:text-cf-lime [&>button]:font-bold",
+            today: "[&>button]:text-cf-primary [&>button]:font-bold",
             // Texto branco (não cf-black) sobre o roxo da marca — escuro
             // sobre roxo saturado praticamente some.
-            selected: "[&>button]:bg-cf-lime [&>button]:text-white [&>button]:font-bold [&>button]:hover:bg-cf-lime",
+            selected: "[&>button]:bg-cf-primary [&>button]:text-white [&>button]:font-bold [&>button]:hover:bg-cf-primary",
             outside: "[&>button]:text-cf-text-dim/35",
             disabled: "[&>button]:text-cf-text-dim/25 [&>button]:line-through",
           }}

@@ -107,8 +107,10 @@ export default async function CalendarioPage({
                 key={v.key}
                 href={hrefFor(v.key, refDate)}
                 className={cn(
-                  "border-b-2 py-1.5 text-xs font-medium transition-colors",
-                  view === v.key ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
+                  "inline-flex min-h-9 items-center rounded-[7px] border px-3 py-1.5 text-xs font-medium transition-[background-color,color,border-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25",
+                  view === v.key
+                    ? "border-cf-border bg-cf-surface text-cf-text"
+                    : "border-transparent text-cf-text-dim hover:bg-cf-surface-2/70 hover:text-cf-text"
                 )}
               >
                 {v.label}
@@ -120,20 +122,24 @@ export default async function CalendarioPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Link href={hrefFor(view, prevDate)} className="border border-cf-border p-1.5 hover:bg-cf-surface-2">
+          <Link href={hrefFor(view, prevDate)} className="inline-flex h-9 w-9 items-center justify-center rounded-[7px] border border-cf-border bg-cf-surface transition-colors hover:bg-cf-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25">
             <ChevronLeft className="h-4 w-4" />
           </Link>
           <h2 className="font-display text-xl tracking-wide capitalize min-w-[9rem]">{title}</h2>
-          <Link href={hrefFor(view, nextDate)} className="border border-cf-border p-1.5 hover:bg-cf-surface-2">
+          <Link href={hrefFor(view, nextDate)} className="inline-flex h-9 w-9 items-center justify-center rounded-[7px] border border-cf-border bg-cf-surface transition-colors hover:bg-cf-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25">
             <ChevronRight className="h-4 w-4" />
           </Link>
-          <Link href={hrefFor(view, new Date())} className="border-b border-cf-primary px-1 py-1.5 text-xs text-cf-primary hover:text-cf-primary-hover">
+          <Link href={hrefFor(view, new Date())} className="inline-flex min-h-9 items-center rounded-[7px] px-2 text-xs font-medium text-cf-primary transition-colors hover:bg-cf-primary/7 hover:text-cf-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/25">
             Hoje
           </Link>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-cf-text-dim">
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-cf-text-dim">
           {(Object.keys(CAL_KIND_META) as (keyof typeof CAL_KIND_META)[]).map((k) => (
-            <span key={k} className="flex items-center gap-1.5">
+            <span
+              key={k}
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.045] px-2 py-1"
+              style={{ backgroundColor: CAL_KIND_META[k].soft }}
+            >
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: CAL_KIND_META[k].color }} />
               {CAL_KIND_META[k].label}
             </span>
@@ -155,8 +161,9 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
 
   return (
-    <div className="border border-cf-border overflow-hidden">
-      <div className="grid grid-cols-7 bg-cf-surface-2/50 border-b border-cf-border">
+    <div className="overflow-x-auto rounded-[var(--cf-radius-card)] border border-cf-border cf-scrollbar-thin">
+      <div className="min-w-[760px] overflow-hidden bg-cf-surface">
+      <div className="grid grid-cols-7 border-b border-cf-border bg-cf-surface-2/55">
         {WEEKDAY_LABELS.map((d) => (
           <div key={d} className="px-2 py-1.5 text-[11px] font-semibold text-cf-text-dim text-center">
             {d}
@@ -176,14 +183,14 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
                 className={cn(
                   "min-h-[92px] border-r border-cf-border last:border-r-0 p-1.5 space-y-1",
                   !isSameMonth(day, refDate) && "opacity-40",
-                  isTodayFn(day) && "bg-cf-lime/5"
+                  isTodayFn(day) && "bg-cf-primary/[0.055]"
                 )}
               >
                 <Link
                   href={`/calendario?view=day&date=${key}`}
                   className={cn(
                     "inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px]",
-                    isTodayFn(day) ? "bg-cf-lime text-cf-on-accent font-semibold" : "text-cf-text-dim hover:text-cf-text"
+                    isTodayFn(day) ? "bg-cf-primary text-cf-on-accent font-semibold" : "text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text"
                   )}
                 >
                   {format(day, "d")}
@@ -203,6 +210,7 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
           })}
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -210,22 +218,47 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
 function WeekView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEventData[]> }) {
   const days = weekDays(refDate);
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
       {days.map((day) => {
         const key = dayKey(day);
         const dayEvents = byDay.get(key) ?? [];
+        const today = isTodayFn(day);
+        const firstMeta = dayEvents[0] ? CAL_KIND_META[dayEvents[0].kind] : null;
         return (
-          <div key={key} className={cn("rounded-xl border bg-cf-surface p-3 space-y-2", isTodayFn(day) ? "border-cf-lime/50" : "border-cf-border")}>
-            <div className="text-xs font-semibold capitalize">{format(day, "EEEE", { locale: ptBR })}</div>
-            <div className="text-[11px] text-cf-text-dim">{format(day, "dd/MM")}</div>
-            <div className="space-y-1.5 pt-1">
+          <section
+            key={key}
+            className={cn(
+              "relative min-h-[210px] overflow-hidden rounded-[var(--cf-radius-card)] border p-3 transition-[border-color,transform] duration-[var(--cf-dur-hover)] hover:-translate-y-px",
+              today ? "border-cf-primary/25" : "border-cf-border"
+            )}
+            style={{
+              background: today
+                ? "linear-gradient(180deg, rgba(38,73,168,.08), rgba(250,249,246,.94))"
+                : firstMeta
+                  ? `linear-gradient(180deg, ${firstMeta.soft}, rgba(250,249,246,.94))`
+                  : "var(--cf-surface)",
+            }}
+          >
+            <div
+              className="absolute inset-x-0 top-0 h-[3px]"
+              style={{ background: today ? "var(--cf-primary)" : firstMeta?.color ?? "var(--cf-border-strong)" }}
+              aria-hidden
+            />
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className={cn("cf-micro capitalize", today ? "text-cf-primary" : "text-cf-text-dim")}>{format(day, "EEEE", { locale: ptBR })}</div>
+                <div className="mt-1 text-[28px] font-semibold leading-none tabular-nums tracking-[-0.04em]">{format(day, "dd")}</div>
+              </div>
+              <span className={cn("inline-flex min-w-6 items-center justify-center rounded-[6px] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums", dayEvents.length ? "bg-black/[0.05] text-cf-text" : "bg-black/[0.025] text-cf-text-dim")}>{dayEvents.length}</span>
+            </div>
+            <div className="mt-4 space-y-2">
               {dayEvents.length === 0 ? (
-                <div className="text-[11px] text-cf-text-dim/50">Nada</div>
+                <div className="rounded-[9px] border border-dashed border-black/10 bg-white/35 px-3 py-4 text-[11px] text-cf-text-dim/65">Sem prazos neste dia.</div>
               ) : (
                 dayEvents.map((e) => <CalendarEventRow key={e.id} event={e} />)
               )}
             </div>
-          </div>
+          </section>
         );
       })}
     </div>
@@ -235,7 +268,7 @@ function WeekView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEve
 function DayView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEventData[]> }) {
   const dayEvents = byDay.get(dayKey(refDate)) ?? [];
   return (
-    <div className="space-y-2 max-w-xl">
+    <div className="max-w-3xl space-y-2">
       {dayEvents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-cf-border p-8 text-center text-sm text-cf-text-dim">Nenhum prazo nesse dia.</div>
       ) : (
@@ -251,7 +284,7 @@ function AgendaView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalE
     .filter((d) => d.events.length > 0);
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="max-w-4xl space-y-6">
       {daysWithEvents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-cf-border p-8 text-center text-sm text-cf-text-dim">
           Nenhum prazo nos próximos 30 dias a partir daqui.
@@ -260,7 +293,7 @@ function AgendaView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalE
         daysWithEvents.map(({ date, events }) => (
           <div key={dayKey(date)}>
             <div className="flex items-baseline gap-2 mb-2">
-              <h3 className={cn("font-display text-xl tracking-wide capitalize", isSameDay(date, new Date()) && "text-cf-lime")}>
+              <h3 className={cn("text-xl font-semibold tracking-[-0.025em] capitalize", isSameDay(date, new Date()) && "text-cf-primary")}>
                 {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
               </h3>
               <span className="text-cf-text-dim text-xs">{events.length}</span>

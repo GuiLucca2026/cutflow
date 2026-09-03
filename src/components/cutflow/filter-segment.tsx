@@ -35,7 +35,7 @@ export function FilterSegment<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(item.value)}
             className={cn(
-              "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-[7px] px-3 text-[12px] font-medium transition-[background-color,color,border-color] duration-[var(--cf-dur-hover)]",
+              "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-[7px] px-3 text-[12px] font-medium transition-[background-color,color,border-color] duration-[var(--cf-dur-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/22",
               active
                 ? "bg-cf-surface-2 text-cf-text"
                 : "text-cf-text-dim hover:bg-black/[0.025] hover:text-cf-text"
