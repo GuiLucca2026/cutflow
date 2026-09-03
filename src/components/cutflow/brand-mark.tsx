@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 import { BRAND_PREFIX, BRAND_ICON_TEXT } from "@/lib/brand";
 
-// Marca "G2 FLOW" — ícone em gradiente roxo→índigo (conceito enviado pelo
-// usuário) + wordmark em dois tons (G2 na cor da marca, FLOW em texto
-// normal). Um componente só, reaproveitado em toda tela onde a marca
-// aparece (Sidebar, menu mobile, /sso, /login, /convite), pra nunca ficar
-// dessincronizada entre os lugares.
+// Marca "G2 FLOW" — ícone em gradiente na cor de ação do rebrand (era
+// roxo→índigo na rodada anterior; ver REBRAND-AUDIT.md) + wordmark em
+// dois tons (G2 na cor da marca, FLOW em texto normal). Um componente só,
+// reaproveitado em toda tela onde a marca aparece (Sidebar, menu mobile,
+// /sso, /login, /convite), pra nunca ficar dessincronizada entre os
+// lugares.
 //
 // Prefixo/ícone vêm de lib/brand.ts (variável de ambiente) — outra
 // instância deste mesmo código (outra produtora, outro deploy) troca só a
@@ -18,7 +19,7 @@ export function BrandIcon({ size = 32, className }: { size?: number; className?:
         width: size,
         height: size,
         fontSize: size * 0.44,
-        background: "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 55%, #4338CA 100%)",
+        background: "linear-gradient(135deg, var(--cf-sky) 0%, var(--cf-blue) 55%, var(--cf-deep-blue) 100%)",
       }}
     >
       {BRAND_ICON_TEXT}
@@ -45,7 +46,7 @@ export function BrandWordmark({
     <div className={cn("flex items-center gap-2.5", className)}>
       <BrandIcon size={iconSize} />
       <div className={cn("font-display leading-none tracking-tight", textClass)}>
-        <span style={{ color: dark ? "#A78BFA" : "#7C3AED" }}>{BRAND_PREFIX}</span>{" "}
+        <span style={{ color: dark ? "var(--cf-sky)" : "var(--cf-lime)" }}>{BRAND_PREFIX}</span>{" "}
         <span className={dark ? "text-white" : "text-cf-text"}>FLOW</span>
       </div>
     </div>
