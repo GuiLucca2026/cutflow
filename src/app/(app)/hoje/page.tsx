@@ -11,7 +11,7 @@ import { computeAlerts } from "@/lib/alerts";
 import { isOverdue, isWaitingClient, isDone, isEditing } from "@/lib/domain";
 import { fmtDateFull, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
-import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock } from "lucide-react";
+import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock, type LucideIcon } from "lucide-react";
 import { Hint } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -112,47 +112,51 @@ export default async function HojePage() {
         <FlowMessage work={flowWork} className="mt-4 max-w-2xl" />
       </header>
 
-      <div className="grid grid-cols-1 gap-3 border-b border-cf-border pb-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-        <StatCard
+      {/* Assimetria de propósito (não é mais "5 caixas iguais"): Atrasados/
+          Vence hoje só ganham peso visual de card quando há algo urgente de
+          verdade (value > 0) — quando não há, colapsam pro mesmo formato
+          inline dos outros três. Num dia calmo a faixa inteira vira uma
+          linha de números, não uma parede de cards repetidos. */}
+      <div className="flex flex-wrap items-stretch gap-x-6 gap-y-4 border-b border-cf-border pb-5">
+        <HeroStat
           label="Atrasados"
           value={overdueMine.length}
           icon={AlertTriangle}
-          tone={overdueMine.length > 0 ? "danger" : "default"}
-          variant="danger"
+          urgent={overdueMine.length > 0}
+          accent="#D73A2F"
           hint="Vídeos seus com o prazo final já vencido."
         />
-        <StatCard
+        <HeroStat
           label="Vence hoje"
           value={todayMine.length}
           icon={Send}
-          tone={todayMine.length > 0 ? "good" : "default"}
-          variant="today"
+          urgent={todayMine.length > 0}
+          accent="var(--cf-primary)"
           hint="Prazo final ou revisão interna caem hoje."
         />
-        <StatCard
-          label="Editando"
-          value={editingMine.length}
-          icon={Scissors}
-          tone={editingMine.length > 0 ? "good" : "default"}
-          variant="editing"
-          hint="Vídeos seus em edição ou alteração agora."
-        />
-        <StatCard
-          label="Aguardando cliente"
-          value={waitingMine.length}
-          icon={Clock}
-          tone="warn"
-          variant="waiting"
-          hint="Já mandou, esperando feedback ou aprovação do cliente."
-        />
-        <StatCard
-          label="Horas hoje"
-          value={fmtHours(planDays[0]?.allocatedHours ?? 0)}
-          icon={CalendarClock}
-          tone="default"
-          variant="hours"
-          hint="Sugestão do planejamento automático pra hoje, pela sua capacidade diária."
-        />
+        <div className="flex flex-1 flex-wrap items-center gap-x-7 gap-y-3 self-center">
+          <CompactStat
+            label="Editando"
+            value={editingMine.length}
+            icon={Scissors}
+            tone={editingMine.length > 0 ? "text-cf-success" : "text-cf-text-dim"}
+            hint="Vídeos seus em edição ou alteração agora."
+          />
+          <CompactStat
+            label="Aguardando cliente"
+            value={waitingMine.length}
+            icon={Clock}
+            tone="text-amber-700"
+            hint="Já mandou, esperando feedback ou aprovação do cliente."
+          />
+          <CompactStat
+            label="Horas hoje"
+            value={fmtHours(planDays[0]?.allocatedHours ?? 0)}
+            icon={CalendarClock}
+            tone="text-cf-text-dim"
+            hint="Sugestão do planejamento automático pra hoje, pela sua capacidade diária."
+          />
+        </div>
       </div>
 
       <WeekPlanBoard
@@ -269,90 +273,71 @@ export default async function HojePage() {
   );
 }
 
-function StatCard({
+function CompactStat({
   label,
   value,
   icon: Icon,
-  tone = "default",
-  variant = "default",
-  href,
+  tone = "text-cf-text-dim",
   hint,
 }: {
   label: string;
   value: string | number;
-  icon: any;
-  tone?: "default" | "danger" | "warn" | "good";
-  variant?: "default" | "danger" | "today" | "editing" | "waiting" | "hours";
-  href?: string;
+  icon: LucideIcon;
+  tone?: string;
   hint?: string;
 }) {
-  const toneMap = {
-    default: "text-cf-text",
-    danger: "text-red-600",
-    warn: "text-amber-700",
-    good: "text-cf-success",
-  } as const;
-
-  const variantMap = {
-    default: {
-      accent: "bg-cf-border-strong",
-      iconTint: "text-cf-text-dim",
-      valueTint: "text-cf-text",
-    },
-    danger: {
-      accent: "bg-red-500",
-      iconTint: "text-red-600",
-      valueTint: "text-red-600",
-    },
-    today: {
-      accent: "bg-cf-primary",
-      iconTint: "text-cf-primary",
-      valueTint: "text-cf-primary",
-    },
-    editing: {
-      accent: "bg-cf-success",
-      iconTint: "text-cf-success",
-      valueTint: "text-cf-success",
-    },
-    waiting: {
-      accent: "bg-cf-orange",
-      iconTint: "text-amber-700",
-      valueTint: "text-amber-700",
-    },
-    hours: {
-      accent: "bg-cf-deep-blue",
-      iconTint: "text-cf-deep-blue",
-      valueTint: "text-cf-deep-blue",
-    },
-  } as const;
-
-  const style = variantMap[variant];
-  const valueColor = variant !== "default" ? style.valueTint : toneMap[tone];
-
-  const body = (
+  return (
     <Hint text={hint}>
-      <div
-        className={cn(
-          "group relative min-h-[118px] overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface p-4 transition-[transform,border-color,background-color] duration-[var(--cf-dur-hover)]",
-          href && "hover:-translate-y-0.5 hover:border-black/15 hover:bg-white"
-        )}
-      >
-        <div className={cn("absolute inset-x-0 top-0 h-[3px]", style.accent)} />
-
-        <div className="relative flex h-full flex-col">
-          <div className="flex items-start justify-between gap-3">
-            <Icon className={cn("mt-0.5 h-4 w-4", style.iconTint)} />
-            <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em] md:text-[48px]", valueColor)}>{value}</div>
-          </div>
-
-          <div className="mt-auto">
-            <div className="mt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
-          </div>
-        </div>
+      <div className="flex items-baseline gap-2">
+        <Icon className={cn("h-3.5 w-3.5 shrink-0", tone)} />
+        <span className={cn("text-[22px] font-semibold tabular-nums leading-none tracking-[-0.02em]", tone)}>{value}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</span>
       </div>
     </Hint>
   );
-  return href ? <Link href={href}>{body}</Link> : body;
+}
+
+// Card "hero" só existe quando o número justifica peso visual (urgent=true).
+// Quando não justifica, vira o mesmo CompactStat inline dos outros — a
+// faixa toda respira em vez de forçar 2 caixas grandes vazias todo dia.
+function HeroStat({
+  label,
+  value,
+  icon: Icon,
+  urgent,
+  accent,
+  hint,
+}: {
+  label: string;
+  value: string | number;
+  icon: LucideIcon;
+  urgent: boolean;
+  accent: string;
+  hint?: string;
+}) {
+  if (!urgent) {
+    return <CompactStat label={label} value={value} icon={Icon} hint={hint} />;
+  }
+  return (
+    <Hint text={hint}>
+      <div
+        className="relative min-w-[168px] flex-1 overflow-hidden rounded-[var(--cf-radius-card)] border p-4 sm:flex-none sm:w-[212px]"
+        style={{
+          borderColor: `color-mix(in srgb, ${accent} 32%, var(--cf-border))`,
+          background: `color-mix(in srgb, ${accent} 7%, var(--cf-surface))`,
+        }}
+      >
+        <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accent }} />
+        <div className="flex items-center justify-between gap-3">
+          <Icon className="h-4 w-4" style={{ color: accent }} />
+          <div className="text-[44px] font-semibold tabular-nums leading-none tracking-[-0.045em]" style={{ color: accent }}>
+            {value}
+          </div>
+        </div>
+        <div className="mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
+      </div>
+    </Hint>
+  );
 }
 
 function Section({ title, subtitle, count, tone, children }: { title: string; subtitle?: string; count?: number; tone?: "danger"; children: React.ReactNode }) {

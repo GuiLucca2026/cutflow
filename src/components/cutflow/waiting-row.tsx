@@ -43,7 +43,7 @@ export function WaitingRow({ video }: { video: WaitingRowVideo }) {
         type="button"
         onClick={() => open(video.id)}
         className={cn(
-          "group flex w-full items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 text-left transition-colors hover:bg-cf-surface-2 hover:border-cf-primary/40 cursor-pointer",
+          "group flex w-full items-center gap-3 rounded-[var(--cf-radius-row)] border bg-cf-surface px-3.5 py-2.5 text-left transition-colors hover:bg-cf-surface-2 hover:border-cf-primary/40 cursor-pointer",
           chase ? "border-amber-500/40" : "border-cf-border"
         )}
       >

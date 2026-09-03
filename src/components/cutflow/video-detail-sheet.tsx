@@ -115,7 +115,7 @@ export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; 
   return (
     <DialogPrimitive.Root open={!!openVideoId} onOpenChange={(v) => !v && close()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#090A0D]/62 backdrop-blur-[3px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[#090A0D]/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           className="fixed inset-0 z-50 flex h-dvh w-full flex-col overflow-hidden bg-cf-surface duration-[var(--cf-dur-panel)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 focus:outline-none sm:left-1/2 sm:top-1/2 sm:inset-auto sm:h-[90vh] sm:w-[94vw] sm:max-w-6xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[18px] sm:border sm:border-cf-border sm:shadow-[0_28px_90px_rgba(8,10,14,.24)] sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95"
         >

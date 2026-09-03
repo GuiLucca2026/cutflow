@@ -152,7 +152,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           borderColor: overdue ? `${accent}55` : "var(--cf-border)",
         }}
         className={cn(
-          "relative cursor-grab overflow-hidden rounded-[var(--cf-radius-card)] border bg-cf-surface p-3 pt-[15px] text-left transition-[border-color,background-color,transform] duration-[var(--cf-dur-hover)] hover:border-black/25 hover:bg-white/78 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/28 active:cursor-grabbing",
+          "relative cursor-grab overflow-hidden rounded-[var(--cf-radius-row)] border bg-cf-surface p-3 pt-[15px] text-left transition-[border-color,background-color,transform] duration-[var(--cf-dur-hover)] hover:border-black/25 hover:bg-white/78 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/28 active:cursor-grabbing",
           (isDragging || dragging) && "scale-[1.015] opacity-75 shadow-[0_16px_42px_rgba(8,10,14,.18)]"
         )}
       >
