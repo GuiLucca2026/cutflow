@@ -18,16 +18,6 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-// Meu Dia — antes eram 3 páginas separadas (Hoje, Minha Edição, Planejar
-// Semana), cada uma respondendo um pedaço de "o que eu preciso fazer" sem
-// as outras duas. Consolidado numa página só por decisão de produto (ver
-// auditoria de UX): "Hoje" também tinha um problema de nome — mostrava a
-// produtora inteira, não a fila pessoal de quem estava logado, o que
-// confundia quem chegava de primeira. Agora a página é pessoal de
-// verdade; visão da produtora inteira continua existindo em Panorama.
-// "Conflitos & Riscos" (calculado pelo sistema, não pessoal) foi mantido
-// abaixo do bloco pessoal — ainda é informação operacional que vale
-// qualquer um ver, só não é mais o que abre a tela.
 export default async function HojePage() {
   const user = await getCurrentUser();
   const [videos, users, captures, notifications, myTasks, projects] = await Promise.all([
@@ -45,9 +35,6 @@ export default async function HojePage() {
   const firstName = user.name.split(" ")[0];
   const todayLabel = fmtDateFull(now);
 
-  // ---------------------------------------------------------------------
-  // Recorte pessoal (era Minha Edição) — só vídeos do usuário logado.
-  // ---------------------------------------------------------------------
   const mine = videos.filter((v) => v.editorId === user.id && !isDone(v.status));
   const overdueMine = mine.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
   const todayMine = mine.filter((v) => isToday(new Date(v.finalDeadline)) || isToday(new Date(v.internalDeadline ?? v.finalDeadline)));
@@ -65,8 +52,6 @@ export default async function HojePage() {
     overdueMine.length + todayMine.length + waitingMine.length + thisWeekMine.length + nextMine.length === 0 && myTasks.length === 0;
   const totalHoursLeftMine = mine.reduce((acc, v) => acc + Math.max(0, v.estimatedHours - v.actualHours), 0);
 
-  // Notificações não lidas por vídeo (Fase 12) — vira o selo de sino no
-  // VideoCard, só aqui por ora (ver o comentário em video-card.tsx).
   const unreadByVideo = new Map<string, number>();
   for (const n of notifications) {
     if (!n.read && n.entityType === "VIDEO" && n.entityId) unreadByVideo.set(n.entityId, (unreadByVideo.get(n.entityId) ?? 0) + 1);
@@ -80,10 +65,6 @@ export default async function HojePage() {
     captures: captures.map((c) => ({ status: c.status, date: c.date })),
   };
 
-  // ---------------------------------------------------------------------
-  // Planejar Semana (era página própria) — mesma lógica de sempre
-  // (Backward Planning + Auto Schedule), ver lib/planning.ts.
-  // ---------------------------------------------------------------------
   const planVideos = mine.map((v) => ({
     id: v.id,
     name: v.name,
@@ -94,9 +75,6 @@ export default async function HojePage() {
   const planDays = planWeek({ videos: planVideos, dailyCapacityHours: user.dailyCapacityHours, workDays: user.workDays, today: now, numDays: 7 });
   const totalAllocated = planDays.reduce((acc, d) => acc + d.allocatedHours, 0);
 
-  // Projetos em que o usuário tem trabalho ativo. É uma leitura de contexto,
-  // não uma segunda lista de tarefas: mostra avanço, etapa e próximo prazo do
-  // projeto inteiro sem obrigar a sair da Home para entender o cenário.
   const projectPreviews = projects
     .filter((project: any) => {
       const hasActiveVideo = project.videos.some((video: any) => !isDone(video.status));
@@ -134,20 +112,13 @@ export default async function HojePage() {
         <FlowMessage work={flowWork} className="mt-4 max-w-2xl" />
       </header>
 
-      {/* Cada card responde uma pergunta específica de "o que eu faço agora"
-          — antes tinha "Hoje" sem dizer o que contava, "Tarefas
-          atribuídas" (0 quase sempre, e a lista completa já existe embaixo
-          em #minhas-tarefas) e "Horas restantes" somando TODO vídeo ativo
-          (inclusive um que só vence daqui a 3 semanas — número grande e
-          pouco acionável). Trocado por "Horas hoje", que é o que o
-          planejamento automático (faixa "Sua semana", no topo) sugere pra hoje
-          especificamente. */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-cf-border pb-3 md:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 border-b border-cf-border pb-5 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           label="Atrasados"
           value={overdueMine.length}
           icon={AlertTriangle}
           tone={overdueMine.length > 0 ? "danger" : "default"}
+          variant="danger"
           hint="Vídeos seus com o prazo final já vencido."
         />
         <StatCard
@@ -155,6 +126,7 @@ export default async function HojePage() {
           value={todayMine.length}
           icon={Send}
           tone={todayMine.length > 0 ? "good" : "default"}
+          variant="today"
           hint="Prazo final ou revisão interna caem hoje."
         />
         <StatCard
@@ -162,6 +134,7 @@ export default async function HojePage() {
           value={editingMine.length}
           icon={Scissors}
           tone={editingMine.length > 0 ? "good" : "default"}
+          variant="editing"
           hint="Vídeos seus em edição ou alteração agora."
         />
         <StatCard
@@ -169,6 +142,7 @@ export default async function HojePage() {
           value={waitingMine.length}
           icon={Clock}
           tone="warn"
+          variant="waiting"
           hint="Já mandou, esperando feedback ou aprovação do cliente."
         />
         <StatCard
@@ -176,6 +150,7 @@ export default async function HojePage() {
           value={fmtHours(planDays[0]?.allocatedHours ?? 0)}
           icon={CalendarClock}
           tone="default"
+          variant="hours"
           hint="Sugestão do planejamento automático pra hoje, pela sua capacidade diária."
         />
       </div>
@@ -205,11 +180,6 @@ export default async function HojePage() {
         </section>
       ) : null}
 
-      {/* Seções só aparecem quando têm conteúdo — os cards acima já dizem
-          "0". Antes cada uma vazia virava uma caixa tracejada gigante com
-          "Nada aqui", e num dia tranquilo a página era uma pilha de 5
-          caixas vazias (o principal sinal de "amador" apontado pelo
-          usuário). Se TUDO estiver vazio, um único aviso, embaixo. */}
       {nothingToShow ? (
         <div className="border-b border-cf-border py-12 text-center">
           <div className="text-2xl font-semibold tracking-[-0.03em]">Fila limpa.</div>
@@ -268,7 +238,7 @@ export default async function HojePage() {
 
       {alerts.length > 0 && (
         <Section title="Conflitos & Riscos" subtitle="Detectado automaticamente — colisões de agenda, sobrecarga e risco de prazo (produtora inteira)" count={alerts.length} tone="danger">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
             {alerts.map((a) => (
               <Link
                 key={a.id}
@@ -287,7 +257,7 @@ export default async function HojePage() {
                 )}
                 <div className="min-w-0">
                   <div className="text-sm font-medium leading-snug">{a.title}</div>
-                  <div className="text-xs text-cf-text-dim leading-snug mt-0.5">{a.detail}</div>
+                  <div className="mt-0.5 text-xs leading-snug text-cf-text-dim">{a.detail}</div>
                 </div>
               </Link>
             ))}
@@ -299,21 +269,105 @@ export default async function HojePage() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { label: string; value: string | number; icon: any; tone?: "default" | "danger" | "warn" | "good"; href?: string; hint?: string }) {
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  tone = "default",
+  variant = "default",
+  href,
+  hint,
+}: {
+  label: string;
+  value: string | number;
+  icon: any;
+  tone?: "default" | "danger" | "warn" | "good";
+  variant?: "default" | "danger" | "today" | "editing" | "waiting" | "hours";
+  href?: string;
+  hint?: string;
+}) {
   const toneMap = {
     default: "text-cf-text",
     danger: "text-red-600",
     warn: "text-amber-700",
     good: "text-cf-success",
-  };
+  } as const;
+
+  const variantMap = {
+    default: {
+      accent: "bg-cf-border-strong",
+      iconTint: "bg-cf-surface-2 text-cf-text-dim",
+      valueTint: "text-cf-text",
+      surface: "linear-gradient(180deg, rgba(255,255,255,.68), rgba(255,255,255,.4))",
+      glaze: "linear-gradient(135deg, rgba(0,0,0,.02), transparent 52%)",
+    },
+    danger: {
+      accent: "bg-red-500",
+      iconTint: "bg-red-500/10 text-red-600",
+      valueTint: "text-red-600",
+      surface: "linear-gradient(180deg, rgba(215,58,47,.10), rgba(255,255,255,.72))",
+      glaze: "radial-gradient(circle at 88% 12%, rgba(215,58,47,.16), transparent 36%)",
+    },
+    today: {
+      accent: "bg-cf-primary",
+      iconTint: "bg-cf-primary/10 text-cf-primary",
+      valueTint: "text-cf-primary",
+      surface: "linear-gradient(180deg, rgba(38,73,168,.08), rgba(255,255,255,.72))",
+      glaze: "radial-gradient(circle at 88% 14%, rgba(38,73,168,.16), transparent 35%)",
+    },
+    editing: {
+      accent: "bg-cf-success",
+      iconTint: "bg-cf-success/10 text-cf-success",
+      valueTint: "text-cf-success",
+      surface: "linear-gradient(180deg, rgba(31,138,76,.09), rgba(255,255,255,.72))",
+      glaze: "radial-gradient(circle at 88% 14%, rgba(31,138,76,.16), transparent 35%)",
+    },
+    waiting: {
+      accent: "bg-cf-orange",
+      iconTint: "bg-cf-orange/12 text-amber-700",
+      valueTint: "text-amber-700",
+      surface: "linear-gradient(180deg, rgba(245,163,87,.12), rgba(255,255,255,.72))",
+      glaze: "radial-gradient(circle at 88% 14%, rgba(245,163,87,.18), transparent 35%)",
+    },
+    hours: {
+      accent: "bg-cf-deep-blue",
+      iconTint: "bg-cf-deep-blue/10 text-cf-deep-blue",
+      valueTint: "text-cf-deep-blue",
+      surface: "linear-gradient(180deg, rgba(17,27,103,.07), rgba(255,255,255,.72))",
+      glaze: "radial-gradient(circle at 88% 12%, rgba(17,27,103,.12), transparent 35%)",
+    },
+  } as const;
+
+  const style = variantMap[variant];
+  const valueColor = variant !== "default" ? style.valueTint : toneMap[tone];
+
   const body = (
     <Hint text={hint}>
-      <div className={cn("group min-h-[106px] border-t border-cf-border py-4 transition-colors", href && "hover:border-cf-primary")}>
-        <div className="flex items-start justify-between gap-3">
-          <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em] md:text-[48px]", toneMap[tone])}>{value}</div>
-          <Icon className={cn("h-4 w-4", tone === "default" ? "text-cf-text-dim" : toneMap[tone])} />
+      <div
+        className={cn(
+          "group relative min-h-[118px] overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border p-4 transition-[transform,border-color,background-color] duration-[var(--cf-dur-hover)]",
+          href && "hover:-translate-y-0.5 hover:border-black/15"
+        )}
+        style={{ background: style.surface }}
+      >
+        <div className="pointer-events-none absolute inset-0" style={{ background: style.glaze }} />
+        <div className={cn("absolute inset-x-0 top-0 h-[3px]", style.accent)} />
+
+        <div className="relative flex h-full flex-col">
+          <div className="flex items-start justify-between gap-3">
+            <div className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5", style.iconTint)}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em] md:text-[48px]", valueColor)}>{value}</div>
+          </div>
+
+          <div className="mt-auto">
+            <div className="mt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
+            <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-black/[0.06]">
+              <div className={cn("h-full rounded-full opacity-80", style.accent, value === 0 || value === "0h" ? "w-[18%]" : value === "8h" ? "w-[82%]" : "w-[54%]")} />
+            </div>
+          </div>
         </div>
-        <div className="mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
       </div>
     </Hint>
   );
@@ -327,7 +381,7 @@ function Section({ title, subtitle, count, tone, children }: { title: string; su
         <h2 className={cn("text-[26px] font-semibold tracking-[-0.03em]", tone === "danger" && "text-red-600")}>{title}</h2>
         {typeof count === "number" && <span className="text-sm font-semibold tabular-nums text-cf-text-dim">{count}</span>}
       </div>
-      {subtitle && <p className="text-xs text-cf-text-dim -mt-2 mb-3">{subtitle}</p>}
+      {subtitle && <p className="-mt-2 mb-3 text-xs text-cf-text-dim">{subtitle}</p>}
       {children}
     </section>
   );
@@ -349,14 +403,6 @@ function Group({ title, videos, emptyText, tone }: { title: string; videos: any[
   );
 }
 
-// Igual ao Group acima, mas em vez de uma grade única, separa por "o que
-// esse vídeo precisa de mim agora" — pedido explícito do usuário: uma
-// visão de tudo que está em edição e outra do que está parado com o
-// cliente (esses dois status foram unidos, ver STATUS_META em
-// lib/domain.ts), em vez de uma lista só ordenada por prazo. O resto
-// (fila, revisão interna, alteração ainda não iniciada, pós-aprovação)
-// cai no terceiro bloco — não tem ação de edição pendente nem está
-// bloqueado pelo cliente, então não precisa de destaque próprio.
 function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: any[]; emptyText?: string }) {
   const editing = videos.filter((v) => isEditing(v.status));
   const withClient = videos.filter((v) => isWaitingClient(v.status));
@@ -376,7 +422,7 @@ function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: 
         <div className="space-y-5">
           {buckets.map((b) => (
             <div key={b.label}>
-              <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-cf-text-dim">
                 {b.label} <span className="normal-case font-normal">· {b.items.length}</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -395,5 +441,3 @@ function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: 
 function EmptyState({ text }: { text: string }) {
   return <div className="rounded-xl border border-dashed border-cf-border p-6 text-center text-sm text-cf-text-dim">{text}</div>;
 }
-
-
