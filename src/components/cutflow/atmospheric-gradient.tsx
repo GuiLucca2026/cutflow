@@ -73,6 +73,15 @@ export function atmosphericTone(variant: AtmosphericVariant): AtmosphericTone {
   return VARIANT_CONFIG[variant].tone;
 }
 
+export function atmosphericAccentForSeed(seed: string) {
+  const variant = atmosphericVariantForSeed(seed);
+  const config = VARIANT_CONFIG[variant];
+  const a = config.colors[0];
+  const b = config.colors[1];
+  const c = config.colors[2];
+  return `linear-gradient(90deg, ${a} 0%, ${b} 52%, ${c} 100%)`;
+}
+
 /**
  * Artwork atmosférico do G2 FLOW.
  * A intenção é parecer luz fotografada fora de foco, não um gradiente SaaS:

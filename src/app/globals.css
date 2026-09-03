@@ -449,3 +449,27 @@ body {
   content-visibility: auto;
   contain-intrinsic-size: 390px 488px;
 }
+
+/* Loading states usam o mesmo sistema de superfícies do app. O shimmer é
+   discreto e direcional para indicar progresso sem competir com o conteúdo. */
+@keyframes cf-skeleton-shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(220%); }
+}
+.cf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--cf-surface-2) 84%, var(--cf-canvas));
+}
+.cf-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+  animation: cf-skeleton-shimmer 1.55s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-skeleton::after { animation: none !important; display: none; }
+}

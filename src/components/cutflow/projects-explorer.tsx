@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import { Search, X } from "lucide-react";
+import { FilterSegment } from "@/components/cutflow/filter-segment";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { PRIORITY_META, isDone, isOverdue } from "@/lib/domain";
 import { ProjectCard, type ProjectPosterData } from "@/components/cutflow/project-card";
 import { EmptyState } from "@/components/cutflow/empty-state";
-import { cn } from "@/lib/utils";
 
 type Scope = "all" | "active" | "late" | "done";
 
@@ -75,25 +75,16 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
     <div className="space-y-6">
       <div className="cf-filter-rail">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            {SCOPES.map((item) => {
-              const active = scope === item.value;
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setScope(item.value)}
-                  className={cn(
-                    "relative shrink-0 border-b-2 py-1.5 text-[12px] font-medium transition-colors",
-                    active ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
-                  )}
-                >
-                  {item.label}
-                  <span className="ml-1.5 text-[12px] font-semibold tabular-nums text-cf-text-dim">{counts[item.value]}</span>
-                </button>
-              );
-            })}
-          </div>
+          <FilterSegment
+            ariaLabel="Filtrar projetos por estado"
+            value={scope}
+            onChange={setScope}
+            items={SCOPES.map((item) => ({
+              ...item,
+              count: counts[item.value],
+              tone: item.value === "late" ? "danger" : item.value === "done" ? "good" : "default",
+            }))}
+          />
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-[210px] flex-1 xl:w-[260px] xl:flex-none">
@@ -141,6 +132,11 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
             )}
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="cf-micro text-cf-text-dim">PROJECT INDEX</div>
+        <div className="text-xs tabular-nums text-cf-text-dim" aria-live="polite">{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</div>
       </div>
 
       {filtered.length === 0 ? (

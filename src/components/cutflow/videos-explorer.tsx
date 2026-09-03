@@ -6,7 +6,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { VideoCard, type VideoCardData } from "@/components/cutflow/video-card";
 import { STATUS_META, PRIORITY_META, isOverdue, isWaitingClient } from "@/lib/domain";
 import { Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FilterSegment } from "@/components/cutflow/filter-segment";
 
 type Video = VideoCardData & { editorId: string | null; clientId?: string };
 type QuickFilter = "all" | "overdue" | "waiting";
@@ -65,21 +65,15 @@ export function VideosExplorer({
     <div className="space-y-6">
       <div className="cf-filter-rail">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            {quickItems.map((item) => (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setQuick(item.value)}
-                className={cn(
-                  "border-b-2 py-1.5 text-[12px] font-medium transition-colors",
-                  quick === item.value ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
-                )}
-              >
-                {item.label}<span className="ml-1.5 text-[12px] font-semibold tabular-nums text-cf-text-dim">{item.count}</span>
-              </button>
-            ))}
-          </div>
+          <FilterSegment
+            ariaLabel="Filtrar vídeos rapidamente"
+            value={quick}
+            onChange={setQuick}
+            items={quickItems.map((item) => ({
+              ...item,
+              tone: item.value === "overdue" ? "danger" : item.value === "waiting" ? "warn" : "default",
+            }))}
+          />
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-[210px] flex-1 xl:w-[250px] xl:flex-none">
@@ -131,7 +125,7 @@ export function VideosExplorer({
 
       <div className="flex items-baseline justify-between gap-4">
         <div className="cf-micro text-cf-text-dim">CUT LIST</div>
-        <div className="text-xs text-cf-text-dim">{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</div>
+        <div className="text-xs tabular-nums text-cf-text-dim" aria-live="polite">{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</div>
       </div>
 
       {filtered.length === 0 ? (

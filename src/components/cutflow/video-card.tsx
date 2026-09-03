@@ -20,6 +20,7 @@ import {
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { AlertTriangle, Bell, CalendarDays, Clock3, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { atmosphericAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
 
 export type VideoCardData = {
   id: string;
@@ -52,6 +53,8 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const riskMeta = RISK_META[risk];
   const waitMeta = clientWait ? CLIENT_WAIT_META[clientWait.kind] : null;
   const accent = overdue ? "#C93128" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusMeta.color;
+  const projectSeed = video.projectId ?? video.project?.name ?? video.id;
+  const projectAccent = atmosphericAccentForSeed(projectSeed);
 
   let attention: { label: string; color: string; hint?: string } | null = null;
   if (overdue) attention = { label: "ATRASADO", color: "#C93128", hint: "Passou da data de entrega final e o vídeo ainda não foi entregue." };
@@ -67,9 +70,10 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
           overdue && "border-red-500/30"
         )}
       >
-        <span className="absolute bottom-0 left-0 top-0 w-[3px]" style={{ backgroundColor: accent }} aria-hidden />
+        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ background: projectAccent }} aria-hidden />
+        <span className="absolute bottom-0 left-0 top-[3px] w-[3px]" style={{ backgroundColor: accent }} aria-hidden />
 
-        <div className="px-4 pb-3 pt-4">
+        <div className="px-4 pb-3 pt-[18px]">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               {video.project ? (

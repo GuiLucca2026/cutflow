@@ -40,9 +40,11 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
   const queryTab = searchParams.get("tab");
   const openTasks = (project.tasks ?? []).filter((task: any) => !task.done).length;
   // Derivado direto da URL (fonte única de verdade) em vez de useState+effect
-  // sincronizando os dois — evita cascading render (mesmo motivo do fix em
-  // progress-indicator.tsx). changeTab só escreve na URL; o valor ativo já
-  // recalcula sozinho no próximo render via searchParams.
+  // sincronizando os dois — evita cascading render (mesmo fix já aplicado
+  // numa rodada anterior deste componente; o pacote reintroduziu o padrão
+  // antigo ao adicionar a navegação por seta, então reaplico aqui).
+  // changeTab só escreve na URL; o valor ativo recalcula sozinho no
+  // próximo render via searchParams.
   const activeTab: ProjectTab = isProjectTab(queryTab) ? queryTab : "videos";
 
   function changeTab(value: string) {
@@ -55,6 +57,18 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
+  function navigateByArrow(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const current = TAB_VALUES.indexOf(activeTab);
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const next = (current + direction + TAB_VALUES.length) % TAB_VALUES.length;
+    changeTab(TAB_VALUES[next]);
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-project-tab="${TAB_VALUES[next]}"]`)?.focus();
+    });
+  }
+
   const tabs = [
     { value: "videos" as const, label: "Vídeos", count: project.videos.length, icon: Film },
     { value: "tarefas" as const, label: "Tarefas", count: openTasks, icon: ListChecks },
@@ -65,27 +79,29 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
 
   return (
     <Tabs value={activeTab} onValueChange={changeTab} className="space-y-0">
-      <div className="sticky top-[54px] z-20 -mx-1 bg-cf-canvas py-2">
+      <div className="sticky top-[54px] z-20 -mx-1 bg-cf-canvas/95 py-2 backdrop-blur-[8px]" onKeyDown={navigateByArrow}>
         <div className="mb-2 flex items-center justify-between px-1">
           <div className="cf-micro text-cf-text-dim">WORKSPACE</div>
-          <div className="hidden text-[11px] text-cf-text-dim sm:block">Use ← → para navegar entre as abas</div>
+          <div className="hidden text-[11px] text-cf-text-dim sm:block">← → navegam · URL preserva a aba</div>
         </div>
         <div className="overflow-x-auto pb-1">
-          <TabsList className="flex h-auto w-max min-w-full justify-start gap-1 rounded-[10px] border border-cf-border bg-cf-surface p-1">
+          <TabsList className="flex h-auto w-max min-w-full justify-start gap-1 rounded-[12px] border border-cf-border bg-cf-surface p-1.5">
             {tabs.map(({ value, label, count, icon: Icon }) => (
               <TabsTrigger
                 key={value}
                 value={value}
+                data-project-tab={value}
                 className={cn(
-                  "group min-h-[42px] min-w-[128px] flex-1 gap-2 rounded-[7px] border border-transparent px-3 py-2 text-[12px] font-medium text-cf-text-dim transition-[color,background-color,border-color] duration-[var(--cf-dur-hover)]",
+                  "group relative min-h-[44px] min-w-[132px] flex-1 gap-2 rounded-[8px] border border-transparent px-3 py-2 text-[12px] font-medium text-cf-text-dim transition-[color,background-color,border-color] duration-[var(--cf-dur-hover)]",
                   "hover:bg-cf-surface-2/70 hover:text-cf-text",
-                  "data-[state=active]:border-cf-border data-[state=active]:bg-cf-surface-2 data-[state=active]:text-cf-text data-[state=active]:shadow-none"
+                  "after:absolute after:inset-x-3 after:bottom-0 after:h-[2px] after:origin-left after:scale-x-0 after:rounded-full after:bg-cf-primary after:transition-transform after:duration-[var(--cf-dur-hover)]",
+                  "data-[state=active]:border-cf-border data-[state=active]:bg-cf-surface-2 data-[state=active]:text-cf-text data-[state=active]:shadow-none data-[state=active]:after:scale-x-100"
                 )}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0 opacity-70 group-data-[state=active]:text-cf-primary group-data-[state=active]:opacity-100" />
                 <span>{label}</span>
                 {typeof count === "number" ? (
-                  <span className="ml-auto min-w-5 text-right text-[10px] font-semibold tabular-nums text-cf-text-dim">{count}</span>
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-[6px] bg-black/[0.04] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-cf-text-dim group-data-[state=active]:bg-cf-primary/10 group-data-[state=active]:text-cf-primary">{count}</span>
                 ) : null}
               </TabsTrigger>
             ))}
