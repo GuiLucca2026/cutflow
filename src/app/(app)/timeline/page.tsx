@@ -73,7 +73,7 @@ export default async function TimelinePage() {
 
       {projects.length === 0 ? (
         <div className="border-b border-cf-border py-14 text-center">
-          <div className="font-editorial text-3xl">Sem cortes na linha do tempo.</div>
+          <div className="text-2xl font-semibold tracking-[-0.03em]">Sem cortes na linha do tempo.</div>
           <div className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo ativo pra mostrar agora.</div>
         </div>
       ) : (

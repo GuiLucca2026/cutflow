@@ -37,7 +37,7 @@ export function ClientsExplorer({ clients }: { clients: ClientLite[] }) {
 
       {filtered.length === 0 ? (
         <div className="border-b border-cf-border py-14 text-center">
-          <div className="font-editorial text-3xl">Nenhum cliente encontrado.</div>
+          <div className="text-2xl font-semibold tracking-[-0.03em]">Nenhum cliente encontrado.</div>
           <div className="mt-2 text-sm text-cf-text-dim">Tente outro nome ou razão social.</div>
         </div>
       ) : (
@@ -70,7 +70,7 @@ export function ClientsExplorer({ clients }: { clients: ClientLite[] }) {
 function Stat({ label, value, tone }: { label: string; value: number; tone?: "danger" }) {
   return (
     <div>
-      <div className={`font-editorial text-[30px] leading-none ${tone === "danger" && value > 0 ? "text-red-600" : ""}`}>{String(value).padStart(2, "0")}</div>
+      <div className={`text-[26px] font-semibold tabular-nums leading-none ${tone === "danger" && value > 0 ? "text-red-600" : ""}`}>{String(value).padStart(2, "0")}</div>
       <div className="cf-micro mt-2 text-cf-text-dim">{label}</div>
     </div>
   );

@@ -34,7 +34,7 @@ export function EditorialMasthead({
         <div className="cf-masthead__aside">
           {typeof metric !== "undefined" ? (
             <div className="text-right">
-              <div className="font-editorial text-[64px] leading-[0.74] tracking-[-0.045em] md:text-[78px]">{metric}</div>
+              <div className="text-[52px] font-semibold tabular-nums leading-[0.82] tracking-[-0.05em] md:text-[64px]">{metric}</div>
               {metricLabel ? <div className="cf-micro mt-3 text-cf-text-dim">{metricLabel}</div> : null}
             </div>
           ) : null}

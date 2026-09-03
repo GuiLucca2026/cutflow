@@ -245,7 +245,7 @@ function KpiCard({ label, value, detail, icon: Icon, tone = "default" }: { label
   return (
     <div className="border-t border-cf-border py-4">
       <div className="flex items-start justify-between gap-3">
-        <div className={cn("font-editorial text-[46px] leading-[0.82] tracking-[-0.035em]", toneMap[tone])}>{value}</div>
+        <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em]", toneMap[tone])}>{value}</div>
         <Icon className={cn("h-4 w-4", tone === "default" ? "text-cf-text-dim" : toneMap[tone])} />
       </div>
       <div className="cf-micro mt-3 text-cf-text-dim">{label}</div>

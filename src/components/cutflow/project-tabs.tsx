@@ -30,7 +30,7 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
       <TabsContent value="videos">
         {project.videos.length === 0 ? (
           <div className="border-b border-cf-border py-14 text-center">
-            <div className="font-editorial text-3xl">Nada em corte ainda.</div>
+            <div className="text-2xl font-semibold tracking-[-0.03em]">Nada em corte ainda.</div>
             <div className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo foi criado neste projeto.</div>
           </div>
         ) : (

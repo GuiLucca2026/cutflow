@@ -160,7 +160,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
     <div className="border-t border-cf-border py-4">
       <div
         className={cn(
-          "font-editorial text-[46px] leading-[0.82] tracking-[-0.035em]",
+          "text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em]",
           tone === "danger" && "text-red-600",
           tone === "warn" && "text-amber-700"
         )}

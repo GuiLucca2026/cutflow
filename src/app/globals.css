@@ -20,6 +20,7 @@
   --cf-surface: #FAF9F6;
   --cf-surface-2: #F1EEE8;
   --cf-border: rgba(21, 21, 21, 0.10);
+  --cf-border-strong: rgba(21, 21, 21, 0.16);
   --cf-ink: #151515;
   --cf-ink-soft: #343434;
   --cf-muted: #6E6B66;
@@ -104,6 +105,7 @@
   --color-cf-surface: var(--cf-surface);
   --color-cf-surface-2: var(--cf-surface-2);
   --color-cf-border: var(--cf-border);
+  --color-cf-border-strong: var(--cf-border-strong);
   --color-cf-gray: var(--cf-gray);
   --color-cf-gray-light: var(--cf-gray-light);
   --color-cf-text: var(--cf-text);
@@ -177,10 +179,10 @@ body {
    .font-editorial acima) que ainda não existia como utilitário — cada
    tela reescrevia text-[10px] uppercase tracking-wide na mão. */
 .cf-micro {
-  font-size: 10px;
-  line-height: 1.4;
+  font-size: 11px;
+  line-height: 1.35;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.09em;
   font-weight: 600;
 }
 
@@ -219,22 +221,22 @@ body {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.08em 0.18em;
-  font-size: clamp(52px, 5.2vw, 76px);
-  line-height: 0.9;
+  font-size: clamp(46px, 4.6vw, 64px);
+  line-height: 0.94;
   letter-spacing: -0.055em;
   font-weight: 600;
 }
 
 .cf-masthead__description {
   margin-top: 18px;
-  max-width: 620px;
+  max-width: 680px;
   font-size: 14px;
   line-height: 1.55;
   color: var(--cf-muted);
 }
 
 .cf-masthead__aside {
-  min-width: 128px;
+  min-width: 118px;
   display: flex;
   align-items: end;
   justify-content: flex-end;
@@ -277,7 +279,7 @@ body {
   }
 
   .cf-masthead__title {
-    font-size: clamp(46px, 14vw, 62px);
+    font-size: clamp(42px, 13vw, 56px);
   }
 
   .cf-masthead__description {

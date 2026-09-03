@@ -101,7 +101,7 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
       <div className="sticky top-0 flex items-baseline gap-2 border-b border-cf-border bg-cf-canvas px-3 py-3">
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
         <span className="cf-micro" style={{ color: meta.color }}>{meta.label}</span>
-        <span className="ml-auto font-editorial text-xl leading-none text-cf-text-dim">{videos.length}</span>
+        <span className="ml-auto text-sm font-semibold tabular-nums text-cf-text-dim">{videos.length}</span>
       </div>
       <div className="flex-1 space-y-2 p-2 min-h-[120px] max-h-[calc(100vh-260px)] overflow-y-auto cf-scrollbar-thin">
         {videos.map((v) => (

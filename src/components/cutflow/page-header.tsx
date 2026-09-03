@@ -44,7 +44,7 @@ export function SectionHeader({
     <div className={cn("mb-4 border-b border-cf-border pb-2.5", className)}>
       <div className="flex items-baseline gap-2.5">
         <h2 className={cn("text-[25px] font-semibold tracking-[-0.035em]", tone === "danger" && "text-red-600")}>{title}</h2>
-        {typeof count === "number" && <span className="font-editorial text-[21px] text-cf-text-dim">{count}</span>}
+        {typeof count === "number" && <span className="text-[14px] font-semibold tabular-nums text-cf-text-dim">{count}</span>}
       </div>
       {subtitle && <p className="mt-1 text-xs leading-relaxed text-cf-text-dim">{subtitle}</p>}
     </div>

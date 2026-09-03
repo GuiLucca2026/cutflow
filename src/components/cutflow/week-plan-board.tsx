@@ -83,7 +83,7 @@ export function WeekPlanBoard({
               return (
                 <div key={day.date} className="flex min-w-[132px] flex-1 flex-col items-start justify-start border-r border-cf-border px-3 py-4 text-[10px] text-cf-text-dim/60" title={`${format(d, "EEEE", { locale: ptBR })} — folga`}>
                   <span className="cf-micro">{format(d, "EEE", { locale: ptBR }).toUpperCase()}</span>
-                  <span className="mt-1 font-editorial text-2xl leading-none">{format(d, "dd")}</span>
+                  <span className="mt-1 text-xl font-semibold tabular-nums leading-none">{format(d, "dd")}</span>
                 </div>
               );
             }
@@ -93,7 +93,7 @@ export function WeekPlanBoard({
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div>
                     <div className={cn("cf-micro", today ? "text-cf-primary" : "text-cf-text-dim")}>{today ? "TODAY" : format(d, "EEE", { locale: ptBR }).toUpperCase()}</div>
-                    <div className="font-editorial mt-1 text-2xl leading-none">{format(d, "dd")}</div>
+                    <div className="mt-1 text-xl font-semibold tabular-nums leading-none">{format(d, "dd")}</div>
                   </div>
                   <span className={cn("text-[10px] tabular-nums", over ? "font-semibold text-red-600" : "text-cf-text-dim")}>{fmtHours(day.allocatedHours)}/{fmtHours(day.capacityHours)}</span>
                 </div>

@@ -76,7 +76,7 @@ export function VideosExplorer({
                   quick === item.value ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
                 )}
               >
-                {item.label}<span className="ml-1.5 font-editorial text-[15px]">{item.count}</span>
+                {item.label}<span className="ml-1.5 text-[12px] font-semibold tabular-nums text-cf-text-dim">{item.count}</span>
               </button>
             ))}
           </div>
@@ -136,7 +136,7 @@ export function VideosExplorer({
 
       {filtered.length === 0 ? (
         <div className="border-b border-cf-border py-14 text-center">
-          <div className="font-editorial text-3xl">Nenhum corte por aqui.</div>
+          <div className="text-2xl font-semibold tracking-[-0.03em]">Nenhum corte por aqui.</div>
           <div className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo corresponde aos filtros selecionados.</div>
         </div>
       ) : (

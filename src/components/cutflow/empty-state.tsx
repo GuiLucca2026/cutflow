@@ -27,7 +27,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className={cn("font-editorial", compact ? "text-2xl" : "text-4xl")}>{title}</div>
+      <div className={cn("font-semibold tracking-[-0.035em]", compact ? "text-xl" : "text-3xl")}>{title}</div>
       {description && <p className="mt-2 text-sm text-cf-text-dim max-w-sm mx-auto">{description}</p>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>

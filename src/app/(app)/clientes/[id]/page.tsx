@@ -42,7 +42,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       <section>
         <div className="mb-4 flex items-baseline gap-2 border-b border-cf-border pb-2">
           <h2 className="text-[26px] font-semibold tracking-[-0.03em]">Projetos</h2>
-          <span className="font-editorial text-xl text-cf-text-dim">{projects.length}</span>
+          <span className="text-sm font-semibold tabular-nums text-cf-text-dim">{projects.length}</span>
         </div>
         <div className="divide-y divide-cf-border border-b border-cf-border">
           {projects.map((p, index) => {
@@ -57,7 +57,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                 <div>
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="cf-micro text-cf-text-dim">PROGRESS</span>
-                    <span className="font-editorial text-2xl leading-none">{progress}%</span>
+                    <span className="text-xl font-semibold tabular-nums leading-none">{progress}%</span>
                   </div>
                   <div className="mt-2 h-[2px] bg-cf-border"><div className="h-full bg-cf-primary" style={{ width: `${progress}%` }} /></div>
                 </div>

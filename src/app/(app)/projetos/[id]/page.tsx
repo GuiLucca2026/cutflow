@@ -131,13 +131,16 @@ export default async function ProjectDetailPage({
         </div>
       </section>
 
-      <section className="border-y border-cf-border py-5">
-        <div className="mb-4 flex items-baseline justify-between gap-4">
-          <div className="cf-micro text-cf-text-dim">PROJECT INFORMATION</div>
+      <section className="overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cf-border px-5 py-3.5">
+          <div>
+            <div className="text-sm font-semibold">Informações do projeto</div>
+            <div className="mt-0.5 text-[11px] text-cf-text-dim">Dados principais e responsáveis</div>
+          </div>
           <div className="text-[11px] text-cf-text-dim">Clique nos campos editáveis para atualizar</div>
         </div>
-        <div className="grid gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="min-w-0">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5">
+          <div className="min-w-0 border-b border-cf-border p-4 sm:border-r lg:border-b-0">
             <div className="cf-micro mb-1 text-cf-text-dim">Cliente</div>
             <ClientSelect
               projectId={project.id}
@@ -146,7 +149,7 @@ export default async function ProjectDetailPage({
               className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm font-medium shadow-none focus:ring-0"
             />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 border-b border-cf-border p-4 lg:border-b-0 lg:border-r">
             <div className="cf-micro mb-1 text-cf-text-dim">Responsável</div>
             <ResponsibleSelect
               kind="project"
@@ -156,8 +159,8 @@ export default async function ProjectDetailPage({
               className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm font-medium shadow-none focus:ring-0"
             />
           </div>
-          <Fact label="Editor líder" value={project.leadEditor?.name ?? "—"} />
-          <Fact label="Vídeos" value={String(project.videos.length).padStart(2, "0")} />
+          <Fact label="Editor líder" value={project.leadEditor?.name ?? "—"} bordered />
+          <Fact label="Vídeos" value={String(project.videos.length).padStart(2, "0")} bordered />
           <Fact label="Orçamento" value={project.budget ? fmtCurrency(project.budget) : "—"} />
         </div>
       </section>
@@ -176,9 +179,9 @@ function HeroFact({ label, value, dark }: { label: string; value: string; dark: 
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value, bordered = false }: { label: string; value: string; bordered?: boolean }) {
   return (
-    <div className="flex min-h-12 flex-col justify-center">
+    <div className={cn("flex min-h-[72px] flex-col justify-center border-b border-cf-border p-4 lg:border-b-0", bordered && "lg:border-r")}>
       <div className="cf-micro text-cf-text-dim">{label}</div>
       <div className="mt-1 text-sm font-medium">{value}</div>
     </div>

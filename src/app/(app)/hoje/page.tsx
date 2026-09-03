@@ -160,7 +160,7 @@ export default async function HojePage() {
           usuário). Se TUDO estiver vazio, um único aviso, embaixo. */}
       {nothingToShow ? (
         <div className="border-b border-cf-border py-12 text-center">
-          <div className="font-editorial text-3xl">Fila limpa.</div>
+          <div className="text-2xl font-semibold tracking-[-0.03em]">Fila limpa.</div>
           <p className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo atribuído a você precisa de atenção agora.</p>
         </div>
       ) : null}
@@ -256,12 +256,12 @@ function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { 
   };
   const body = (
     <Hint text={hint}>
-      <div className={cn("group border-t border-cf-border py-4 transition-colors", href && "hover:border-cf-primary")}>
+      <div className={cn("group min-h-[106px] border-t border-cf-border py-4 transition-colors", href && "hover:border-cf-primary")}>
         <div className="flex items-start justify-between gap-3">
-          <div className={cn("font-editorial text-[48px] leading-[0.78] tracking-[-0.035em] md:text-[56px]", toneMap[tone])}>{value}</div>
+          <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em] md:text-[48px]", toneMap[tone])}>{value}</div>
           <Icon className={cn("h-4 w-4", tone === "default" ? "text-cf-text-dim" : toneMap[tone])} />
         </div>
-        <div className="cf-micro mt-3 text-cf-text-dim">{label}</div>
+        <div className="mt-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
       </div>
     </Hint>
   );
@@ -273,7 +273,7 @@ function Section({ title, subtitle, count, tone, children }: { title: string; su
     <section>
       <div className="mb-3 flex items-baseline gap-2 border-b border-cf-border pb-2">
         <h2 className={cn("text-[26px] font-semibold tracking-[-0.03em]", tone === "danger" && "text-red-600")}>{title}</h2>
-        {typeof count === "number" && <span className="font-editorial text-xl text-cf-text-dim">{count}</span>}
+        {typeof count === "number" && <span className="text-sm font-semibold tabular-nums text-cf-text-dim">{count}</span>}
       </div>
       {subtitle && <p className="text-xs text-cf-text-dim -mt-2 mb-3">{subtitle}</p>}
       {children}

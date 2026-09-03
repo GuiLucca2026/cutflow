@@ -89,7 +89,7 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
                   )}
                 >
                   {item.label}
-                  <span className="ml-1.5 font-editorial text-[15px]">{counts[item.value]}</span>
+                  <span className="ml-1.5 text-[12px] font-semibold tabular-nums text-cf-text-dim">{counts[item.value]}</span>
                 </button>
               );
             })}
