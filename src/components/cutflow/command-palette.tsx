@@ -72,7 +72,7 @@ export function CommandPalette({ onQuickAdd }: { onQuickAdd: (type: "cliente" | 
           <>
             <CommandGroup heading="Navegação">
               <CommandItem onSelect={() => go("/hoje")}><Sun className="h-4 w-4" /> Ir para Meu Dia</CommandItem>
-              <CommandItem onSelect={() => go("/hoje?tab=semana")}><Sun className="h-4 w-4" /> Planejar semana</CommandItem>
+              <CommandItem onSelect={() => go("/hoje")}><Sun className="h-4 w-4" /> Planejar semana</CommandItem>
               <CommandItem onSelect={() => go("/kanban")}><Kanban className="h-4 w-4" /> Kanban</CommandItem>
               <CommandItem onSelect={() => go("/calendario")}><Calendar className="h-4 w-4" /> Calendário</CommandItem>
               <CommandItem onSelect={() => go("/timeline")}><GanttChartSquare className="h-4 w-4" /> Timeline</CommandItem>

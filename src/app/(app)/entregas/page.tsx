@@ -37,7 +37,15 @@ export default async function EntregasPage() {
         <p className="text-cf-text-dim text-sm">Central de entregas — {videos.filter((v) => !isDone(v.status)).length} vídeos ativos</p>
       </div>
 
-      {groups.map((g) => (
+      {/* Grupo vazio some — antes cada um virava uma caixa tracejada "Nada
+          aqui", e a página era mais caixa vazia do que vídeo. Se todos
+          estiverem vazios, um aviso só. */}
+      {groups.every((g) => g.items.length === 0) && (
+        <div className="rounded-xl border border-dashed border-cf-border px-6 py-10 text-center text-sm text-cf-text-dim">
+          Nenhuma entrega nas próximas duas semanas.
+        </div>
+      )}
+      {groups.filter((g) => g.items.length > 0).map((g) => (
         <section key={g.title}>
           <div className="flex items-baseline gap-2 mb-3">
             <h2 className={`font-display text-2xl tracking-wide ${g.tone === "danger" ? "text-red-600" : g.dim ? "text-cf-text-dim" : ""}`}>
@@ -45,15 +53,11 @@ export default async function EntregasPage() {
             </h2>
             <span className="text-cf-text-dim text-sm">{g.items.length}</span>
           </div>
-          {g.items.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-cf-border p-6 text-center text-sm text-cf-text-dim">Nada aqui.</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {g.items.map((v) => (
-                <VideoCard key={v.id} video={v as any} showRisk={!g.dim} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {g.items.map((v) => (
+              <VideoCard key={v.id} video={v as any} showRisk={!g.dim} />
+            ))}
+          </div>
         </section>
       ))}
     </div>

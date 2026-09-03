@@ -5,7 +5,6 @@ import { WaitingRow } from "@/components/cutflow/waiting-row";
 import { Greeting } from "@/components/cutflow/greeting";
 import { FlowMessage } from "@/components/cutflow/flow-message";
 import { Avatar } from "@/components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
@@ -29,10 +28,7 @@ export const dynamic = "force-dynamic";
 // "Conflitos & Riscos" (calculado pelo sistema, não pessoal) foi mantido
 // abaixo do bloco pessoal — ainda é informação operacional que vale
 // qualquer um ver, só não é mais o que abre a tela.
-export default async function HojePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const sp = await searchParams;
-  const defaultTab = sp.tab === "semana" ? "semana" : "dia";
-
+export default async function HojePage() {
   const user = await getCurrentUser();
   const [videos, users, captures, notifications, myTasks] = await Promise.all([
     listVideos(),
@@ -64,6 +60,8 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
     const d = differenceInCalendarDays(new Date(v.finalDeadline), now);
     return d > 7;
   });
+  const nothingToShow =
+    overdueMine.length + todayMine.length + waitingMine.length + thisWeekMine.length + nextMine.length === 0 && myTasks.length === 0;
   const totalHoursLeftMine = mine.reduce((acc, v) => acc + Math.max(0, v.estimatedHours - v.actualHours), 0);
 
   // Notificações não lidas por vídeo (Fase 12) — vira o selo de sino no
@@ -106,13 +104,20 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
         </div>
       </div>
 
+      <WeekPlanBoard
+        days={planDays}
+        unallocatedHours={Math.max(0, totalHoursLeftMine - totalAllocated)}
+        totalHoursLeft={totalHoursLeftMine}
+        dailyCapacityHours={user.dailyCapacityHours}
+      />
+
       {/* Cada card responde uma pergunta específica de "o que eu faço agora"
           — antes tinha "Hoje" sem dizer o que contava, "Tarefas
           atribuídas" (0 quase sempre, e a lista completa já existe embaixo
           em #minhas-tarefas) e "Horas restantes" somando TODO vídeo ativo
           (inclusive um que só vence daqui a 3 semanas — número grande e
           pouco acionável). Trocado por "Horas hoje", que é o que o
-          planejamento automático (aba "Planejar semana") sugere pra hoje
+          planejamento automático (faixa "Sua semana", no topo) sugere pra hoje
           especificamente. */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard
@@ -148,117 +153,100 @@ export default async function HojePage({ searchParams }: { searchParams: Promise
           value={fmtHours(planDays[0]?.allocatedHours ?? 0)}
           icon={CalendarClock}
           tone="default"
-          href="/hoje?tab=semana"
           hint="Sugestão do planejamento automático pra hoje, pela sua capacidade diária."
         />
       </div>
 
-      <Tabs defaultValue={defaultTab}>
-        <TabsList>
-          <TabsTrigger value="dia">Meu dia</TabsTrigger>
-          <TabsTrigger value="semana" className="gap-1.5">
-            <CalendarClock className="h-3.5 w-3.5" /> Planejar semana
-          </TabsTrigger>
-        </TabsList>
+      {/* Seções só aparecem quando têm conteúdo — os cards acima já dizem
+          "0". Antes cada uma vazia virava uma caixa tracejada gigante com
+          "Nada aqui", e num dia tranquilo a página era uma pilha de 5
+          caixas vazias (o principal sinal de "amador" apontado pelo
+          usuário). Se TUDO estiver vazio, um único aviso, embaixo. */}
+      {nothingToShow ? (
+        <div className="rounded-xl border border-dashed border-cf-border px-6 py-10 text-center">
+          <div className="font-display text-xl tracking-wide">Fila limpa.</div>
+          <p className="mt-1 text-sm text-cf-text-dim">Nenhum vídeo atribuído a você precisa de atenção agora.</p>
+        </div>
+      ) : null}
 
-        <TabsContent value="dia" className="space-y-8">
-          <Group title="Atrasados" videos={withPending(overdueMine)} emptyText="Nada atrasado. Ótimo trabalho." tone="danger" />
-          <Group title="Hoje" videos={withPending(todayMine)} emptyText="Nenhum prazo para hoje." />
+      {overdueMine.length > 0 && <Group title="Atrasados" videos={withPending(overdueMine)} tone="danger" />}
+      {todayMine.length > 0 && <Group title="Vence hoje" videos={withPending(todayMine)} />}
 
-          <Section title="Aguardando cliente" subtitle="Tempo parado esperando retorno" count={waitingMine.length}>
-            {waitingMine.length === 0 ? (
-              <EmptyState text="Nenhum vídeo seu aguardando cliente no momento." />
-            ) : (
-              <div className="space-y-2">
-                {waitingMine.map((v) => (
-                  <WaitingRow key={v.id} video={v} />
-                ))}
-              </div>
-            )}
-          </Section>
+      {waitingMine.length > 0 && (
+        <Section title="Aguardando cliente" subtitle="Tempo parado esperando retorno" count={waitingMine.length}>
+          <div className="space-y-2">
+            {waitingMine.map((v) => (
+              <WaitingRow key={v.id} video={v} />
+            ))}
+          </div>
+        </Section>
+      )}
 
-          <Section title="Minhas tarefas" subtitle="Atribuídas a você, de qualquer projeto ou vídeo" count={myTasks.length}>
-            {myTasks.length === 0 ? (
-              <EmptyState text="Nenhuma tarefa avulsa atribuída a você." />
-            ) : (
-              <div id="minhas-tarefas" className="space-y-1.5">
-                {myTasks.map((t: any) => {
-                  const overdue = t.dueAt && new Date(t.dueAt).getTime() < now.getTime();
-                  const contextHref = t.video ? `/projetos/${t.video.projectId}?video=${t.video.id}` : t.project ? `/projetos/${t.project.id}` : undefined;
-                  return (
-                    <Link
-                      key={t.id}
-                      href={contextHref ?? "#"}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 hover:border-cf-lime/40 transition-colors",
-                        overdue ? "border-red-500/30" : "border-cf-border"
-                      )}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{t.title}</div>
-                        <div className="text-xs text-cf-text-dim truncate">{t.video?.name ?? t.project?.name ?? "—"}</div>
-                      </div>
-                      {t.dueAt && (
-                        <span className={cn("text-xs whitespace-nowrap", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
-                          {new Date(t.dueAt).toLocaleDateString("pt-BR")}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </Section>
+      {myTasks.length > 0 && (
+      <Section title="Minhas tarefas" subtitle="Atribuídas a você, de qualquer projeto ou vídeo" count={myTasks.length}>
+        {(
+          <div id="minhas-tarefas" className="space-y-1.5">
+            {myTasks.map((t: any) => {
+              const overdue = t.dueAt && new Date(t.dueAt).getTime() < now.getTime();
+              const contextHref = t.video ? `/projetos/${t.video.projectId}?video=${t.video.id}` : t.project ? `/projetos/${t.project.id}` : undefined;
+              return (
+                <Link
+                  key={t.id}
+                  href={contextHref ?? "#"}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 hover:border-cf-lime/40 transition-colors",
+                    overdue ? "border-red-500/30" : "border-cf-border"
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{t.title}</div>
+                    <div className="text-xs text-cf-text-dim truncate">{t.video?.name ?? t.project?.name ?? "—"}</div>
+                  </div>
+                  {t.dueAt && (
+                    <span className={cn("text-xs whitespace-nowrap", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
+                      {new Date(t.dueAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </Section>
+      )}
 
-          <GroupedByStatus title="Esta semana" videos={withPending(thisWeekMine)} emptyText="Nada programado para os próximos 7 dias." />
-          <Group title="Próximo" videos={withPending(nextMine)} emptyText="Sem vídeos futuros atribuídos." />
+      {thisWeekMine.length > 0 && <GroupedByStatus title="Esta semana" videos={withPending(thisWeekMine)} />}
+      {nextMine.length > 0 && <Group title="Próximo" videos={withPending(nextMine)} />}
 
-          {alerts.length > 0 && (
-            <Section title="Conflitos & Riscos" subtitle="Detectado automaticamente — colisões de agenda, sobrecarga e risco de prazo (produtora inteira)" count={alerts.length} tone="danger">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
-                {alerts.map((a) => (
-                  <Link
-                    key={a.id}
-                    href={a.href}
-                    className={cn(
-                      "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-lime/40 transition-colors",
-                      a.severity === "CRITICO" ? "border-red-500/30" : a.severity === "ALTO" ? "border-amber-500/30" : "border-cf-border"
-                    )}
-                  >
-                    {a.severity === "CRITICO" ? (
-                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
-                    ) : a.severity === "ALTO" ? (
-                      <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
-                    ) : (
-                      <Info className="h-4 w-4 shrink-0 mt-0.5 text-cf-text-dim" />
-                    )}
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium leading-snug">{a.title}</div>
-                      <div className="text-xs text-cf-text-dim leading-snug mt-0.5">{a.detail}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </Section>
-          )}
-        </TabsContent>
+      {alerts.length > 0 && (
+        <Section title="Conflitos & Riscos" subtitle="Detectado automaticamente — colisões de agenda, sobrecarga e risco de prazo (produtora inteira)" count={alerts.length} tone="danger">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+            {alerts.map((a) => (
+              <Link
+                key={a.id}
+                href={a.href}
+                className={cn(
+                  "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-lime/40 transition-colors",
+                  a.severity === "CRITICO" ? "border-red-500/30" : a.severity === "ALTO" ? "border-amber-500/30" : "border-cf-border"
+                )}
+              >
+                {a.severity === "CRITICO" ? (
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
+                ) : a.severity === "ALTO" ? (
+                  <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                ) : (
+                  <Info className="h-4 w-4 shrink-0 mt-0.5 text-cf-text-dim" />
+                )}
+                <div className="min-w-0">
+                  <div className="text-sm font-medium leading-snug">{a.title}</div>
+                  <div className="text-xs text-cf-text-dim leading-snug mt-0.5">{a.detail}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      )}
 
-        <TabsContent value="semana">
-          {planVideos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-cf-border p-8 text-center text-sm text-cf-text-dim">
-              Nenhum vídeo ativo atribuído a você no momento.
-            </div>
-          ) : (
-            <>
-              <p className="text-cf-text-dim text-sm max-w-2xl mb-4">
-                Sugestão automática de distribuição de {totalHoursLeftMine.toFixed(1)}h restantes ao longo dos próximos 7 dias,
-                respeitando sua capacidade diária ({user.dailyCapacityHours}h) e priorizando pelo prazo mais próximo.
-              </p>
-              <WeekPlanBoard days={planDays} unallocatedHours={Math.max(0, totalHoursLeftMine - totalAllocated)} />
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
@@ -299,11 +287,11 @@ function Section({ title, subtitle, count, tone, children }: { title: string; su
   );
 }
 
-function Group({ title, videos, emptyText, tone }: { title: string; videos: any[]; emptyText: string; tone?: "danger" }) {
+function Group({ title, videos, emptyText, tone }: { title: string; videos: any[]; emptyText?: string; tone?: "danger" }) {
   return (
     <Section title={title} count={videos.length} tone={tone}>
       {videos.length === 0 ? (
-        <EmptyState text={emptyText} />
+        <EmptyState text={emptyText ?? "Nada aqui."} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {videos.map((v) => (
@@ -323,7 +311,7 @@ function Group({ title, videos, emptyText, tone }: { title: string; videos: any[
 // (fila, revisão interna, alteração ainda não iniciada, pós-aprovação)
 // cai no terceiro bloco — não tem ação de edição pendente nem está
 // bloqueado pelo cliente, então não precisa de destaque próprio.
-function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: any[]; emptyText: string }) {
+function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: any[]; emptyText?: string }) {
   const editing = videos.filter((v) => isEditing(v.status));
   const withClient = videos.filter((v) => isWaitingClient(v.status));
   const rest = videos.filter((v) => !isEditing(v.status) && !isWaitingClient(v.status));
@@ -337,7 +325,7 @@ function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: 
   return (
     <Section title={title} count={videos.length}>
       {videos.length === 0 ? (
-        <EmptyState text={emptyText} />
+        <EmptyState text={emptyText ?? "Nada aqui."} />
       ) : (
         <div className="space-y-5">
           {buckets.map((b) => (
