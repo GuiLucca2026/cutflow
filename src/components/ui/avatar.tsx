@@ -14,7 +14,7 @@ import { initials } from "@/lib/domain";
 // cadastrada é escura o bastante, calculamos a luminância e escurecemos
 // só o texto/borda quando preciso; o tom de fundo continua o original, a
 // "cor da pessoa" ainda é reconhecível, só o texto fica legível.
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const clean = hex.replace("#", "").trim();
   const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
   if (!/^[0-9a-fA-F]{6}$/.test(full)) return null;
@@ -22,7 +22,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-function readableAccent(color: string): string {
+export function readableAccent(color: string): string {
   const rgb = hexToRgb(color);
   if (!rgb) return color;
   // Luminância percebida (0–1) — acima de ~0.68 a cor é clara o bastante

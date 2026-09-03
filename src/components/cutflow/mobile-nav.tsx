@@ -33,15 +33,11 @@ export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
       >
         <Menu className="h-4.5 w-4.5" />
       </button>
-      <SheetContent
-        side="left"
-        className="cf-sheet-dark w-72 sm:max-w-xs p-0 text-cf-side-text border-none"
-        style={{ background: "var(--cf-side-bg)" }}
-      >
+      <SheetContent side="left" className="w-72 sm:max-w-xs p-0 text-cf-side-text">
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">Navegação principal do {BRAND_NAME}</SheetDescription>
         <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--cf-side-border)" }}>
-          <BrandWordmark size="sm" dark />
+          <BrandWordmark size="sm" />
         </div>
         <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-3 space-y-4">
           {NAV_GROUPS.map((group) => (
@@ -56,10 +52,10 @@ export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-all",
+                        "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors",
                         active
-                          ? "cf-side-active text-cf-side-text-active font-semibold"
-                          : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-side-text-active"
+                          ? "cf-side-active text-cf-on-accent font-semibold"
+                          : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-text"
                       )}
                     >
                       <Icon className="h-4 w-4 shrink-0" />

@@ -2,12 +2,17 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BRAND_NAME } from "@/lib/brand";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
-import "@fontsource/sora/600.css";
-import "@fontsource/sora/700.css";
+// Fase 1 do rebranding "Cut Flow" (ver REBRAND-AUDIT.md) — Geist Sans
+// substitui Inter/Sora como única fonte de interface (era duas famílias,
+// uma pra corpo outra pra título; Geist cobre os dois pesos que
+// precisamos, menos uma família carregada). Instrument Serif é o
+// registro editorial — usado só pontualmente (números grandes,
+// percentuais, títulos editoriais), não em toda a interface.
+import "@fontsource/geist-sans/400.css";
+import "@fontsource/geist-sans/500.css";
+import "@fontsource/geist-sans/600.css";
+import "@fontsource/geist-sans/700.css";
+import "@fontsource/instrument-serif/400.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

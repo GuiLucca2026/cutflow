@@ -29,7 +29,7 @@ export function PersonalProgressWidget({ progress }: { progress?: PersonalMonthP
 
   const pct = Math.round((delivered / total) * 100);
   const done = delivered === total;
-  const accent = done ? "#16A34A" : "#7C3AED";
+  const accent = done ? "var(--cf-success)" : "var(--cf-lime)";
   const milestone = personalProgressMilestone(progress);
   const segments = [
     editing > 0 ? `${editing} editando` : null,
@@ -41,8 +41,8 @@ export function PersonalProgressWidget({ progress }: { progress?: PersonalMonthP
     <div
       className="rounded-lg px-3 py-2.5 transition-colors"
       style={{
-        background: done ? "rgba(22, 163, 74, 0.12)" : "var(--cf-side-surface)",
-        border: `1px solid ${done ? "rgba(22, 163, 74, 0.35)" : "var(--cf-side-border)"}`,
+        background: done ? "color-mix(in srgb, var(--cf-success) 12%, transparent)" : "var(--cf-side-surface)",
+        border: `1px solid ${done ? "color-mix(in srgb, var(--cf-success) 35%, transparent)" : "var(--cf-side-border)"}`,
       }}
     >
       <div className="flex items-center justify-between mb-1">

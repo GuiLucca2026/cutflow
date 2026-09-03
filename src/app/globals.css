@@ -1,58 +1,99 @@
 @import "tailwindcss";
 
-/* Identidade "G2 FLOW" (conceito claro + roxo) — substitui o tema escuro +
-   lime original. Os NOMES das variáveis ficaram os mesmos de propósito
-   (cf-lime, cf-black, cf-surface...) porque são usados como classes
-   Tailwind (bg-cf-lime, text-cf-black etc.) espalhadas pelo app inteiro —
-   trocar só o VALOR aqui já atualiza tudo de uma vez, sem precisar caçar
-   cada arquivo. Os nomes descrevem o papel histórico (fundo mais escuro,
-   marca originalmente lime), não o valor atual — ver comentário em cada
-   um. Única exceção: cf-black também era usado como cor de TEXTO sobre
-   preenchimentos da marca (botão, item ativo do menu) — isso não faz mais
-   sentido virando uma cor clara de fundo, então esse papel específico
-   virou o token novo --cf-on-accent (branco). Ver checkbox.tsx,
-   button.tsx, sidebar.tsx etc. (classe text-cf-on-accent).
+/* ============================================================
+   Rebranding "Cut Flow" — Fase 1 (ver REBRAND-AUDIT.md na raiz do repo).
+   Terceira paleta desta mesma base de código: escuro+lime original →
+   claro+roxo/lavanda ("G2 FLOW") → esta, atmosférica/editorial (canvas
+   quente, azul profundo como cor de ação, laranja/coral/vermelho como
+   acentos decorativos). Os NOMES das variáveis seguem os mesmos de
+   sempre (cf-lime, cf-black, cf-surface...) — são usados como classe
+   Tailwind (bg-cf-lime, text-cf-black...) espalhada por ~40 arquivos, e
+   trocar só o VALOR aqui atualiza tudo de uma vez sem caçar arquivo por
+   arquivo. Os nomes descrevem o papel histórico, não o valor atual (ver
+   comentário em cada um).
 */
 :root {
-  /* Marca — roxo/violeta (era o lime). Ação primária, item ativo do menu,
-     logo, links em destaque. */
-  --cf-lime: #7C3AED;
-  --cf-lime-dim: #6D28D9;
-  /* Verde dedicado a "sucesso/concluído" — separado da marca de propósito,
-     pra "isso terminou" nunca ter a mesma cor de "isso é clicável" (ver
-     checkbox marcado, KPIs "bom" da Hoje/Analytics, status Aprovado). */
-  --cf-success: #22C55E;
-  /* Fundo da página/tela cheia (era o preto mais escuro) — agora um
-     cinza muito claro, levemente lavanda, pra os cards brancos (cf-surface)
-     se destacarem por cima, igual ao canvas atrás do quadro no conceito. */
-  --cf-black: #F5F5FA;
-  /* Fundo de card/painel — branco (era a superfície mais clara do escuro). */
-  --cf-surface: #FFFFFF;
-  /* Fundo de hover/nested (era ainda mais claro que cf-surface no escuro;
-     aqui é um cinza bem sutil, pra diferenciar de branco sem pesar). */
-  --cf-surface-2: #F1F1F6;
-  --cf-border: #E5E5EC;
-  --cf-gray: #8B8D98;
-  --cf-gray-light: #4B4D57;
-  --cf-text: #111319;
-  --cf-text-dim: #6B6D76;
-  /* Texto/ícone sobre um preenchimento saturado (botão primário, item de
-     menu ativo, badge de notificação) — branco, pro contraste continuar
-     bom agora que esses preenchimentos são cores vivas sobre fundo claro. */
+  /* ---- Superfícies (era frio/lavanda #F5F5FA; agora canvas quente,
+     off-white pro card — mais parecido com papel/poster do que com
+     "app SaaS"). ---- */
+  --cf-canvas: #F2F0EC;
+  --cf-surface: #FAF9F6;
+  --cf-surface-2: #F1EEE8;
+  --cf-border: rgba(21, 21, 21, 0.10);
+  --cf-ink: #151515;
+  --cf-ink-soft: #343434;
+  --cf-muted: #77746F;
+
+  /* ---- Paleta atmosférica — decorativa (AtmosphericGradient, acentos
+     pontuais). NÃO usar em status/prioridade/risco: essas continuam
+     semânticas, só em STATUS_META/PRIORITY_META/RISK_META (lib/domain.ts),
+     nunca aqui. Cor decorativa ≠ cor de estado. ---- */
+  --cf-blue: #2649A8;
+  --cf-deep-blue: #111B67;
+  --cf-sky: #9DB7DF;
+  --cf-orange: #F5A357;
+  --cf-coral: #FF704D;
+  --cf-red: #D73A2F;
+  --cf-lavender: #C9B9E8;
+  --cf-cream: #E8DDC8;
+
+  /* Marca / ação primária (era roxo #7C3AED da rodada "G2 FLOW"; antes
+     disso, lime — dá pra ver a história inteira só pelos comentários).
+     Agora o azul profundo da paleta atmosférica: item ativo do menu,
+     botão primário, link, foco. */
+  --cf-lime: #2649A8;
+  --cf-lime-dim: #1B3480;
+  /* Verde dedicado a "sucesso/concluído" — separado da marca de propósito
+     (ver histórico), continua assim: "isso terminou" nunca pode ter a
+     mesma cor de "isso é clicável". */
+  --cf-success: #1F8A4C;
+
+  /* Aliases mantidos por compatibilidade — usados como classe Tailwind em
+     dezenas de arquivos (bg-cf-black, text-cf-text, text-cf-text-dim...).
+     Resolvem pros tokens novos acima; nenhum arquivo precisou mudar. */
+  --cf-black: var(--cf-canvas);
+  --cf-gray: #A29E96;
+  --cf-gray-light: #57544E;
+  --cf-text: var(--cf-ink);
+  --cf-text-dim: var(--cf-muted);
+  /* Texto/ícone sobre preenchimento saturado (botão primário, item de
+     menu ativo, badge de notificação) — branco, contraste sobre a cor
+     de marca viva. */
   --cf-on-accent: #FFFFFF;
 
-  /* Sidebar/menu mobile ficam ESCUROS de propósito mesmo no modo claro —
-     é assim no conceito de referência (mockup mostra o painel de navegação
-     em navy quase preto contra o conteúdo branco) e cria a "moldura" que
-     ancora o resto da tela clara. Só usado em sidebar.tsx e mobile-nav.tsx. */
-  --cf-side-bg: #121019;
-  --cf-side-border: rgba(255, 255, 255, 0.08);
-  --cf-side-surface: rgba(255, 255, 255, 0.06);
-  --cf-side-text: #A6A4B8;
-  --cf-side-text-active: #FFFFFF;
+  /* Sidebar/menu mobile — ANTES ficavam escuros de propósito mesmo com o
+     resto do app claro (moldura fixa ancorando o conteúdo). Decisão
+     revista nesta fase do rebrand: passam a usar a MESMA paleta clara —
+     a "moldura" agora é só a borda + leve diferença de superfície, não
+     inversão de cor. Os tokens continuam existindo (usados em
+     sidebar.tsx/mobile-nav.tsx/personal-progress.tsx) só que resolvem
+     pros valores claros agora. */
+  --cf-side-bg: var(--cf-surface);
+  --cf-side-border: var(--cf-border);
+  --cf-side-surface: var(--cf-surface-2);
+  --cf-side-text: var(--cf-muted);
+  --cf-side-text-active: var(--cf-ink);
 
-  --background: var(--cf-black);
-  --foreground: var(--cf-text);
+  --background: var(--cf-canvas);
+  --foreground: var(--cf-ink);
+
+  /* ---- Radius por camada (era um valor só pra rounded-lg/rounded-xl no
+     app inteiro — brief pede diferenciação: input/botão mais contidos,
+     poster de projeto mais generoso). ---- */
+  --cf-radius-input: 8px;
+  --cf-radius-button: 9px;
+  --cf-radius-card: 12px;
+  --cf-radius-poster: 16px;
+
+  /* ---- Motion — antes cada arquivo tinha sua própria duração solta
+     (150ms aqui, 180ms ali...). Centralizado, usado pelas classes
+     cf-fade-in/cf-celebrate-pop abaixo e por qualquer componente novo. ---- */
+  --cf-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --cf-dur-hover: 150ms;
+  --cf-dur-menu: 180ms;
+  --cf-dur-panel: 240ms;
+  --cf-dur-page: 300ms;
+  --cf-dur-progress: 850ms;
 }
 
 @theme inline {
@@ -75,15 +116,34 @@
   --color-cf-side-surface: var(--cf-side-surface);
   --color-cf-side-text: var(--cf-side-text);
   --color-cf-side-text-active: var(--cf-side-text-active);
-  --font-display: 'Sora', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
-  /* Cantos mais arredondados/"macios" em TODO o app (cards, inputs,
-     botões, colunas do Kanban etc. usam rounded-lg/rounded-xl) — parte do
-     efeito "liquid glass" pedido: formas mais suaves, menos angulares que
-     o tema anterior. Sobrescreve só esses dois tamanhos do Tailwind. */
-  --radius-lg: 0.625rem;
-  --radius-xl: 1.125rem;
+  /* Paleta atmosférica exposta como classe Tailwind (bg-cf-blue,
+     text-cf-coral...) pra uso pontual em componentes novos (Fase 2+). */
+  --color-cf-blue: var(--cf-blue);
+  --color-cf-deep-blue: var(--cf-deep-blue);
+  --color-cf-sky: var(--cf-sky);
+  --color-cf-orange: var(--cf-orange);
+  --color-cf-coral: var(--cf-coral);
+  --color-cf-red: var(--cf-red);
+  --color-cf-lavender: var(--cf-lavender);
+  --color-cf-cream: var(--cf-cream);
+
+  /* Geist Sans é a única família de interface agora (era Inter pro corpo
+     + Sora pros títulos — duas famílias carregadas pra um resultado que
+     o brief queria mais discreto). Instrument Serif é o registro
+     editorial: usado PONTUALMENTE (número grande, título editorial,
+     empty state) via .font-editorial — nunca a interface inteira. */
+  --font-display: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: 'Instrument Serif', ui-serif, Georgia, serif;
+
+  /* rounded-lg/rounded-xl (usados em ~30 arquivos) passam a apontar pros
+     tokens de card/poster — qualquer componente que já usava essas
+     classes do Tailwind ganha o radius novo sem precisar editar cada
+     arquivo. Componentes que precisam de um valor mais contido (input,
+     botão) usam --cf-radius-input/--cf-radius-button diretamente. */
+  --radius-lg: var(--cf-radius-card);
+  --radius-xl: var(--cf-radius-poster);
 }
 
 * {
@@ -101,6 +161,29 @@ body {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+/* Registro editorial — Instrument Serif, uso pontual (Fase 2+): número
+   grande de progresso, título de empty state, destaque de dashboard.
+   Nunca em tabela/formulário/label — a interface operacional continua
+   toda em Geist Sans, por legibilidade em uso contínuo. */
+.font-editorial {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Micro label — metadado técnico pequeno (10-11px, uppercase, tracking
+   largo): "EDITING · 14 VIDEOS", cabeçalho de coluna, timestamp. Um dos
+   dois registros tipográficos pedidos pro rebrand (o outro é
+   .font-editorial acima) que ainda não existia como utilitário — cada
+   tela reescrevia text-[10px] uppercase tracking-wide na mão. */
+.cf-micro {
+  font-size: 10px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
 }
 
 ::-webkit-scrollbar {
@@ -123,7 +206,7 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .cf-fade-in {
-  animation: cf-fade-in 0.18s ease-out;
+  animation: cf-fade-in 0.18s var(--cf-ease);
 }
 
 .cf-scrollbar-thin {
@@ -151,23 +234,32 @@ body {
   animation: cf-celebrate-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Movimento ambiente do AtmosphericGradient (Fase 2) — luz mudando
+   devagar, não um loop chamativo. Só transform/opacity (GPU), nunca
+   background-position/filter recalculado a cada frame. Respeita
+   prefers-reduced-motion (ver media query no fim do arquivo). */
+@keyframes cf-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(2%, -3%, 0) scale(1.04); }
+}
+.cf-drift {
+  animation: cf-drift 22s ease-in-out infinite;
+}
+
 /* ============================================================
    Superfícies planas — cor comunica só status/prioridade/risco/categoria,
-   nunca decoração. Havia um efeito "liquid glass" aqui (gradiente de fundo
-   fixo atrás de tudo + backdrop-filter blur em todo bg-cf-surface/-2 +
-   hover com elevação e sombra colorida em ~30 arquivos, via hack de
-   seletor de classe Tailwind) — removido por decisão de produto (auditoria
-   de UX/UI): contradizia a diretriz de evitar glassmorphism, gradiente
-   gratuito e sombra em excesso, e o blur repetido em toda tela tinha custo
-   de render real, não só estético.
+   nunca decoração. Sem glassmorphism, sem blur em superfície, sem hover
+   com elevação/sombra colorida — removido antes da rodada "G2 FLOW" e
+   mantido de propósito nesta também: contradiz tanto aquela auditoria
+   quanto o brief atual do rebrand editorial (seção 13/29 — evitar
+   glassmorphism, sombra grande, glow).
    ============================================================ */
 .bg-cf-surface {
   /* var(--cf-card-tint, ...) continua existindo: VideoCard/KanbanCard
      tingem o fundo do card conforme a cor do status — isso é cor
-     comunicando informação (uso legítimo), não decoração. Só trocou de
-     "vidro colorido" pra "sólido colorido". */
+     comunicando informação (uso legítimo), não decoração. */
   background-color: var(--cf-card-tint, var(--cf-surface)) !important;
-  box-shadow: 0 1px 2px rgba(17, 19, 25, 0.04);
+  box-shadow: 0 1px 2px rgba(21, 21, 21, 0.04);
 }
 .bg-cf-surface-2 {
   background-color: var(--cf-surface-2) !important;
@@ -177,14 +269,14 @@ body {
   background: var(--cf-lime);
 }
 
-/* Menu mobile (Sheet) fica escuro — mesma moldura da Sidebar — mas o botão
-   de fechar (X) do sheet.tsx é compartilhado com o painel de vídeo (que
-   continua claro), então não dá pra reescrever a cor dele direto no
-   componente sem afetar os dois. Sobrescreve só dentro do sheet marcado
-   como escuro. */
-.cf-sheet-dark .text-cf-text-dim {
-  color: var(--cf-side-text) !important;
-}
-.cf-sheet-dark .hover\:bg-cf-surface-2:hover {
-  background: var(--cf-side-surface) !important;
+@media (prefers-reduced-motion: reduce) {
+  .cf-drift,
+  .cf-fade-in,
+  .cf-pulse-dot,
+  .cf-celebrate-pop {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

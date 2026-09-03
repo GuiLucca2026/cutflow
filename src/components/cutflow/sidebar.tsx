@@ -16,7 +16,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
       style={{ background: "var(--cf-side-bg)", borderRight: "1px solid var(--cf-side-border)" }}
     >
       <div className="px-5 py-5">
-        <BrandWordmark size="sm" dark />
+        <BrandWordmark size="sm" />
       </div>
       <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-2 space-y-4">
         {NAV_GROUPS.map((group) => (
@@ -31,10 +31,10 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all",
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
                       active
-                        ? "cf-side-active text-cf-side-text-active font-semibold"
-                        : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-side-text-active"
+                        ? "cf-side-active text-cf-on-accent font-semibold"
+                        : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-text"
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
