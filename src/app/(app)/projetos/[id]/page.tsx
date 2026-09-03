@@ -3,17 +3,23 @@ import { getProject, getProjectActivity, listUsers, listClients } from "@/db/que
 import { ResponsibleSelect } from "@/components/cutflow/responsible-select";
 import { ClientSelect } from "@/components/cutflow/client-select";
 import { ProjectTitle } from "@/components/cutflow/project-title";
-import { projectProgress, PRIORITY_META } from "@/lib/domain";
-import { fmtDateTime, fmtCurrency } from "@/lib/format";
-import { PriorityBadge } from "@/components/cutflow/badges";
-import { Avatar, AvatarStack } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { VideoCard } from "@/components/cutflow/video-card";
-import { OpenVideoOnLoad } from "@/components/cutflow/open-video-on-load";
+import { projectProgress, isDone, STATUS_META, PRIORITY_META } from "@/lib/domain";
+import { fmtCurrency } from "@/lib/format";
 import { ProjectTabs } from "@/components/cutflow/project-tabs";
-import { ExternalLink } from "lucide-react";
+import { OpenVideoOnLoad } from "@/components/cutflow/open-video-on-load";
+import { AtmosphericGradient, atmosphericTone, atmosphericVariantForSeed } from "@/components/cutflow/atmospheric-gradient";
+import { ClientLogo } from "@/components/cutflow/client-logo";
+import { ProgressIndicator } from "@/components/cutflow/progress-indicator";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+function formatDateOnly(date: string) {
+  const [, month, day] = date.slice(0, 10).split("-");
+  const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+  if (!month || !day) return date;
+  return `${day} ${months[Math.max(0, Number(month) - 1)]}`;
+}
 
 export default async function ProjectDetailPage({
   params,
@@ -24,84 +30,153 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
   const { video } = await searchParams;
-  const [project, activity, users, clients] = await Promise.all([getProject(id), getProjectActivity(id), listUsers(), listClients()]);
+  const [project, activity, users, clients] = await Promise.all([
+    getProject(id),
+    getProjectActivity(id),
+    listUsers(),
+    listClients(),
+  ]);
   if (!project) notFound();
 
   const progress = projectProgress(project.videos);
+  const variant = atmosphericVariantForSeed(project.id);
+  const darkArtwork = atmosphericTone(variant) === "dark";
+  const activeVideos = project.videos.filter((item: any) => !isDone(item.status));
+  const nextDeadline = [...activeVideos]
+    .filter((item: any) => item.finalDeadline)
+    .sort((a: any, b: any) => a.finalDeadline.localeCompare(b.finalDeadline))[0]?.finalDeadline as string | undefined;
+  const mostAdvanced = [...activeVideos].sort(
+    (a: any, b: any) => (STATUS_META[b.status]?.order ?? 0) - (STATUS_META[a.status]?.order ?? 0)
+  )[0];
+  const stage = mostAdvanced ? STATUS_META[mostAdvanced.status]?.label ?? "Em andamento" : "Concluído";
+  const priority = PRIORITY_META[project.priority]?.label ?? project.priority;
   const editors = Array.from(
-    new Map(project.videos.filter((v: any) => v.editorId).map((v: any) => [v.editorId, v.editor])).values()
-  );
+    new Map(project.videos.filter((item: any) => item.editorId).map((item: any) => [item.editorId, item.editor])).values()
+  ) as any[];
 
   return (
-    <div className="cf-fade-in pb-16 space-y-5">
+    <div className="cf-fade-in space-y-7 pb-16">
       {video && <OpenVideoOnLoad videoId={video} />}
 
-      <div className="rounded-xl border border-cf-border bg-cf-surface p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-sm text-cf-text-dim">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: project.client?.color }} />
-              {project.client?.name}
-              <span>·</span>
-              {project.type}
+      <section
+        className={cn(
+          "relative min-h-[430px] overflow-hidden rounded-[var(--cf-radius-poster)] border",
+          darkArtwork ? "border-white/[0.10] text-white" : "border-black/[0.10] text-[#171717]"
+        )}
+      >
+        <AtmosphericGradient variant={variant} seed={project.id} animated grain className="absolute inset-0" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: darkArtwork
+              ? "linear-gradient(180deg, rgba(8,10,28,.10) 0%, rgba(8,10,28,.03) 42%, rgba(8,10,28,.48) 100%)"
+              : "linear-gradient(180deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.03) 46%, rgba(255,255,255,.52) 100%)",
+          }}
+        />
+
+        <div className="relative z-10 flex min-h-[430px] flex-col justify-between p-6 md:p-8 lg:p-10">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <ClientLogo
+                name={project.client?.name ?? "Cliente"}
+                color={project.client?.color ?? "#2649A8"}
+                size={44}
+                onDark={darkArtwork}
+                variant="poster"
+              />
+              <div>
+                <div className={cn("cf-micro", darkArtwork ? "text-white/[0.62]" : "text-black/[0.52]")}>CLIENT</div>
+                <div className="mt-1 text-sm font-medium">{project.client?.name ?? "—"}</div>
+              </div>
             </div>
-            <ProjectTitle id={project.id} name={project.name} className="font-display text-4xl tracking-wide mt-1" />
-            {project.description && <p className="text-cf-text-dim text-sm mt-1 max-w-xl">{project.description}</p>}
+            <div className={cn("text-right cf-micro", darkArtwork ? "text-white/[0.58]" : "text-black/[0.50]")}>
+              <div>{project.type}</div>
+              {project.priority !== "NORMAL" && <div className="mt-1">PRIORIDADE {priority.toUpperCase()}</div>}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <PriorityBadge priority={project.priority} />
-            {editors.length > 0 && <AvatarStack people={editors.map((e: any) => ({ name: e?.name ?? "?", color: e?.avatarColor }))} />}
+
+          <div className="grid items-end gap-8 lg:grid-cols-[1fr_260px]">
+            <div className="max-w-4xl">
+              <div className={cn("mb-3 cf-micro", darkArtwork ? "text-white/[0.62]" : "text-black/[0.52]")}>{stage}</div>
+              <ProjectTitle
+                id={project.id}
+                name={project.name}
+                className="max-w-[900px] text-[44px] font-semibold leading-[0.94] tracking-[-0.05em] md:text-[62px] lg:text-[74px]"
+                editButtonClassName={darkArtwork ? "text-white/[0.55] hover:text-white" : "text-black/[0.45] hover:text-black"}
+              />
+              {project.description && (
+                <p className={cn("mt-4 max-w-2xl text-sm leading-relaxed", darkArtwork ? "text-white/[0.72]" : "text-black/[0.62]")}>
+                  {project.description}
+                </p>
+              )}
+            </div>
+
+            <ProgressIndicator
+              value={progress}
+              label="PROJECT PROGRESS"
+              size="lg"
+              tone={darkArtwork ? "light" : "dark"}
+            />
+          </div>
+
+          <div className={cn("grid gap-4 border-t pt-4 sm:grid-cols-3", darkArtwork ? "border-white/[0.22]" : "border-black/[0.16]")}>
+            <HeroFact label="NEXT DELIVERY" value={nextDeadline ? formatDateOnly(nextDeadline) : "—"} dark={darkArtwork} />
+            <HeroFact label="VIDEOS" value={String(project.videos.length).padStart(2, "0")} dark={darkArtwork} />
+            <HeroFact
+              label="TEAM"
+              value={[project.producer?.name, ...editors.map((editor) => editor?.name).filter(Boolean)].filter(Boolean).slice(0, 3).join(" · ") || "A definir"}
+              dark={darkArtwork}
+            />
           </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-5">
-          {/* Cliente do projeto — sempre existe um, trocar não deixa vazio
-              (ver setProjectClient em actions.ts). */}
+      <section className="border-y border-cf-border py-4">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-1">Cliente</div>
+            <div className="cf-micro mb-1.5 text-cf-text-dim">Cliente</div>
             <ClientSelect
               projectId={project.id}
               value={project.clientId}
-              clients={clients.map((c) => ({ id: c.id, name: c.name }))}
-              className="h-8 text-sm"
+              clients={clients.map((client) => ({ id: client.id, name: client.name }))}
+              className="h-9 bg-transparent"
             />
           </div>
-          {/* Responsável do projeto = produtor. Quem cria já entra aqui
-              (ver insertProject) e a troca é feita neste seletor. */}
           <div>
-            <div className="text-[11px] uppercase tracking-wide text-cf-text-dim mb-1">Responsável</div>
+            <div className="cf-micro mb-1.5 text-cf-text-dim">Responsável</div>
             <ResponsibleSelect
               kind="project"
               id={project.id}
               value={project.producerId ?? null}
-              users={users.map((u) => ({ id: u.id, name: u.name }))}
-              className="h-8 text-sm"
+              users={users.map((user) => ({ id: user.id, name: user.name }))}
+              className="h-9 bg-transparent"
             />
           </div>
           <Fact label="Editor líder" value={project.leadEditor?.name ?? "—"} />
           <Fact label="Vídeos" value={String(project.videos.length)} />
           <Fact label="Orçamento" value={project.budget ? fmtCurrency(project.budget) : "—"} />
         </div>
+      </section>
 
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-cf-text-dim mb-1">
-            <span>Progresso ponderado</span>
-            <span>{progress}%</span>
-          </div>
-          <Progress value={progress} />
-        </div>
-      </div>
+      <ProjectTabs project={project} activity={activity} users={users.map((user) => ({ id: user.id, name: user.name }))} />
+    </div>
+  );
+}
 
-      <ProjectTabs project={project} activity={activity} users={users.map((u) => ({ id: u.id, name: u.name }))} />
+function HeroFact({ label, value, dark }: { label: string; value: string; dark: boolean }) {
+  return (
+    <div className="min-w-0">
+      <div className={cn("cf-micro", dark ? "text-white/[0.52]" : "text-black/[0.48]")}>{label}</div>
+      <div className={cn("mt-1 truncate text-sm", dark ? "text-white/[0.86]" : "text-black/[0.78]")}>{value}</div>
     </div>
   );
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className="text-[11px] uppercase tracking-wide text-cf-text-dim">{label}</div>
-      <div className="font-medium text-sm mt-0.5">{value}</div>
+    <div className="flex min-h-14 flex-col justify-center">
+      <div className="cf-micro text-cf-text-dim">{label}</div>
+      <div className="mt-1 text-sm font-medium">{value}</div>
     </div>
   );
 }

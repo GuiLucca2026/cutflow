@@ -12,16 +12,21 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
   const pathname = usePathname();
   return (
     <aside
-      className="hidden lg:flex w-60 shrink-0 flex-col h-screen sticky top-0 text-cf-side-text"
+      className="hidden h-screen w-[232px] shrink-0 flex-col lg:sticky lg:top-0 lg:flex text-cf-side-text"
       style={{ background: "var(--cf-side-bg)", borderRight: "1px solid var(--cf-side-border)" }}
     >
-      <div className="px-5 py-5">
-        <BrandWordmark size="sm" />
+      <div className="px-5 pb-5 pt-6">
+        <BrandWordmark size="sm" dark />
       </div>
-      <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-2 space-y-4">
+
+      <nav className="cf-scrollbar-thin flex-1 space-y-5 overflow-y-auto px-3 py-2">
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
-            {group.label && <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-cf-side-text/50">{group.label}</div>}
+            {group.label && (
+              <div className="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/[0.28]">
+                {group.label}
+              </div>
+            )}
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + "/");
@@ -31,13 +36,13 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+                      "flex items-center gap-2.5 rounded-[6px] px-3 py-2 text-[13px] transition-colors duration-[var(--cf-dur-hover)]",
                       active
-                        ? "cf-side-active text-cf-on-accent font-semibold"
-                        : "text-cf-side-text hover:bg-cf-side-surface hover:text-cf-text"
+                        ? "cf-side-active font-medium text-cf-side-text-active"
+                        : "text-cf-side-text hover:bg-white/[0.045] hover:text-white/[0.88]"
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
+                    <Icon className={cn("h-4 w-4 shrink-0", active ? "text-cf-sky" : "text-white/[0.38]")} />
                     <span className="flex-1">{item.label}</span>
                   </Link>
                 );
@@ -46,6 +51,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
           </div>
         ))}
       </nav>
+
       <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
         <PersonalProgressWidget progress={progress} />
       </div>

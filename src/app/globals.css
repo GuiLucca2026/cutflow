@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Rebranding "Cut Flow" — Fase 1 (ver REBRAND-AUDIT.md na raiz do repo).
+   Rebranding visual do G2 FLOW — base da Fase 2 (ver REBRAND-AUDIT.md na raiz do repo).
    Terceira paleta desta mesma base de código: escuro+lime original →
    claro+roxo/lavanda ("G2 FLOW") → esta, atmosférica/editorial (canvas
    quente, azul profundo como cor de ação, laranja/coral/vermelho como
@@ -22,7 +22,7 @@
   --cf-border: rgba(21, 21, 21, 0.10);
   --cf-ink: #151515;
   --cf-ink-soft: #343434;
-  --cf-muted: #77746F;
+  --cf-muted: #6E6B66;
 
   /* ---- Paleta atmosférica — decorativa (AtmosphericGradient, acentos
      pontuais). NÃO usar em status/prioridade/risco: essas continuam
@@ -37,12 +37,13 @@
   --cf-lavender: #C9B9E8;
   --cf-cream: #E8DDC8;
 
-  /* Marca / ação primária (era roxo #7C3AED da rodada "G2 FLOW"; antes
-     disso, lime — dá pra ver a história inteira só pelos comentários).
-     Agora o azul profundo da paleta atmosférica: item ativo do menu,
-     botão primário, link, foco. */
-  --cf-lime: #2649A8;
-  --cf-lime-dim: #1B3480;
+  /* Marca / ação primária. `primary` é o token semântico novo; os
+     nomes `lime` ficam só como alias legado enquanto as telas antigas
+     migram gradualmente. Componentes novos devem usar cf-primary. */
+  --cf-primary: var(--cf-blue);
+  --cf-primary-hover: #1B3480;
+  --cf-lime: var(--cf-primary); /* legacy compatibility alias */
+  --cf-lime-dim: var(--cf-primary-hover); /* legacy compatibility alias */
   /* Verde dedicado a "sucesso/concluído" — separado da marca de propósito
      (ver histórico), continua assim: "isso terminou" nunca pode ter a
      mesma cor de "isso é clicável". */
@@ -61,18 +62,13 @@
      de marca viva. */
   --cf-on-accent: #FFFFFF;
 
-  /* Sidebar/menu mobile — ANTES ficavam escuros de propósito mesmo com o
-     resto do app claro (moldura fixa ancorando o conteúdo). Decisão
-     revista nesta fase do rebrand: passam a usar a MESMA paleta clara —
-     a "moldura" agora é só a borda + leve diferença de superfície, não
-     inversão de cor. Os tokens continuam existindo (usados em
-     sidebar.tsx/mobile-nav.tsx/personal-progress.tsx) só que resolvem
-     pros valores claros agora. */
-  --cf-side-bg: var(--cf-surface);
-  --cf-side-border: var(--cf-border);
-  --cf-side-surface: var(--cf-surface-2);
-  --cf-side-text: var(--cf-muted);
-  --cf-side-text-active: var(--cf-ink);
+  /* Sidebar/menu mobile: moldura neutra escura. A cor expressiva fica
+     concentrada no conteúdo/projetos, não na navegação. */
+  --cf-side-bg: #111216;
+  --cf-side-border: rgba(255, 255, 255, 0.08);
+  --cf-side-surface: rgba(255, 255, 255, 0.055);
+  --cf-side-text: #85858B;
+  --cf-side-text-active: #ECEAE5;
 
   --background: var(--cf-canvas);
   --foreground: var(--cf-ink);
@@ -99,6 +95,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-cf-primary: var(--cf-primary);
+  --color-cf-primary-hover: var(--cf-primary-hover);
   --color-cf-lime: var(--cf-lime);
   --color-cf-lime-dim: var(--cf-lime-dim);
   --color-cf-success: var(--cf-success);
@@ -239,12 +237,31 @@ body {
    background-position/filter recalculado a cada frame. Respeita
    prefers-reduced-motion (ver media query no fim do arquivo). */
 @keyframes cf-drift {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(2%, -3%, 0) scale(1.04); }
+  0%, 100% { transform: translate3d(-2%, 1%, 0) scale(1.02); }
+  35% { transform: translate3d(4%, -3%, 0) scale(1.08); }
+  68% { transform: translate3d(-1%, 4%, 0) scale(1.045); }
+}
+@keyframes cf-drift-alt {
+  0%, 100% { transform: translate3d(2%, -2%, 0) scale(1.04); }
+  42% { transform: translate3d(-5%, 2%, 0) scale(1.09); }
+  72% { transform: translate3d(3%, 4%, 0) scale(1.03); }
 }
 .cf-drift {
-  animation: cf-drift 22s ease-in-out infinite;
+  animation: cf-drift 26s var(--cf-ease) infinite;
+  will-change: transform;
 }
+.cf-drift-alt {
+  animation: cf-drift-alt 31s var(--cf-ease) infinite;
+  will-change: transform;
+}
+.cf-atmosphere-blob {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  filter: blur(52px);
+  transform-origin: 50% 50%;
+}
+
 
 /* ============================================================
    Superfícies planas — cor comunica só status/prioridade/risco/categoria,
@@ -266,11 +283,14 @@ body {
 }
 
 .cf-side-active {
-  background: var(--cf-lime);
+  color: var(--cf-side-text-active);
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 2px 0 0 var(--cf-sky);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cf-drift,
+  .cf-drift-alt,
   .cf-fade-in,
   .cf-pulse-dot,
   .cf-celebrate-pop {
@@ -279,4 +299,12 @@ body {
   * {
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Cards de projeto podem existir em listas longas. O browser não precisa
+   pintar dezenas de artworks borrados fora da viewport só porque o grid
+   já conhece todos os projetos. */
+.cf-project-poster {
+  content-visibility: auto;
+  contain-intrinsic-size: 390px 488px;
 }

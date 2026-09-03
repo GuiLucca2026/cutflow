@@ -1,148 +1,159 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { PriorityBadge } from "@/components/cutflow/badges";
-import { ProjectContextMenu } from "@/components/cutflow/project-context-menu";
-import { AvatarStack } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import { PRIORITY_META, isOverdue, isDone, projectProgress } from "@/lib/domain";
-import { Search, X, AlertTriangle } from "lucide-react";
+import { PRIORITY_META, isDone, isOverdue } from "@/lib/domain";
+import { ProjectCard, type ProjectPosterData } from "@/components/cutflow/project-card";
+import { EmptyState } from "@/components/cutflow/empty-state";
+import { cn } from "@/lib/utils";
 
-type ProjectLite = {
-  id: string;
-  name: string;
-  type: string;
-  priority: string;
-  client: { id: string; name: string; color: string } | null;
-  videos: { status: string; finalDeadline: string; editorId: string | null; editor: { name: string; avatarColor: string } | null; alterationStartedAt?: string | null }[];
-};
+type Scope = "all" | "active" | "late" | "done";
 
-// Mesmo padrão de filtro do VideosExplorer (busca + selects), aplicado aqui
-// porque a lista de Projetos não tinha NENHUM jeito de filtrar — com 8
-// projetos de demonstração isso não incomoda, com 200 vira o único jeito
-// de achar algo. Cada card também ganhou um sinal de atraso (contagem de
-// vídeos atrasados do projeto), que antes só existia no card de Cliente —
-// inconsistência: o nível mais específico (Projeto) mostrava MENOS sinal
-// de risco que o nível mais genérico (Cliente) acima dele.
-export function ProjectsExplorer({ projects }: { projects: ProjectLite[] }) {
+const SCOPES: { value: Scope; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "active", label: "Ativos" },
+  { value: "late", label: "Atrasados" },
+  { value: "done", label: "Concluídos" },
+];
+
+function isProjectDone(project: ProjectPosterData) {
+  return project.videos.length > 0 && project.videos.every((video) => isDone(video.status));
+}
+
+function isProjectLate(project: ProjectPosterData) {
+  return project.videos.some(
+    (video) => !isDone(video.status) && isOverdue(video.finalDeadline, video.status, video.alterationStartedAt)
+  );
+}
+
+export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }) {
   const [q, setQ] = React.useState("");
   const [clientId, setClientId] = React.useState("all");
   const [priority, setPriority] = React.useState("all");
+  const [scope, setScope] = React.useState<Scope>("all");
 
   const clients = React.useMemo(() => {
     const map = new Map<string, { id: string; name: string }>();
-    for (const p of projects) if (p.client) map.set(p.client.id, { id: p.client.id, name: p.client.name });
+    for (const project of projects) {
+      if (project.client) map.set(project.client.id, { id: project.client.id, name: project.client.name });
+    }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [projects]);
 
-  const filtered = projects.filter((p) => {
-    if (q && !`${p.name} ${p.client?.name ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
-    if (clientId !== "all" && p.client?.id !== clientId) return false;
-    if (priority !== "all" && p.priority !== priority) return false;
+  const counts = React.useMemo(
+    () => ({
+      all: projects.length,
+      active: projects.filter((project) => !isProjectDone(project)).length,
+      late: projects.filter(isProjectLate).length,
+      done: projects.filter(isProjectDone).length,
+    }),
+    [projects]
+  );
+
+  const filtered = projects.filter((project) => {
+    if (q && !`${project.name} ${project.client?.name ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
+    if (clientId !== "all" && project.client?.id !== clientId) return false;
+    if (priority !== "all" && project.priority !== priority) return false;
+    if (scope === "active" && isProjectDone(project)) return false;
+    if (scope === "done" && !isProjectDone(project)) return false;
+    if (scope === "late" && !isProjectLate(project)) return false;
     return true;
   });
 
-  const hasFilters = q || clientId !== "all" || priority !== "all";
+  const hasFilters = q || clientId !== "all" || priority !== "all" || scope !== "all";
+
   function clearAll() {
     setQ("");
     setClientId("all");
     setPriority("all");
+    setScope("all");
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px] max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-cf-text-dim" />
-          <Input placeholder="Buscar projeto, cliente…" className="pl-8" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="space-y-7">
+      <div className="border-y border-cf-border">
+        <div className="flex flex-col gap-4 py-3.5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-5 overflow-x-auto cf-scrollbar-thin">
+            {SCOPES.map((item) => {
+              const active = scope === item.value;
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setScope(item.value)}
+                  className={cn(
+                    "relative shrink-0 py-1 text-[12px] font-medium transition-colors",
+                    active ? "text-cf-text" : "text-cf-text-dim hover:text-cf-text"
+                  )}
+                >
+                  {item.label}
+                  <span className="ml-1.5 font-editorial text-[15px]">{counts[item.value]}</span>
+                  {active && <span className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-cf-primary" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-[210px] flex-1 xl:w-[260px] xl:flex-none">
+              <Search className="absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-cf-text-dim" />
+              <Input
+                placeholder="Buscar projeto ou cliente"
+                className="h-9 rounded-none border-0 border-b border-cf-border bg-transparent pl-6 pr-2 shadow-none focus:border-cf-primary focus:ring-0"
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+              />
+            </div>
+
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger className="h-9 w-[170px] rounded-none border-0 border-b border-cf-border bg-transparent px-1 focus:ring-0">
+                <SelectValue placeholder="Cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os clientes</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="h-9 w-[145px] rounded-none border-0 border-b border-cf-border bg-transparent px-1 focus:ring-0">
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toda prioridade</SelectItem>
+                {Object.entries(PRIORITY_META).map(([key, value]) => (
+                  <SelectItem key={key} value={key}>{value.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearAll}
+                className="inline-flex h-9 items-center gap-1.5 px-1 text-xs text-cf-text-dim transition-colors hover:text-cf-text"
+              >
+                <X className="h-3.5 w-3.5" /> Limpar
+              </button>
+            )}
+          </div>
         </div>
-        <Select value={clientId} onValueChange={setClientId}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os clientes</SelectItem>
-            {clients.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={priority} onValueChange={setPriority}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Prioridade" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Toda prioridade</SelectItem>
-            {Object.entries(PRIORITY_META).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearAll} className="gap-1">
-            <X className="h-3.5 w-3.5" /> Limpar
-          </Button>
-        )}
       </div>
 
-      <div className="text-xs text-cf-text-dim">{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</div>
-
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-cf-border p-10 text-center text-sm text-cf-text-dim">
-          Nenhum projeto corresponde aos filtros selecionados.
-        </div>
+        <EmptyState
+          title="Nada em movimento aqui."
+          description="Nenhum projeto corresponde aos filtros selecionados."
+        />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {filtered.map((p) => {
-            const progress = projectProgress(p.videos);
-            const active = p.videos.filter((v) => !isDone(v.status));
-            const overdue = active.filter((v) => isOverdue(v.finalDeadline, v.status, v.alterationStartedAt));
-            const editors = Array.from(
-              new Map(p.videos.filter((v) => v.editorId && v.editor).map((v) => [v.editorId as string, v.editor!])).values()
-            );
-
-            return (
-              <ProjectContextMenu key={p.id} project={{ id: p.id, name: p.name }} href={`/projetos/${p.id}`}>
-                <Link
-                  href={`/projetos/${p.id}`}
-                  className="rounded-xl border border-cf-border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors block"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: p.client?.color }} />
-                        <span className="text-xs text-cf-text-dim truncate">{p.client?.name}</span>
-                      </div>
-                      <h3 className="font-semibold mt-0.5 truncate">{p.name}</h3>
-                      <div className="text-xs text-cf-text-dim mt-0.5">{p.type} · {p.videos.length} vídeos</div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {overdue.length > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
-                          <AlertTriangle className="h-3 w-3" /> {overdue.length} atrasado{overdue.length === 1 ? "" : "s"}
-                        </span>
-                      )}
-                      <PriorityBadge priority={p.priority} />
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between text-xs text-cf-text-dim mb-1">
-                      <span>Progresso</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <Progress value={progress} />
-                  </div>
-
-                  {editors.length > 0 && (
-                    <div className="flex items-center justify-end mt-3 pt-3 border-t border-cf-border">
-                      <AvatarStack people={editors.map((e) => ({ name: e.name, color: e.avatarColor }))} />
-                    </div>
-                  )}
-                </Link>
-              </ProjectContextMenu>
-            );
-          })}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {filtered.map((project, index) => (
+            <ProjectCard key={project.id} project={project} index={index} />
+          ))}
         </div>
       )}
     </div>

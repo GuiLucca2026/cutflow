@@ -6,27 +6,45 @@ export const dynamic = "force-dynamic";
 export default async function ProjetosPage() {
   const projects = await listProjects();
 
-  const light = projects.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    type: p.type,
-    priority: p.priority,
-    client: p.client ? { id: p.client.id, name: p.client.name, color: p.client.color } : null,
-    videos: p.videos.map((v: any) => ({
-      status: v.status,
-      finalDeadline: v.finalDeadline,
-      editorId: v.editorId,
-      editor: v.editor ? { name: v.editor.name, avatarColor: v.editor.avatarColor } : null,
-      alterationStartedAt: v.alterationStartedAt,
+  const light = projects.map((project: any) => ({
+    id: project.id,
+    name: project.name,
+    type: project.type,
+    priority: project.priority,
+    status: project.status,
+    client: project.client
+      ? { id: project.client.id, name: project.client.name, color: project.client.color }
+      : null,
+    producer: project.producer
+      ? { id: project.producer.id, name: project.producer.name, avatarColor: project.producer.avatarColor }
+      : null,
+    videos: project.videos.map((video: any) => ({
+      status: video.status,
+      finalDeadline: video.finalDeadline,
+      editorId: video.editorId,
+      editor: video.editor ? { name: video.editor.name, avatarColor: video.editor.avatarColor } : null,
+      alterationStartedAt: video.alterationStartedAt,
     })),
   }));
 
   return (
-    <div className="cf-fade-in space-y-5 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Projetos</h1>
-        <p className="text-cf-text-dim text-sm">{projects.length} projetos ativos e arquivados</p>
-      </div>
+    <div className="cf-fade-in pb-20">
+      <header className="mb-8 pt-1 md:mb-10">
+        <div className="cf-micro text-cf-text-dim">WORK / PROJECTS</div>
+        <div className="mt-3 flex items-end justify-between gap-6 border-b border-cf-border pb-5">
+          <div>
+            <h1 className="text-[46px] font-semibold leading-none tracking-[-0.045em] md:text-[62px]">Projetos</h1>
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-cf-text-dim">
+              Uma visão visual do que está em movimento agora — do primeiro corte até a entrega.
+            </p>
+          </div>
+          <div className="hidden shrink-0 text-right sm:block">
+            <div className="font-editorial text-[58px] leading-[0.8] tracking-[-0.04em] md:text-[72px]">{projects.length}</div>
+            <div className="cf-micro mt-2 text-cf-text-dim">PROJECTS</div>
+          </div>
+        </div>
+      </header>
+
       <ProjectsExplorer projects={light} />
     </div>
   );

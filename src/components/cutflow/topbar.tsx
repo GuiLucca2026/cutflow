@@ -69,17 +69,17 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-cf-border bg-white/65 backdrop-blur-xl backdrop-saturate-150 px-5 py-3">
+    <header className="sticky top-0 z-30 flex min-h-[58px] items-center gap-3 border-b border-cf-border bg-cf-surface px-5 py-2.5">
       <MobileNav progress={progress} />
       {title && <h1 className="font-display text-2xl tracking-wide mr-2 hidden sm:block">{title}</h1>}
 
       <button
         onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-        className="flex items-center gap-2 rounded-lg border border-cf-border bg-cf-surface px-3 py-1.5 text-sm text-cf-text-dim hover:border-cf-lime/40 hover:text-cf-text transition-colors flex-1 max-w-sm"
+        className="flex max-w-sm flex-1 items-center gap-2 rounded-[7px] border border-transparent bg-transparent px-2.5 py-1.5 text-sm text-cf-text-dim transition-colors hover:bg-cf-surface-2 hover:text-cf-text"
       >
         <Search className="h-4 w-4" />
         <span className="flex-1 text-left">Pesquisar…</span>
-        <kbd className="text-[10px] rounded border border-cf-border px-1.5 py-0.5 bg-cf-surface-2">⌘K</kbd>
+        <kbd className="text-[10px] px-1 py-0.5 text-cf-text-dim">⌘K</kbd>
       </button>
 
       <div className="flex-1" />

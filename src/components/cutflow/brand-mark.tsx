@@ -46,7 +46,7 @@ export function BrandWordmark({
     <div className={cn("flex items-center gap-2.5", className)}>
       <BrandIcon size={iconSize} />
       <div className={cn("font-display leading-none tracking-tight", textClass)}>
-        <span style={{ color: dark ? "var(--cf-sky)" : "var(--cf-lime)" }}>{BRAND_PREFIX}</span>{" "}
+        <span style={{ color: dark ? "var(--cf-sky)" : "var(--cf-primary)" }}>{BRAND_PREFIX}</span>{" "}
         <span className={dark ? "text-white" : "text-cf-text"}>FLOW</span>
       </div>
     </div>
