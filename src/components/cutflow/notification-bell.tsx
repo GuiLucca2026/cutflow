@@ -138,14 +138,14 @@ export function NotificationBell({ alerts, notifications }: { alerts: Alert[]; n
                 {items.map((n) => {
                   const Icon = NOTIF_ICON[n.type] ?? Info;
                   const body = (
-                    <div className={cn("flex gap-2.5 rounded-lg px-2 py-2 transition-colors", n.read ? "hover:bg-cf-surface-2" : "bg-cf-lime/5 hover:bg-cf-lime/10")}>
-                      <Icon className={cn("h-4 w-4 shrink-0 mt-0.5", n.read ? "text-cf-text-dim" : "text-cf-lime")} />
+                    <div className={cn("flex gap-2.5 rounded-lg px-2 py-2 transition-colors", n.read ? "hover:bg-cf-surface-2" : "bg-cf-primary/5 hover:bg-cf-primary/10")}>
+                      <Icon className={cn("h-4 w-4 shrink-0 mt-0.5", n.read ? "text-cf-text-dim" : "text-cf-primary")} />
                       <div className="min-w-0 flex-1">
                         <div className="text-xs font-medium leading-snug">{n.title}</div>
                         {n.body && <div className="text-[11px] text-cf-text-dim leading-snug mt-0.5 line-clamp-2">{n.body}</div>}
                         <div className="text-[10px] text-cf-text-dim/70 mt-0.5">{fmtRelative(n.createdAt)}</div>
                       </div>
-                      {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-cf-lime shrink-0 mt-1.5" />}
+                      {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-cf-primary shrink-0 mt-1.5" />}
                     </div>
                   );
                   return n.entityType === "PROJECT" && n.entityId ? (

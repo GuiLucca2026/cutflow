@@ -140,7 +140,7 @@ export function Topbar({
                 >
                   <Avatar name={u.name} color={u.avatarColor} size={22} />
                   {u.name}
-                  {u.id === currentUser.id && <span className="ml-auto text-cf-lime text-xs">●</span>}
+                  {u.id === currentUser.id && <span className="ml-auto text-cf-primary text-xs">●</span>}
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />

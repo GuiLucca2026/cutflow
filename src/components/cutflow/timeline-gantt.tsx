@@ -166,7 +166,7 @@ export function TimelineGantt({
           </button>
           <button
             onClick={scrollToToday}
-            className="flex items-center gap-1 border-b border-cf-border px-2 py-1 text-[11px] text-cf-lime hover:bg-cf-surface-2 transition-colors"
+            className="flex items-center gap-1 border-b border-cf-border px-2 py-1 text-[11px] text-cf-primary hover:bg-cf-surface-2 transition-colors"
           >
             <Locate className="h-3 w-3" /> Hoje
           </button>
@@ -209,7 +209,7 @@ export function TimelineGantt({
             {/* Today playhead — spans the full height of the reel, like the
                 current-time indicator in a video editor. */}
             <div
-              className="pointer-events-none absolute top-0 bottom-0 w-px bg-cf-lime/50 z-[5]"
+              className="pointer-events-none absolute top-0 bottom-0 w-px bg-cf-primary/50 z-[5]"
               style={{ left: LABEL_WIDTH + todayLeft }}
             />
 
@@ -227,7 +227,7 @@ export function TimelineGantt({
                     style={{ width: dayWidth }}
                     className={cn(
                       "shrink-0 text-center text-[10px] py-2 border-r border-cf-border/50 transition-[width] duration-150",
-                      isToday(d) && "bg-cf-lime/10 text-cf-lime font-semibold"
+                      isToday(d) && "bg-cf-primary/10 text-cf-primary font-semibold"
                     )}
                   >
                     {dayWidth >= 20 && <div className="capitalize">{format(d, "EEEEE", { locale: ptBR })}</div>}

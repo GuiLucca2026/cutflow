@@ -76,7 +76,7 @@ export default function SsoPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 rounded-full border-2 border-cf-lime border-t-transparent animate-spin" />
+          <div className="h-8 w-8 rounded-full border-2 border-cf-primary border-t-transparent animate-spin" />
           <p className="text-cf-text-dim text-sm">Conectando com o G2 FLOW…</p>
         </div>
       )}

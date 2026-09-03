@@ -29,7 +29,7 @@ export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
       <button
         onClick={() => setOpen(true)}
         aria-label="Abrir menu"
-        className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-dim hover:text-cf-text hover:border-cf-lime/40 transition-colors shrink-0"
+        className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-cf-border bg-cf-surface text-cf-text-dim hover:text-cf-text hover:border-cf-primary/40 transition-colors shrink-0"
       >
         <Menu className="h-4.5 w-4.5" />
       </button>

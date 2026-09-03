@@ -23,7 +23,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
         {NAV_GROUPS.map((group) => (
           <div key={group.label}>
             {group.label && (
-              <div className="px-3 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/[0.28]">
+              <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/[0.28]">
                 {group.label}
               </div>
             )}

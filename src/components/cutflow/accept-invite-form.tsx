@@ -72,7 +72,7 @@ export function AcceptInviteForm({
     return (
       <p className="text-cf-text-dim text-sm text-center">
         Conta criada! Confira seu e-mail (<strong className="text-cf-text">{email}</strong>) pra confirmar — depois é
-        só entrar em <span className="text-cf-lime">/login</span> com o e-mail e a senha que você acabou de criar.
+        só entrar em <span className="text-cf-primary">/login</span> com o e-mail e a senha que você acabou de criar.
       </p>
     );
   }

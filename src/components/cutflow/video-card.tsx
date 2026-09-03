@@ -20,7 +20,7 @@ import {
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { AlertTriangle, Bell, CalendarDays, Clock3, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { atmosphericAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
+import { projectAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
 
 export type VideoCardData = {
   id: string;
@@ -54,7 +54,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const waitMeta = clientWait ? CLIENT_WAIT_META[clientWait.kind] : null;
   const accent = overdue ? "#C93128" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusMeta.color;
   const projectSeed = video.projectId ?? video.project?.name ?? video.id;
-  const projectAccent = atmosphericAccentForSeed(projectSeed);
+  const projectAccent = projectAccentForSeed(projectSeed);
 
   let attention: { label: string; color: string; hint?: string } | null = null;
   if (overdue) attention = { label: "ATRASADO", color: "#C93128", hint: "Passou da data de entrega final e o vídeo ainda não foi entregue." };
@@ -66,11 +66,11 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
       <button
         onClick={() => open(video.id)}
         className={cn(
-          "group relative flex h-full min-h-[210px] w-full flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface text-left transition-[border-color,background-color] duration-[var(--cf-dur-hover)] hover:border-black/[0.22] hover:bg-white/70",
+          "group relative flex h-full min-h-[210px] w-full flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface text-left transition-[border-color,background-color] duration-[var(--cf-dur-hover)] hover:border-black/[0.22] hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-cf-canvas",
           overdue && "border-red-500/30"
         )}
       >
-        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ background: projectAccent }} aria-hidden />
+        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ backgroundColor: projectAccent }} aria-hidden />
         <span className="absolute bottom-0 left-0 top-[3px] w-[3px]" style={{ backgroundColor: accent }} aria-hidden />
 
         <div className="px-4 pb-3 pt-[18px]">
@@ -88,7 +88,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
             </div>
 
             <div className="shrink-0 text-right">
-              <div className="font-mono text-[9px] tracking-[0.12em] text-cf-text-dim/65">CUT / {fmtShortId(video.id).toUpperCase()}</div>
+              <div className="font-mono text-[10px] tracking-[0.1em] text-cf-text-dim/65">CUT / {fmtShortId(video.id).toUpperCase()}</div>
               {!!video.pendingCount && (
                 <Hint text={`${video.pendingCount} ${video.pendingCount === 1 ? "notificação não lida" : "notificações não lidas"} neste vídeo`}>
                   <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-cf-primary">

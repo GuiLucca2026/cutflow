@@ -328,7 +328,7 @@ const ClientPicker = React.forwardRef<
         {clients.map((c) => (
           <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
         ))}
-        <SelectItem value="__new__" className="text-cf-lime font-medium">+ Criar novo cliente</SelectItem>
+        <SelectItem value="__new__" className="text-cf-primary font-medium">+ Criar novo cliente</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -516,7 +516,7 @@ const ProjectPicker = React.forwardRef<
             </SelectItem>
           );
         })}
-        <SelectItem value="__new__" className="text-cf-lime font-medium">+ Criar novo projeto</SelectItem>
+        <SelectItem value="__new__" className="text-cf-primary font-medium">+ Criar novo projeto</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -733,7 +733,7 @@ function CrewPicker({ users, value, onChange }: { users: UserLite[]; value: stri
             onClick={() => toggle(u.id)}
             className={cn(
               "rounded-full border px-2.5 py-1 text-xs transition-colors",
-              active ? "border-cf-lime bg-cf-lime/10 text-cf-lime font-medium" : "border-cf-border text-cf-text-dim hover:text-cf-text"
+              active ? "border-cf-primary bg-cf-primary/10 text-cf-primary font-medium" : "border-cf-border text-cf-text-dim hover:text-cf-text"
             )}
           >
             {u.name}

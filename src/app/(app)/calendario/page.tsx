@@ -232,16 +232,16 @@ function WeekView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEve
               today ? "border-cf-primary/25" : "border-cf-border"
             )}
             style={{
-              background: today
-                ? "linear-gradient(180deg, rgba(38,73,168,.08), rgba(250,249,246,.94))"
+              backgroundColor: today
+                ? "color-mix(in srgb, var(--cf-primary) 4%, var(--cf-surface))"
                 : firstMeta
-                  ? `linear-gradient(180deg, ${firstMeta.soft}, rgba(250,249,246,.94))`
+                  ? firstMeta.soft
                   : "var(--cf-surface)",
             }}
           >
             <div
               className="absolute inset-x-0 top-0 h-[3px]"
-              style={{ background: today ? "var(--cf-primary)" : firstMeta?.color ?? "var(--cf-border-strong)" }}
+              style={{ backgroundColor: today ? "var(--cf-primary)" : firstMeta?.color ?? "var(--cf-border-strong)" }}
               aria-hidden
             />
             <div className="flex items-start justify-between gap-2">

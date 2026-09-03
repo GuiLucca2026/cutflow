@@ -102,11 +102,11 @@ export default async function EquipePage() {
                   <div className="relative w-full flex-1 flex items-end">
                     <div className="absolute w-full border-t border-dashed border-cf-text-dim/40" style={{ bottom: `${capHeight}%` }} />
                     <div
-                      className={cn("w-full rounded-t transition-all", over ? "bg-red-500" : "bg-cf-lime")}
+                      className={cn("w-full rounded-t transition-all", over ? "bg-red-500" : "bg-cf-primary")}
                       style={{ height: `${barHeight}%` }}
                     />
                   </div>
-                  <div className="text-[9px] text-cf-text-dim">{format(day, "dd/MM")}</div>
+                  <div className="text-[10px] text-cf-text-dim">{format(day, "dd/MM")}</div>
                 </div>
               );
             })}

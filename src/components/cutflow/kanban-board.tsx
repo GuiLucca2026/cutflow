@@ -23,7 +23,7 @@ import { ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
-import { atmosphericAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
+import { projectAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, GripVertical, UserX } from "lucide-react";
 import type { VideoCardData } from "@/components/cutflow/video-card";
@@ -104,14 +104,11 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
       )}
       style={{ background: tint }}
     >
-      <div className="sticky top-0 z-10 border-b border-cf-border bg-cf-surface/92 px-3 py-3 backdrop-blur-[6px]">
+      <div className="sticky top-0 z-10 border-b border-cf-border bg-cf-surface px-3 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full" style={{ background: meta.color }} />
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: meta.color }}>{meta.label}</span>
           <span className="ml-auto inline-flex min-w-6 items-center justify-center rounded-[6px] bg-black/[0.045] px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-cf-text-dim">{videos.length}</span>
-        </div>
-        <div className="mt-2 h-[2px] overflow-hidden rounded-full bg-black/[0.055]">
-          <div className="h-full rounded-full opacity-75" style={{ width: `${Math.min(100, Math.max(12, videos.length * 13))}%`, background: meta.color }} />
         </div>
       </div>
 
@@ -135,7 +132,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
   const clientWait = computeClientWait(video);
   const statusColor = STATUS_META[video.status]?.color ?? "#6B7280";
   const accent = overdue ? "#DC2626" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusColor;
-  const projectAccent = atmosphericAccentForSeed(video.projectId ?? video.project?.name ?? video.id);
+  const projectAccent = projectAccentForSeed(video.projectId ?? video.project?.name ?? video.id);
 
   return (
     <VideoContextMenu video={video} onOpen={() => onOpen(video.id)}>
@@ -159,7 +156,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           (isDragging || dragging) && "scale-[1.015] opacity-75 shadow-[0_16px_42px_rgba(8,10,14,.18)]"
         )}
       >
-        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ background: projectAccent }} aria-hidden />
+        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ backgroundColor: projectAccent }} aria-hidden />
         <span className="absolute bottom-0 left-0 top-[3px] w-[2px]" style={{ backgroundColor: accent }} aria-hidden />
 
         <div className="flex items-start gap-2">
@@ -167,10 +164,10 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
             {video.project ? (
               <div className="flex min-w-0 items-center gap-1.5">
                 {video.project.client?.color && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: video.project.client.color }} />}
-                <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim truncate">{video.project.client?.name ?? "—"}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim truncate">{video.project.client?.name ?? "—"}</span>
               </div>
             ) : (
-              <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-amber-700">AVULSO</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-700">AVULSO</span>
             )}
             {video.project && <div className="mt-0.5 truncate text-[11px] text-cf-text-dim">{video.project.name}</div>}
           </div>
@@ -179,7 +176,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
 
         <div className="mt-2 flex items-baseline gap-1.5">
           <div className="line-clamp-2 text-sm font-medium leading-[1.25] text-cf-text">{video.name}</div>
-          <span className="shrink-0 font-mono text-[8.5px] tracking-wide text-cf-text-dim/55" title={`ID completo: ${video.id}`}>#{fmtShortId(video.id)}</span>
+          <span className="shrink-0 font-mono text-[9.5px] tracking-wide text-cf-text-dim/55" title={`ID completo: ${video.id}`}>#{fmtShortId(video.id)}</span>
         </div>
 
         <div className="mt-3 flex items-center gap-1.5 border-t border-cf-border pt-2.5">
@@ -188,7 +185,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           <span className={cn("ml-auto text-[11px]", overdue ? "font-semibold text-red-600" : "text-cf-text-dim")}>{fmtDateWeekday(video.finalDeadline)}</span>
         </div>
 
-        {clientWait && <ClientWaitBadge wait={clientWait} className="mt-2 text-[9px] px-1.5 py-0" />}
+        {clientWait && <ClientWaitBadge wait={clientWait} className="mt-2 text-[10px] px-1.5 py-0" />}
 
         <div className="mt-2.5 flex items-center justify-between gap-1.5">
           {video.editor ? (

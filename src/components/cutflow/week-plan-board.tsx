@@ -86,14 +86,13 @@ export function WeekPlanBoard({
               <div
                 key={day.date}
                 className={cn(
-                  "group relative overflow-hidden rounded-[var(--cf-radius-card)] border p-3 transition-[transform,border-color] duration-[var(--cf-dur-hover)] hover:-translate-y-0.5",
-                  meta.wrapper
+                  "group relative overflow-hidden rounded-[var(--cf-radius-card)] border p-3 transition-[transform,border-color,background-color] duration-[var(--cf-dur-hover)] hover:-translate-y-0.5",
+                  meta.wrapper,
+                  meta.surface
                 )}
-                style={{ background: meta.background }}
                 title={`${format(d, "EEEE", { locale: ptBR })}`}
               >
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: meta.accent }} />
-                <div className="pointer-events-none absolute inset-0 opacity-[0.9]" style={{ background: meta.glow }} />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: meta.accent }} />
 
                 <div className="relative flex h-full min-h-[190px] flex-col">
                   <div className="flex items-start justify-between gap-2">
@@ -115,25 +114,32 @@ export function WeekPlanBoard({
                     <span className={cn("tabular-nums", over ? "text-red-600" : intense ? "text-amber-700" : "text-cf-text-dim")}>{day.isWorkDay ? `${fmtHours(day.allocatedHours)}/${fmtHours(day.capacityHours)}` : "Folga"}</span>
                   </div>
 
-                  <div className="mt-2 h-[4px] overflow-hidden rounded-full bg-black/[0.06]">
+                  <div
+                    className="mt-2 h-[4px] overflow-hidden rounded-full bg-black/[0.06]"
+                    role="progressbar"
+                    aria-label={`Carga de ${format(d, "EEEE", { locale: ptBR })}`}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={day.isWorkDay ? pct : 0}
+                  >
                     <div
                       className="h-full rounded-full transition-[width] duration-[var(--cf-dur-progress)] ease-[var(--cf-ease)]"
-                      style={{ width: `${day.isWorkDay ? Math.max(pct, isEmpty ? 8 : 14) : 20}%`, background: meta.accent }}
+                      style={{ width: `${day.isWorkDay ? Math.max(pct, isEmpty ? 8 : 14) : 20}%`, backgroundColor: meta.accent }}
                     />
                   </div>
 
                   <div className="mt-4 flex-1 space-y-2">
                     {!day.isWorkDay ? (
-                      <div className="rounded-[10px] border border-black/5 bg-white/35 px-3 py-3 text-[12px] text-cf-text-dim">
+                      <div className="rounded-[10px] border border-black/5 bg-white/55 px-3 py-3 text-[12px] text-cf-text-dim">
                         Sem alocação. Dia fora da sua semana de trabalho.
                       </div>
                     ) : isEmpty ? (
-                      <div className="rounded-[10px] border border-black/5 bg-white/52 px-3 py-3 text-[12px] text-cf-text-dim">
+                      <div className="rounded-[10px] border border-black/5 bg-white/72 px-3 py-3 text-[12px] text-cf-text-dim">
                         Janela livre para absorver alterações ou novas tarefas.
                       </div>
                     ) : (
                       day.items.slice(0, 3).map((it, i) => (
-                        <div key={i} className="rounded-[10px] border border-black/5 bg-white/64 px-3 py-2.5 backdrop-blur-[1px]">
+                        <div key={i} className="rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5">
                           <div className="line-clamp-2 text-[12px] font-medium leading-[1.25] text-cf-text">{it.name}</div>
                           <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-cf-text-dim">
                             <span className="truncate">{it.projectName}</span>
@@ -163,11 +169,10 @@ function describeDay(
 ) {
   if (!day.isWorkDay) {
     return {
-      wrapper: "border-cf-border bg-cf-surface-2/80",
-      background: "linear-gradient(180deg, rgba(241,238,232,.92), rgba(250,249,246,.74))",
-      accent: "rgba(110,107,102,.45)",
-      glow: "radial-gradient(circle at 82% 16%, rgba(255,255,255,.46), transparent 32%)",
-      badge: "bg-white/68 text-cf-text-dim border border-black/5",
+      wrapper: "border-cf-border",
+      surface: "bg-cf-surface-2/55",
+      accent: "#9A9790",
+      badge: "bg-white/80 text-cf-text-dim border border-black/5",
       badgeLabel: "Folga",
       dayLabel: "text-cf-text-dim/75",
       Icon: Coffee,
@@ -175,10 +180,9 @@ function describeDay(
   }
   if (today) {
     return {
-      wrapper: "border-cf-primary/20",
-      background: "linear-gradient(180deg, rgba(38,73,168,.09), rgba(255,255,255,.78))",
+      wrapper: "border-cf-primary/22",
+      surface: "bg-cf-primary/[0.035]",
       accent: "var(--cf-primary)",
-      glow: "radial-gradient(circle at 12% 10%, rgba(38,73,168,.14), transparent 34%), radial-gradient(circle at 86% 82%, rgba(157,183,223,.16), transparent 30%)",
       badge: "bg-cf-primary/10 text-cf-primary border border-cf-primary/12",
       badgeLabel: "Hoje",
       dayLabel: "text-cf-primary",
@@ -187,10 +191,9 @@ function describeDay(
   }
   if (over) {
     return {
-      wrapper: "border-red-500/20",
-      background: "linear-gradient(180deg, rgba(215,58,47,.11), rgba(255,255,255,.8))",
+      wrapper: "border-red-500/22",
+      surface: "bg-red-500/[0.025]",
       accent: "var(--cf-red)",
-      glow: "radial-gradient(circle at 88% 16%, rgba(215,58,47,.16), transparent 30%)",
       badge: "bg-red-500/10 text-red-600 border border-red-500/12",
       badgeLabel: "Excedido",
       dayLabel: "text-red-600",
@@ -199,10 +202,9 @@ function describeDay(
   }
   if (intense) {
     return {
-      wrapper: "border-amber-500/20",
-      background: "linear-gradient(180deg, rgba(245,163,87,.11), rgba(255,255,255,.8))",
+      wrapper: "border-amber-500/22",
+      surface: "bg-amber-500/[0.025]",
       accent: "var(--cf-orange)",
-      glow: "radial-gradient(circle at 88% 16%, rgba(245,163,87,.18), transparent 30%)",
       badge: "bg-amber-500/10 text-amber-700 border border-amber-500/12",
       badgeLabel: "Cheio",
       dayLabel: "text-amber-700",
@@ -212,9 +214,8 @@ function describeDay(
   if (isEmpty) {
     return {
       wrapper: "border-cf-border",
-      background: "linear-gradient(180deg, rgba(31,138,76,.06), rgba(255,255,255,.8))",
+      surface: "bg-cf-success/[0.025]",
       accent: "var(--cf-success)",
-      glow: "radial-gradient(circle at 88% 16%, rgba(31,138,76,.12), transparent 30%)",
       badge: "bg-cf-success/10 text-cf-success border border-cf-success/12",
       badgeLabel: "Livre",
       dayLabel: "text-cf-text-dim",
@@ -223,10 +224,9 @@ function describeDay(
   }
   return {
     wrapper: "border-cf-border",
-    background: "linear-gradient(180deg, rgba(157,183,223,.08), rgba(255,255,255,.82))",
+    surface: "bg-cf-surface",
     accent: "var(--cf-primary)",
-    glow: "radial-gradient(circle at 88% 16%, rgba(157,183,223,.18), transparent 32%)",
-    badge: "bg-white/70 text-cf-primary border border-cf-primary/10",
+    badge: "bg-cf-primary/[0.06] text-cf-primary border border-cf-primary/10",
     badgeLabel: "Planejado",
     dayLabel: "text-cf-text-dim",
     Icon: CalendarCheck2,

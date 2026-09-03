@@ -212,7 +212,7 @@ export default async function HojePage() {
                   key={t.id}
                   href={contextHref ?? "#"}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 hover:border-cf-lime/40 transition-colors",
+                    "flex items-center gap-3 rounded-lg border bg-cf-surface px-3.5 py-2.5 hover:border-cf-primary/40 transition-colors",
                     overdue ? "border-red-500/30" : "border-cf-border"
                   )}
                 >
@@ -244,7 +244,7 @@ export default async function HojePage() {
                 key={a.id}
                 href={a.href}
                 className={cn(
-                  "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-lime/40 transition-colors",
+                  "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-primary/40 transition-colors",
                   a.severity === "CRITICO" ? "border-red-500/30" : a.severity === "ALTO" ? "border-amber-500/30" : "border-cf-border"
                 )}
               >
@@ -296,45 +296,33 @@ function StatCard({
   const variantMap = {
     default: {
       accent: "bg-cf-border-strong",
-      iconTint: "bg-cf-surface-2 text-cf-text-dim",
+      iconTint: "text-cf-text-dim",
       valueTint: "text-cf-text",
-      surface: "linear-gradient(180deg, rgba(255,255,255,.68), rgba(255,255,255,.4))",
-      glaze: "linear-gradient(135deg, rgba(0,0,0,.02), transparent 52%)",
     },
     danger: {
       accent: "bg-red-500",
-      iconTint: "bg-red-500/10 text-red-600",
+      iconTint: "text-red-600",
       valueTint: "text-red-600",
-      surface: "linear-gradient(180deg, rgba(215,58,47,.10), rgba(255,255,255,.72))",
-      glaze: "radial-gradient(circle at 88% 12%, rgba(215,58,47,.16), transparent 36%)",
     },
     today: {
       accent: "bg-cf-primary",
-      iconTint: "bg-cf-primary/10 text-cf-primary",
+      iconTint: "text-cf-primary",
       valueTint: "text-cf-primary",
-      surface: "linear-gradient(180deg, rgba(38,73,168,.08), rgba(255,255,255,.72))",
-      glaze: "radial-gradient(circle at 88% 14%, rgba(38,73,168,.16), transparent 35%)",
     },
     editing: {
       accent: "bg-cf-success",
-      iconTint: "bg-cf-success/10 text-cf-success",
+      iconTint: "text-cf-success",
       valueTint: "text-cf-success",
-      surface: "linear-gradient(180deg, rgba(31,138,76,.09), rgba(255,255,255,.72))",
-      glaze: "radial-gradient(circle at 88% 14%, rgba(31,138,76,.16), transparent 35%)",
     },
     waiting: {
       accent: "bg-cf-orange",
-      iconTint: "bg-cf-orange/12 text-amber-700",
+      iconTint: "text-amber-700",
       valueTint: "text-amber-700",
-      surface: "linear-gradient(180deg, rgba(245,163,87,.12), rgba(255,255,255,.72))",
-      glaze: "radial-gradient(circle at 88% 14%, rgba(245,163,87,.18), transparent 35%)",
     },
     hours: {
       accent: "bg-cf-deep-blue",
-      iconTint: "bg-cf-deep-blue/10 text-cf-deep-blue",
+      iconTint: "text-cf-deep-blue",
       valueTint: "text-cf-deep-blue",
-      surface: "linear-gradient(180deg, rgba(17,27,103,.07), rgba(255,255,255,.72))",
-      glaze: "radial-gradient(circle at 88% 12%, rgba(17,27,103,.12), transparent 35%)",
     },
   } as const;
 
@@ -345,27 +333,20 @@ function StatCard({
     <Hint text={hint}>
       <div
         className={cn(
-          "group relative min-h-[118px] overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border p-4 transition-[transform,border-color,background-color] duration-[var(--cf-dur-hover)]",
-          href && "hover:-translate-y-0.5 hover:border-black/15"
+          "group relative min-h-[118px] overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface p-4 transition-[transform,border-color,background-color] duration-[var(--cf-dur-hover)]",
+          href && "hover:-translate-y-0.5 hover:border-black/15 hover:bg-white"
         )}
-        style={{ background: style.surface }}
       >
-        <div className="pointer-events-none absolute inset-0" style={{ background: style.glaze }} />
         <div className={cn("absolute inset-x-0 top-0 h-[3px]", style.accent)} />
 
         <div className="relative flex h-full flex-col">
           <div className="flex items-start justify-between gap-3">
-            <div className={cn("inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/5", style.iconTint)}>
-              <Icon className="h-4 w-4" />
-            </div>
+            <Icon className={cn("mt-0.5 h-4 w-4", style.iconTint)} />
             <div className={cn("text-[42px] font-semibold tabular-nums leading-none tracking-[-0.045em] md:text-[48px]", valueColor)}>{value}</div>
           </div>
 
           <div className="mt-auto">
             <div className="mt-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
-            <div className="mt-2 h-[2px] w-full overflow-hidden rounded-full bg-black/[0.06]">
-              <div className={cn("h-full rounded-full opacity-80", style.accent, value === 0 || value === "0h" ? "w-[18%]" : value === "8h" ? "w-[82%]" : "w-[54%]")} />
-            </div>
           </div>
         </div>
       </div>

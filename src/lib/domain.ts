@@ -27,7 +27,7 @@ export const STATUS_META: Record<
   // de propósito (igual o conceito trata "Edição" como a cor principal);
   // "Aprovado" e "Entregue" ficam em famílias PRÓPRIAS (verde e
   // grafite/preto) pra nunca se confundir com "isso é clicável" — mesmo
-  // motivo que já tinha separado o cf-success do cf-lime antes. "Aguardando
+  // motivo que já tinha separado o cf-success do cf-primary antes. "Aguardando
   // X" continua toda em âmbar de propósito: o significado é sempre o mesmo
   // ("parado esperando alguém"), o rótulo já diz esperando o quê.
   BACKLOG: { label: "Backlog", color: "#6B7280", bg: "#F1F2F4", order: 0, group: "backlog", hint: "Ainda não começou — só está na fila." },
@@ -353,7 +353,7 @@ export const CLIENT_WAIT_META: Record<"COBRAR_FEEDBACK" | "AGUARDANDO_ALTERACAO"
 // cliente" ler visualmente igual — calmo, não uma cor de alerta — não
 // importa em qual das 3 sub-fases exatas ele está (isso continua
 // diferenciado no BADGE de status, só o fundo do card fica uniforme).
-// Roxo de propósito, mas um tom DIFERENTE do roxo da marca (--cf-lime,
+// Roxo de propósito, mas um tom DIFERENTE do roxo da marca (--cf-primary,
 // #7C3AED, usado em botão primário/item ativo/EDITANDO) e do roxo de
 // Revisão interna (#7E22CE) — mistura-los faria um card "aguardando
 // cliente" parecer clicável/ativo ou parecer em revisão.

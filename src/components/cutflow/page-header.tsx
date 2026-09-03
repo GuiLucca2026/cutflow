@@ -17,7 +17,7 @@ export function PageHeader({
     <header className={cn("flex flex-wrap items-end justify-between gap-8 border-b border-cf-border pb-6 pt-[18px]", className)}>
       <div className="min-w-0">
         <div className="cf-micro text-cf-text-dim">{eyebrow}</div>
-        <h1 className="mt-3 text-[50px] font-semibold leading-[0.9] tracking-[-0.052em] md:text-[64px]">
+        <h1 className="mt-3 text-[44px] font-semibold leading-[0.94] tracking-[-0.048em] md:text-[56px]">
           {title}<span className="font-editorial font-normal">.</span>
         </h1>
         {subtitle && <p className="mt-4 max-w-[620px] text-sm leading-relaxed text-cf-text-dim">{subtitle}</p>}

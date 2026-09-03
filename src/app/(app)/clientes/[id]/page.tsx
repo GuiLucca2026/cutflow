@@ -23,7 +23,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <div className="mt-4 flex flex-wrap items-end gap-5">
           <Avatar name={client.name} color={client.color} size={52} />
           <div className="min-w-[220px] flex-1">
-            <h1 className="text-[48px] font-semibold leading-[0.9] tracking-[-0.052em] md:text-[62px]">{client.name}<span className="font-editorial font-normal">.</span></h1>
+            <h1 className="text-[44px] font-semibold leading-[0.94] tracking-[-0.048em] md:text-[56px]">{client.name}<span className="font-editorial font-normal">.</span></h1>
             <div className="mt-3 text-sm text-cf-text-dim">{client.company ?? client.tradeName ?? "—"}</div>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-cf-text-dim">

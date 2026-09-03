@@ -38,14 +38,15 @@ export function ProgressIndicator({
 
   const numberClass = size === "lg" ? "text-[48px] md:text-[56px]" : size === "sm" ? "text-2xl" : "text-4xl";
   const mutedClass = tone === "light" ? "text-white/[0.72]" : tone === "dark" ? "text-black/[0.62]" : "text-cf-text-dim";
+  const numberToneClass = tone === "light" ? "text-white" : tone === "dark" ? "text-black/[0.86]" : "text-cf-text";
   const trackClass = tone === "light" ? "bg-white/[0.28]" : tone === "dark" ? "bg-black/[0.18]" : "bg-cf-border";
   const fillClass = tone === "light" ? "bg-white" : tone === "dark" ? "bg-black/[0.78]" : "bg-cf-primary";
 
   return (
-    <div ref={ref} className={cn("space-y-2.5", className)}>
+    <div ref={ref} role="progressbar" aria-label={label ?? "Progresso"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(clamped)} className={cn("space-y-2.5", className)}>
       <div className="flex items-end justify-between gap-3">
         {label ? <div className={cn("cf-micro pb-1", mutedClass)}>{label}</div> : <span />}
-        <div className={cn("font-sans font-semibold tabular-nums leading-none tracking-[-0.045em]", numberClass)}>
+        <div className={cn("font-sans font-semibold tabular-nums leading-none tracking-[-0.045em]", numberClass, numberToneClass)}>
           {Math.round(clamped)}<span className="ml-0.5 text-[0.48em] font-medium align-top">%</span>
         </div>
       </div>

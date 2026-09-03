@@ -29,7 +29,7 @@ export function PersonalProgressWidget({ progress }: { progress?: PersonalMonthP
 
   const pct = Math.round((delivered / total) * 100);
   const done = delivered === total;
-  const accent = done ? "var(--cf-success)" : "var(--cf-lime)";
+  const accent = done ? "var(--cf-success)" : "var(--cf-primary)";
   const milestone = personalProgressMilestone(progress);
   const segments = [
     editing > 0 ? `${editing} editando` : null,

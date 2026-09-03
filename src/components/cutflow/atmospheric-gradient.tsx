@@ -73,13 +73,26 @@ export function atmosphericTone(variant: AtmosphericVariant): AtmosphericTone {
   return VARIANT_CONFIG[variant].tone;
 }
 
-export function atmosphericAccentForSeed(seed: string) {
+/** Cor sólida derivada da mesma seed do artwork.
+ * Use fora de Project Cards quando for útil carregar contexto de projeto
+ * sem espalhar gradientes decorativos pelo produto.
+ */
+export function projectAccentForSeed(seed: string) {
   const variant = atmosphericVariantForSeed(seed);
   const config = VARIANT_CONFIG[variant];
-  const a = config.colors[0];
-  const b = config.colors[1];
-  const c = config.colors[2];
-  return `linear-gradient(90deg, ${a} 0%, ${b} 52%, ${c} 100%)`;
+  const preferredIndex: Record<AtmosphericVariant, number> = {
+    sunset: 2,
+    blueHour: 1,
+    lavender: 2,
+    signal: 1,
+    midnight: 2,
+  };
+  return config.colors[preferredIndex[variant]];
+}
+
+/** Alias legado. Novos componentes devem preferir projectAccentForSeed. */
+export function atmosphericAccentForSeed(seed: string) {
+  return projectAccentForSeed(seed);
 }
 
 /**

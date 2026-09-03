@@ -1,17 +1,16 @@
-@import "tailwindcss";
-
 /* ============================================================
-   Rebranding visual do G2 FLOW — base da Fase 2 (ver REBRAND-AUDIT.md na raiz do repo).
-   Terceira paleta desta mesma base de código: escuro+lime original →
-   claro+roxo/lavanda ("G2 FLOW") → esta, atmosférica/editorial (canvas
-   quente, azul profundo como cor de ação, laranja/coral/vermelho como
-   acentos decorativos). Os NOMES das variáveis seguem os mesmos de
-   sempre (cf-lime, cf-black, cf-surface...) — são usados como classe
-   Tailwind (bg-cf-lime, text-cf-black...) espalhada por ~40 arquivos, e
-   trocar só o VALOR aqui atualiza tudo de uma vez sem caçar arquivo por
-   arquivo. Os nomes descrevem o papel histórico, não o valor atual (ver
-   comentário em cada um).
-*/
+   G2 FLOW — Design System consolidado.
+
+   Regra visual final:
+   - PROJECT CONTEXT = expressivo / AtmosphericGradient
+   - WORKSPACE = superfícies planas, alta legibilidade
+   - STATUS = cor semântica, nunca decoração
+   - MOTION = feedback e continuidade, nunca espetáculo
+
+   Gradientes ficam restritos ao artwork de projeto (e ao shimmer neutro
+   de loading). Cards operacionais, Kanban, calendário, métricas e
+   navegação usam cor sólida/tint sutil.
+   ============================================================ */
 :root {
   /* ---- Superfícies (era frio/lavanda #F5F5FA; agora canvas quente,
      off-white pro card — mais parecido com papel/poster do que com
@@ -38,13 +37,9 @@
   --cf-lavender: #C9B9E8;
   --cf-cream: #E8DDC8;
 
-  /* Marca / ação primária. `primary` é o token semântico novo; os
-     nomes `lime` ficam só como alias legado enquanto as telas antigas
-     migram gradualmente. Componentes novos devem usar cf-primary. */
+  /* Marca / ação primária. */
   --cf-primary: var(--cf-blue);
   --cf-primary-hover: #1B3480;
-  --cf-lime: var(--cf-primary); /* legacy compatibility alias */
-  --cf-lime-dim: var(--cf-primary-hover); /* legacy compatibility alias */
   /* Verde dedicado a "sucesso/concluído" — separado da marca de propósito
      (ver histórico), continua assim: "isso terminou" nunca pode ter a
      mesma cor de "isso é clicável". */
@@ -98,8 +93,6 @@
   --color-foreground: var(--foreground);
   --color-cf-primary: var(--cf-primary);
   --color-cf-primary-hover: var(--cf-primary-hover);
-  --color-cf-lime: var(--cf-lime);
-  --color-cf-lime-dim: var(--cf-lime-dim);
   --color-cf-success: var(--cf-success);
   --color-cf-black: var(--cf-black);
   --color-cf-surface: var(--cf-surface);

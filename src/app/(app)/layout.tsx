@@ -111,7 +111,7 @@ function NoSessionScreen() {
         )}
         <p className="text-cf-text-dim text-sm">
           Foi convidado por e-mail?{" "}
-          <Link href="/login" className="text-cf-lime hover:underline">
+          <Link href="/login" className="text-cf-primary hover:underline">
             Entre com e-mail e senha aqui
           </Link>
           .

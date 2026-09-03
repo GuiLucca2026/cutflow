@@ -40,11 +40,10 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
   const queryTab = searchParams.get("tab");
   const openTasks = (project.tasks ?? []).filter((task: any) => !task.done).length;
   // Derivado direto da URL (fonte única de verdade) em vez de useState+effect
-  // sincronizando os dois — evita cascading render (mesmo fix já aplicado
-  // numa rodada anterior deste componente; o pacote reintroduziu o padrão
-  // antigo ao adicionar a navegação por seta, então reaplico aqui).
-  // changeTab só escreve na URL; o valor ativo recalcula sozinho no
-  // próximo render via searchParams.
+  // sincronizando os dois — evita cascading render (fix reaplicado; o
+  // pacote reintroduziu o padrão antigo de novo ao vir de uma base
+  // desatualizada deste arquivo). changeTab só escreve na URL; o valor
+  // ativo recalcula sozinho no próximo render via searchParams.
   const activeTab: ProjectTab = isProjectTab(queryTab) ? queryTab : "videos";
 
   function changeTab(value: string) {
@@ -79,7 +78,7 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
 
   return (
     <Tabs value={activeTab} onValueChange={changeTab} className="space-y-0">
-      <div className="sticky top-[54px] z-20 -mx-1 bg-cf-canvas/95 py-2 backdrop-blur-[8px]" onKeyDown={navigateByArrow}>
+      <div className="sticky top-[54px] z-20 -mx-1 bg-cf-canvas py-2" onKeyDown={navigateByArrow}>
         <div className="mb-2 flex items-center justify-between px-1">
           <div className="cf-micro text-cf-text-dim">WORKSPACE</div>
           <div className="hidden text-[11px] text-cf-text-dim sm:block">← → navegam · URL preserva a aba</div>

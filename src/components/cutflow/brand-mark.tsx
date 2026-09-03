@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import { BRAND_PREFIX, BRAND_ICON_TEXT } from "@/lib/brand";
 
-// Marca "G2 FLOW" — ícone em gradiente na cor de ação do rebrand (era
-// roxo→índigo na rodada anterior; ver REBRAND-AUDIT.md) + wordmark em
-// dois tons (G2 na cor da marca, FLOW em texto normal). Um componente só,
+// Marca "G2 FLOW" — assinatura limpa e estável. Gradientes ficam reservados
+// ao contexto visual dos projetos; navegação e identidade-base usam cor sólida
+// para preservar hierarquia e evitar aparência de template. Um componente só,
 // reaproveitado em toda tela onde a marca aparece (Sidebar, menu mobile,
 // /sso, /login, /convite), pra nunca ficar dessincronizada entre os
 // lugares.
@@ -19,7 +19,7 @@ export function BrandIcon({ size = 32, className }: { size?: number; className?:
         width: size,
         height: size,
         fontSize: size * 0.44,
-        background: "linear-gradient(135deg, var(--cf-sky) 0%, var(--cf-blue) 55%, var(--cf-deep-blue) 100%)",
+        backgroundColor: "var(--cf-primary)",
       }}
     >
       {BRAND_ICON_TEXT}
@@ -38,7 +38,7 @@ export function BrandWordmark({
   // Sidebar/menu mobile continuam escuros mesmo no resto do app claro (ver
   // globals.css, tokens --cf-side-*) — "FLOW" em text-cf-text (quase preto)
   // ficaria invisível lá. Este flag troca só a cor do texto, mantém o
-  // ícone (que já é branco sobre gradiente) igual nos dois casos.
+  // ícone sólido igual nos dois casos.
   dark?: boolean;
   minimal?: boolean;
 }) {

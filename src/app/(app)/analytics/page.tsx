@@ -137,7 +137,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <div className="flex items-end gap-3 h-40">
             {monthly.map((m) => {
               const barHeight = m.rate === null ? 0 : Math.max(2, Math.round((m.rate / 100) * 100));
-              const barTone = m.rate === null ? "bg-cf-surface-2" : m.rate >= 80 ? "bg-cf-lime" : m.rate >= 60 ? "bg-amber-500" : "bg-red-500";
+              const barTone = m.rate === null ? "bg-cf-surface-2" : m.rate >= 80 ? "bg-cf-primary" : m.rate >= 60 ? "bg-amber-500" : "bg-red-500";
               return (
                 <div key={m.month} className="flex-1 flex flex-col items-center justify-end h-full gap-1.5">
                   <div className="text-[11px] text-cf-text-dim">{m.rate === null ? "—" : `${m.rate}%`}</div>
@@ -145,7 +145,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
                     <div className={cn("w-full rounded-t transition-all", barTone)} style={{ height: `${barHeight}%` }} />
                   </div>
                   <div className="text-[10px] text-cf-text-dim capitalize">{format(new Date(`${m.month}-01T00:00:00`), "MMM/yy", { locale: ptBR })}</div>
-                  <div className="text-[9px] text-cf-text-dim/60">{m.delivered} entrega{m.delivered === 1 ? "" : "s"}</div>
+                  <div className="text-[10px] text-cf-text-dim/70">{m.delivered} entrega{m.delivered === 1 ? "" : "s"}</div>
                 </div>
               );
             })}
@@ -270,7 +270,7 @@ function RankRow({
   tone?: "default" | "danger" | "warn" | "good";
 }) {
   const pct = maxValue > 0 ? Math.min(100, Math.round((value / maxValue) * 100)) : 0;
-  const barTone = tone === "danger" ? "bg-red-500" : tone === "warn" ? "bg-amber-500" : tone === "good" ? "bg-cf-lime" : "bg-cf-text-dim";
+  const barTone = tone === "danger" ? "bg-red-500" : tone === "warn" ? "bg-amber-500" : tone === "good" ? "bg-cf-primary" : "bg-cf-text-dim";
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">

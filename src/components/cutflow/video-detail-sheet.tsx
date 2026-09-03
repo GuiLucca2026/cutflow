@@ -352,7 +352,7 @@ function VideoDetailBody({
               {video.revisions.map((r: any) => (
                 <div key={r.id} className="rounded-lg border border-cf-border p-3 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-cf-lime">ALTERAÇÃO #{r.number}</span>
+                    <span className="text-xs font-semibold text-cf-primary">ALTERAÇÃO #{r.number}</span>
                     <StatusBadge status={r.status === "CONCLUIDA" ? "ENTREGUE" : r.status === "EM_ANDAMENTO" ? "EM_ALTERACAO" : "ALTERACAO_SOLICITADA"} />
                   </div>
                   <p className="text-sm text-cf-text">&ldquo;{r.description}&rdquo;</p>
@@ -386,7 +386,7 @@ function VideoDetailBody({
               {video.versions.length === 0 && <EmptyHint text="Nenhuma versão enviada ainda." />}
               {video.versions.map((v: any) => (
                 <div key={v.id} className="flex items-start gap-3 rounded-lg border border-cf-border p-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-cf-lime/10 text-cf-lime font-display text-sm">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-cf-primary/10 text-cf-primary font-display text-sm">
                     {v.label}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -434,7 +434,7 @@ function VideoDetailBody({
               <ol className="space-y-3 border-l border-cf-border pl-4">
                 {activity.map((a: any) => (
                   <li key={a.id} className="relative text-sm">
-                    <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-cf-lime" />
+                    <span className="absolute -left-[21px] top-1 h-2 w-2 rounded-full bg-cf-primary" />
                     <div className="text-cf-text">{a.action}{a.detail ? ` — ${a.detail}` : ""}</div>
                     <div className="text-xs text-cf-text-dim">{a.user?.name ?? "Sistema"} · {fmtDateTime(a.createdAt)}</div>
                   </li>
