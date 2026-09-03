@@ -22,11 +22,12 @@ export default async function KanbanPage() {
   }));
 
   return (
-    <div className="cf-fade-in h-full flex flex-col">
-      <div className="mb-5">
-        <h1 className="font-display text-4xl tracking-wide">Kanban</h1>
-        <p className="text-cf-text-dim text-sm">Arraste os cards entre as colunas para atualizar o status. Cada movimento é registrado no histórico.</p>
-      </div>
+    <div className="cf-fade-in flex h-full flex-col">
+      <header className="mb-7 border-b border-cf-border pb-6 pt-2">
+        <div className="cf-micro text-cf-text-dim">WORK / STATUS FLOW</div>
+        <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Kanban<span className="font-editorial font-normal">.</span></h1>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cf-text-dim">Arraste os cortes entre estados. O movimento muda o status; o histórico continua registrando cada transição.</p>
+      </header>
       <KanbanBoard initialVideos={light} />
     </div>
   );

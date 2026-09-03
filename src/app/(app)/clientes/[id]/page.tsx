@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
 import { getClient, listProjectsByClient } from "@/db/queries";
 import { Avatar } from "@/components/ui/avatar";
-import { PriorityBadge } from "@/components/cutflow/badges";
 import { EditableNotes } from "@/components/cutflow/editable-notes";
 import { updateClientNotes } from "@/app/actions";
 import { projectProgress } from "@/lib/domain";
-import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { Mail, Phone, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,55 +17,55 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const projects = await listProjectsByClient(id);
 
   return (
-    <div className="cf-fade-in space-y-5 pb-16">
-      <div className="rounded-xl border border-cf-border bg-cf-surface p-5 flex flex-wrap items-center gap-5">
-        <Avatar name={client.name} color={client.color} size={56} />
-        <div className="flex-1 min-w-[200px]">
-          <h1 className="font-display text-3xl tracking-wide">{client.name}</h1>
-          <div className="text-sm text-cf-text-dim">{client.company ?? client.tradeName}</div>
+    <div className="cf-fade-in space-y-8 pb-16">
+      <header className="border-b border-cf-border pb-7 pt-2">
+        <div className="cf-micro text-cf-text-dim">CLIENT / PROFILE</div>
+        <div className="mt-4 flex flex-wrap items-end gap-5">
+          <Avatar name={client.name} color={client.color} size={52} />
+          <div className="min-w-[220px] flex-1">
+            <h1 className="text-[48px] font-semibold leading-[0.9] tracking-[-0.052em] md:text-[62px]">{client.name}<span className="font-editorial font-normal">.</span></h1>
+            <div className="mt-3 text-sm text-cf-text-dim">{client.company ?? client.tradeName ?? "—"}</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-cf-text-dim">
+            {client.contactName && <span>{client.contactName}</span>}
+            {client.email && <a href={`mailto:${client.email}`} className="flex items-center gap-1.5 hover:text-cf-primary"><Mail className="h-3.5 w-3.5" /> {client.email}</a>}
+            {client.whatsapp && <a href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-cf-primary"><MessageCircle className="h-3.5 w-3.5" /> {client.whatsapp}</a>}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-4 text-sm text-cf-text-dim">
-          {client.contactName && <span>{client.contactName}</span>}
-          {client.email && (
-            <a href={`mailto:${client.email}`} className="flex items-center gap-1.5 hover:text-cf-lime">
-              <Mail className="h-3.5 w-3.5" /> {client.email}
-            </a>
-          )}
-          {client.whatsapp && (
-            <a href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-cf-lime">
-              <MessageCircle className="h-3.5 w-3.5" /> {client.whatsapp}
-            </a>
-          )}
-        </div>
-      </div>
+      </header>
 
-      <div className="rounded-xl border border-cf-border bg-cf-surface p-4 max-w-2xl">
-        <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">Observações</div>
+      <section className="max-w-2xl border-t border-cf-border py-5">
+        <div className="cf-micro mb-3 text-cf-text-dim">NOTES / CLIENT</div>
         <EditableNotes value={client.notes ?? null} onSave={(notes) => updateClientNotes(client.id, notes)} />
-      </div>
+      </section>
 
-      <div>
-        <h2 className="font-display text-2xl tracking-wide mb-3">Projetos ({projects.length})</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {projects.map((p) => {
+      <section>
+        <div className="mb-4 flex items-baseline gap-2 border-b border-cf-border pb-2">
+          <h2 className="text-[26px] font-semibold tracking-[-0.03em]">Projetos</h2>
+          <span className="font-editorial text-xl text-cf-text-dim">{projects.length}</span>
+        </div>
+        <div className="divide-y divide-cf-border border-b border-cf-border">
+          {projects.map((p, index) => {
             const progress = projectProgress(p.videos);
             return (
-              <Link key={p.id} href={`/projetos/${p.id}`} className="rounded-xl border border-cf-border bg-cf-surface p-4 hover:border-cf-lime/40 transition-colors">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold">{p.name}</div>
-                    <div className="text-xs text-cf-text-dim">{p.type} · {p.videos.length} vídeos</div>
-                  </div>
-                  <PriorityBadge priority={p.priority} />
+              <Link key={p.id} href={`/projetos/${p.id}`} className="group grid gap-4 py-4 transition-colors hover:text-cf-primary md:grid-cols-[72px_1fr_110px] md:items-center">
+                <div className="cf-micro text-cf-text-dim">PROJECT / {String(index + 1).padStart(2, "0")}</div>
+                <div className="min-w-0">
+                  <div className="truncate text-[17px] font-semibold tracking-[-0.02em]">{p.name}</div>
+                  <div className="mt-1 text-xs text-cf-text-dim">{p.type} · {p.videos.length} vídeos</div>
                 </div>
-                <div className="mt-3">
-                  <Progress value={progress} />
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="cf-micro text-cf-text-dim">PROGRESS</span>
+                    <span className="font-editorial text-2xl leading-none">{progress}%</span>
+                  </div>
+                  <div className="mt-2 h-[2px] bg-cf-border"><div className="h-full bg-cf-primary" style={{ width: `${progress}%` }} /></div>
                 </div>
               </Link>
             );
           })}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

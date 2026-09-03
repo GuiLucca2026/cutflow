@@ -2,12 +2,11 @@
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { VideoCard } from "@/components/cutflow/video-card";
-import { StatusBadge } from "@/components/cutflow/badges";
 import { EditableNotes } from "@/components/cutflow/editable-notes";
 import { TaskList } from "@/components/cutflow/task-list";
 import { updateProjectNotes } from "@/app/actions";
-import { fmtDateTime, fmtDateFull } from "@/lib/format";
-import { ExternalLink, Link2, Film, Clapperboard, FileText } from "lucide-react";
+import { fmtDateTime } from "@/lib/format";
+import { ExternalLink, Link2 } from "lucide-react";
 
 const LINK_CATEGORY_LABEL: Record<string, string> = {
   FOOTAGE: "Footage",
@@ -20,21 +19,22 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
   const openTasks = (project.tasks ?? []).filter((t: any) => !t.done).length;
   return (
     <Tabs defaultValue="videos">
-      <TabsList>
-        <TabsTrigger value="videos">Vídeos ({project.videos.length})</TabsTrigger>
-        <TabsTrigger value="tarefas">Tarefas ({openTasks})</TabsTrigger>
-        <TabsTrigger value="arquivos">Arquivos ({project.links.length})</TabsTrigger>
-        <TabsTrigger value="info">Briefing</TabsTrigger>
-        <TabsTrigger value="atividade">Atividade</TabsTrigger>
+      <TabsList className="w-full justify-start gap-6 rounded-none border-0 border-b border-cf-border bg-transparent p-0">
+        <TabsTrigger value="videos" className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-1 text-xs font-medium data-[state=active]:border-cf-primary data-[state=active]:bg-transparent data-[state=active]:text-cf-text data-[state=active]:shadow-none">Vídeos ({project.videos.length})</TabsTrigger>
+        <TabsTrigger value="tarefas" className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-1 text-xs font-medium data-[state=active]:border-cf-primary data-[state=active]:bg-transparent data-[state=active]:text-cf-text data-[state=active]:shadow-none">Tarefas ({openTasks})</TabsTrigger>
+        <TabsTrigger value="arquivos" className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-1 text-xs font-medium data-[state=active]:border-cf-primary data-[state=active]:bg-transparent data-[state=active]:text-cf-text data-[state=active]:shadow-none">Arquivos ({project.links.length})</TabsTrigger>
+        <TabsTrigger value="info" className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-1 text-xs font-medium data-[state=active]:border-cf-primary data-[state=active]:bg-transparent data-[state=active]:text-cf-text data-[state=active]:shadow-none">Briefing</TabsTrigger>
+        <TabsTrigger value="atividade" className="rounded-none border-b-2 border-transparent px-0 pb-3 pt-1 text-xs font-medium data-[state=active]:border-cf-primary data-[state=active]:bg-transparent data-[state=active]:text-cf-text data-[state=active]:shadow-none">Atividade</TabsTrigger>
       </TabsList>
 
       <TabsContent value="videos">
         {project.videos.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-cf-border p-8 text-center text-sm text-cf-text-dim">
-            Nenhum vídeo neste projeto ainda.
+          <div className="border-b border-cf-border py-14 text-center">
+            <div className="font-editorial text-3xl">Nada em corte ainda.</div>
+            <div className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo foi criado neste projeto.</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {project.videos.map((v: any) => (
               <VideoCard
                 key={v.id}
@@ -55,7 +55,7 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
             const links = project.links.filter((l: any) => l.category === cat);
             if (links.length === 0) return null;
             return (
-              <div key={cat} className="rounded-xl border border-cf-border bg-cf-surface p-4">
+              <div key={cat} className="border-t border-cf-border py-4">
                 <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">{LINK_CATEGORY_LABEL[cat]}</div>
                 <div className="space-y-1.5">
                   {links.map((l: any) => (
@@ -79,7 +79,7 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
       </TabsContent>
 
       <TabsContent value="info">
-        <div className="rounded-xl border border-cf-border bg-cf-surface p-4 max-w-2xl">
+        <div className="max-w-2xl border-t border-cf-border py-5">
           <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">Briefing / Observações</div>
           <EditableNotes value={project.notes ?? null} onSave={(notes) => updateProjectNotes(project.id, notes)} />
         </div>
@@ -87,7 +87,7 @@ export function ProjectTabs({ project, activity, users }: { project: any; activi
 
       <TabsContent value="atividade">
         {activity.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-cf-border p-8 text-center text-sm text-cf-text-dim">Sem atividade registrada.</div>
+          <div className="border-b border-cf-border py-14 text-center text-sm text-cf-text-dim">Sem atividade registrada.</div>
         ) : (
           <ol className="space-y-4 border-l border-cf-border pl-4">
             {activity.map((a: any) => (

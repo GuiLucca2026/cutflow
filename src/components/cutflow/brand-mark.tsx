@@ -31,6 +31,7 @@ export function BrandWordmark({
   size = "md",
   className,
   dark = false,
+  minimal = false,
 }: {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -39,9 +40,20 @@ export function BrandWordmark({
   // ficaria invisível lá. Este flag troca só a cor do texto, mantém o
   // ícone (que já é branco sobre gradiente) igual nos dois casos.
   dark?: boolean;
+  minimal?: boolean;
 }) {
   const iconSize = size === "lg" ? 44 : size === "sm" ? 26 : 32;
   const textClass = size === "lg" ? "text-4xl" : size === "sm" ? "text-xl" : "text-2xl";
+
+  if (minimal) {
+    return (
+      <div className={cn("flex items-baseline gap-2 leading-none", className)}>
+        <span className={cn("font-display tracking-[-0.04em]", textClass, dark ? "text-white" : "text-cf-text")}>{BRAND_PREFIX}</span>
+        <span className={cn("cf-micro", dark ? "text-white/45" : "text-cf-text-dim")}>/ FLOW</span>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
       <BrandIcon size={iconSize} />

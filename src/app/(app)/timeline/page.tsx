@@ -9,10 +9,6 @@ function dstr(d: Date) {
   return format(d, "yyyy-MM-dd");
 }
 
-// A real editing timeline doesn't reload from the server every time you
-// scrub — it loads a wide reel once and lets you pan/zoom freely. 45 days
-// back and 180 forward comfortably covers "what's overdue" through
-// "what's coming up this quarter" without ever needing a page nav.
 const DAYS_BEFORE = 45;
 const DAYS_AFTER = 180;
 const TOTAL_DAYS = DAYS_BEFORE + DAYS_AFTER;
@@ -26,8 +22,6 @@ export default async function TimelinePage() {
 
   const byProject = new Map<string, TimelineProjectGroup>();
   for (const v of relevant) {
-    // Videos without a project (spec: "vídeo avulso") are grouped under a
-    // single synthetic bucket rather than one row per video.
     const pid = v.projectId ?? "__no_project__";
     if (!byProject.has(pid)) {
       byProject.set(pid, {
@@ -58,27 +52,29 @@ export default async function TimelinePage() {
   });
 
   return (
-    <div className="cf-fade-in space-y-4 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Timeline</h1>
-        <p className="text-cf-text-dim text-sm max-w-xl">
-          Arraste uma barra pra reagendar o vídeo — os prazos interno, de revisão e de entrega se movem juntos, mantendo o
-          espaçamento entre eles. Arraste o fundo (ou use a roda do mouse) pra navegar no tempo, como numa timeline de edição.
+    <div className="cf-fade-in space-y-6 pb-16">
+      <header className="border-b border-cf-border pb-6 pt-2">
+        <div className="cf-micro text-cf-text-dim">PLANNING / TIME</div>
+        <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Timeline<span className="font-editorial font-normal">.</span></h1>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cf-text-dim">
+          Navegue como numa timeline de edição: pan, zoom e arraste as barras para reagendar sem perder a relação entre os prazos.
         </p>
-      </div>
+      </header>
 
-      <div className="flex items-center gap-3 text-[11px] text-cf-text-dim flex-wrap">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-cf-text-dim">
+        <span className="cf-micro mr-1">STATUS KEY</span>
         {["BACKLOG", "EDITANDO", "REVISAO_INTERNA", "ENVIADO_AO_CLIENTE", "ENTREGUE"].map((s) => (
           <span key={s} className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: STATUS_META[s]?.color }} />
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: STATUS_META[s]?.color }} />
             {STATUS_META[s]?.label}
           </span>
         ))}
       </div>
 
       {projects.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-cf-border p-10 text-center text-sm text-cf-text-dim">
-          Nenhum vídeo ativo pra mostrar na timeline.
+        <div className="border-b border-cf-border py-14 text-center">
+          <div className="font-editorial text-3xl">Sem cortes na linha do tempo.</div>
+          <div className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo ativo pra mostrar agora.</div>
         </div>
       ) : (
         <TimelineGantt windowStart={dstr(windowStart)} totalDays={TOTAL_DAYS} todayOffsetDays={DAYS_BEFORE} projects={projects} />

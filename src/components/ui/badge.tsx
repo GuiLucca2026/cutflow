@@ -13,14 +13,14 @@ export const Badge = React.forwardRef<
     <span
       ref={ref}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-transparent px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
+        "inline-flex items-center gap-1.5 rounded-[5px] border border-transparent px-2 py-[3px] text-[10px] font-semibold uppercase tracking-[0.08em]",
         !color && "bg-cf-surface-2 text-cf-text-dim",
         className
       )}
       style={
         color
           ? solid
-            ? { color: "#fff", backgroundColor: color, boxShadow: `0 2px 6px -1px ${color}66` }
+            ? { color: "#fff", backgroundColor: color }
             : { color, backgroundColor: bg ?? `${color}22` }
           : undefined
       }

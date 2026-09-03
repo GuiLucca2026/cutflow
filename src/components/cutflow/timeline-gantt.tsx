@@ -154,25 +154,25 @@ export function TimelineGantt({
   const todayLeft = todayOffsetDays * dayWidth + dayWidth / 2;
 
   return (
-    <div className="rounded-xl border border-cf-border overflow-hidden">
-      <div className="flex items-center justify-between gap-2 border-b border-cf-border bg-cf-surface px-3 py-1.5">
+    <div className="border border-cf-border overflow-hidden">
+      <div className="flex items-center justify-between gap-2 border-b border-cf-border bg-cf-canvas px-3 py-2">
         <div className="text-[11px] text-cf-text-dim">Arraste o fundo pra navegar · roda do mouse pan · zoom pra ajustar a escala</div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => nudge(-7)}
-            className="rounded-md border border-cf-border px-2 py-1 text-[11px] text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors"
+            className="border-b border-cf-border px-2 py-1 text-[11px] text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors"
           >
             ← Semana
           </button>
           <button
             onClick={scrollToToday}
-            className="flex items-center gap-1 rounded-md border border-cf-border px-2 py-1 text-[11px] text-cf-lime hover:bg-cf-surface-2 transition-colors"
+            className="flex items-center gap-1 border-b border-cf-border px-2 py-1 text-[11px] text-cf-lime hover:bg-cf-surface-2 transition-colors"
           >
             <Locate className="h-3 w-3" /> Hoje
           </button>
           <button
             onClick={() => nudge(7)}
-            className="rounded-md border border-cf-border px-2 py-1 text-[11px] text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors"
+            className="border-b border-cf-border px-2 py-1 text-[11px] text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors"
           >
             Semana →
           </button>
@@ -180,14 +180,14 @@ export function TimelineGantt({
           <button
             onClick={() => zoom(-1)}
             disabled={zoomIndex === 0}
-            className="rounded-md border border-cf-border p-1 text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors disabled:opacity-30"
+            className="border border-cf-border p-1 text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors disabled:opacity-30"
           >
             <ZoomOut className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => zoom(1)}
             disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-            className="rounded-md border border-cf-border p-1 text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors disabled:opacity-30"
+            className="border border-cf-border p-1 text-cf-text-dim hover:bg-cf-surface-2 hover:text-cf-text transition-colors disabled:opacity-30"
           >
             <ZoomIn className="h-3.5 w-3.5" />
           </button>

@@ -4,7 +4,6 @@ import { VideoCard } from "@/components/cutflow/video-card";
 import { WaitingRow } from "@/components/cutflow/waiting-row";
 import { Greeting } from "@/components/cutflow/greeting";
 import { FlowMessage } from "@/components/cutflow/flow-message";
-import { Avatar } from "@/components/ui/avatar";
 import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
@@ -94,22 +93,12 @@ export default async function HojePage() {
   const totalAllocated = planDays.reduce((acc, d) => acc + d.allocatedHours, 0);
 
   return (
-    <div className="space-y-8 cf-fade-in pb-16">
-      <div className="flex items-center gap-3">
-        <Avatar name={user.name} color={user.avatarColor} size={44} />
-        <div>
-          <div className="text-xs uppercase tracking-widest text-cf-text-dim">{todayLabel}</div>
-          <Greeting firstName={firstName} className="font-display text-4xl tracking-wide" />
-          <FlowMessage work={flowWork} />
-        </div>
-      </div>
-
-      <WeekPlanBoard
-        days={planDays}
-        unallocatedHours={Math.max(0, totalHoursLeftMine - totalAllocated)}
-        totalHoursLeft={totalHoursLeftMine}
-        dailyCapacityHours={user.dailyCapacityHours}
-      />
+    <div className="space-y-10 cf-fade-in pb-16">
+      <header className="border-b border-cf-border pb-7 pt-2">
+        <div className="cf-micro text-cf-text-dim">TODAY / {todayLabel}</div>
+        <Greeting firstName={firstName} className="font-editorial mt-3 text-[54px] leading-[0.92] tracking-[-0.035em] md:text-[72px]" />
+        <FlowMessage work={flowWork} className="mt-4 max-w-2xl" />
+      </header>
 
       {/* Cada card responde uma pergunta específica de "o que eu faço agora"
           — antes tinha "Hoje" sem dizer o que contava, "Tarefas
@@ -119,7 +108,7 @@ export default async function HojePage() {
           pouco acionável). Trocado por "Horas hoje", que é o que o
           planejamento automático (faixa "Sua semana", no topo) sugere pra hoje
           especificamente. */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-cf-border pb-2 md:grid-cols-5">
         <StatCard
           label="Atrasados"
           value={overdueMine.length}
@@ -157,15 +146,22 @@ export default async function HojePage() {
         />
       </div>
 
+      <WeekPlanBoard
+        days={planDays}
+        unallocatedHours={Math.max(0, totalHoursLeftMine - totalAllocated)}
+        totalHoursLeft={totalHoursLeftMine}
+        dailyCapacityHours={user.dailyCapacityHours}
+      />
+
       {/* Seções só aparecem quando têm conteúdo — os cards acima já dizem
           "0". Antes cada uma vazia virava uma caixa tracejada gigante com
           "Nada aqui", e num dia tranquilo a página era uma pilha de 5
           caixas vazias (o principal sinal de "amador" apontado pelo
           usuário). Se TUDO estiver vazio, um único aviso, embaixo. */}
       {nothingToShow ? (
-        <div className="rounded-xl border border-dashed border-cf-border px-6 py-10 text-center">
-          <div className="font-display text-xl tracking-wide">Fila limpa.</div>
-          <p className="mt-1 text-sm text-cf-text-dim">Nenhum vídeo atribuído a você precisa de atenção agora.</p>
+        <div className="border-b border-cf-border py-12 text-center">
+          <div className="font-editorial text-3xl">Fila limpa.</div>
+          <p className="mt-2 text-sm text-cf-text-dim">Nenhum vídeo atribuído a você precisa de atenção agora.</p>
         </div>
       ) : null}
 
@@ -253,21 +249,19 @@ export default async function HojePage() {
 
 function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { label: string; value: string | number; icon: any; tone?: "default" | "danger" | "warn" | "good"; href?: string; hint?: string }) {
   const toneMap = {
-    default: "text-cf-text border-cf-border",
-    danger: "text-red-600 border-red-500/30",
-    warn: "text-amber-600 border-amber-500/30",
-    good: "text-cf-success border-cf-success/30",
+    default: "text-cf-text",
+    danger: "text-red-600",
+    warn: "text-amber-700",
+    good: "text-cf-success",
   };
   const body = (
     <Hint text={hint}>
-      <div className={cn("rounded-xl border bg-cf-surface p-4 flex items-center gap-3 transition-colors", href && "hover:border-cf-lime/40")}>
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg bg-cf-surface-2", toneMap[tone])}>
-          <Icon className="h-5 w-5" />
+      <div className={cn("group border-t border-cf-border py-4 transition-colors", href && "hover:border-cf-primary")}>
+        <div className="flex items-start justify-between gap-3">
+          <div className={cn("font-editorial text-[48px] leading-[0.78] tracking-[-0.035em] md:text-[56px]", toneMap[tone])}>{value}</div>
+          <Icon className={cn("h-4 w-4", tone === "default" ? "text-cf-text-dim" : toneMap[tone])} />
         </div>
-        <div>
-          <div className="font-display text-3xl leading-none">{value}</div>
-          <div className="text-xs text-cf-text-dim mt-0.5">{label}</div>
-        </div>
+        <div className="cf-micro mt-3 text-cf-text-dim">{label}</div>
       </div>
     </Hint>
   );
@@ -277,9 +271,9 @@ function StatCard({ label, value, icon: Icon, tone = "default", href, hint }: { 
 function Section({ title, subtitle, count, tone, children }: { title: string; subtitle?: string; count?: number; tone?: "danger"; children: React.ReactNode }) {
   return (
     <section>
-      <div className="flex items-baseline gap-2 mb-3">
-        <h2 className={cn("font-display text-2xl tracking-wide", tone === "danger" && "text-red-600")}>{title}</h2>
-        {typeof count === "number" && <span className="text-cf-text-dim text-sm">{count}</span>}
+      <div className="mb-3 flex items-baseline gap-2 border-b border-cf-border pb-2">
+        <h2 className={cn("text-[26px] font-semibold tracking-[-0.03em]", tone === "danger" && "text-red-600")}>{title}</h2>
+        {typeof count === "number" && <span className="font-editorial text-xl text-cf-text-dim">{count}</span>}
       </div>
       {subtitle && <p className="text-xs text-cf-text-dim -mt-2 mb-3">{subtitle}</p>}
       {children}

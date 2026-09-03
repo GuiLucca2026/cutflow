@@ -24,11 +24,26 @@ export default async function VideosPage() {
   }));
 
   return (
-    <div className="cf-fade-in space-y-5 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Vídeos</h1>
-        <p className="text-cf-text-dim text-sm">{videos.length} vídeos no total · filtre por cliente, editor, status ou prioridade</p>
-      </div>
+    <div className="cf-fade-in pb-16">
+      <header className="mb-9 pt-2 md:mb-12">
+        <div className="cf-micro text-cf-text-dim">WORK / CUTS</div>
+        <div className="mt-4 grid items-end gap-8 border-b border-cf-border pb-7 lg:grid-cols-[1fr_auto]">
+          <div>
+            <h1 className="leading-[0.88] tracking-[-0.055em]">
+              <span className="block text-[54px] font-semibold md:text-[72px]">Vídeos</span>
+              <span className="font-editorial block text-[58px] font-normal md:text-[78px]">em fluxo.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-cf-text-dim">
+              Uma fila operacional dos cortes — status, responsável e prazo sem transformar tudo em badge.
+            </p>
+          </div>
+          <div className="hidden min-w-[120px] text-right sm:block">
+            <div className="font-editorial text-[70px] leading-[0.72] tracking-[-0.045em] md:text-[86px]">{videos.length}</div>
+            <div className="cf-micro mt-3 text-cf-text-dim">CUTS / TOTAL</div>
+          </div>
+        </div>
+      </header>
+
       <VideosExplorer
         videos={light}
         users={users.map((u) => ({ id: u.id, name: u.name }))}

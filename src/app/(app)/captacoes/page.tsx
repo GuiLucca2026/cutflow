@@ -1,6 +1,7 @@
 import { listCaptures, listUsers } from "@/db/queries";
 import { CaptureRow } from "@/components/cutflow/capture-row";
 import { isBefore, startOfDay } from "date-fns";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,7 @@ export default async function CaptacoesPage() {
 
   return (
     <div className="cf-fade-in space-y-8 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Captações</h1>
-        <p className="text-cf-text-dim text-sm">Sessões de filmagem/gravação — o dia da captação, antes de virar material pra editar.</p>
-      </div>
+      <PageHeader eyebrow="PRODUCTION / CAPTURES" title="Captações" subtitle="Sessões de filmagem e gravação — antes do material entrar em pós." />
 
       <section>
         <div className="flex items-baseline gap-2 mb-3">

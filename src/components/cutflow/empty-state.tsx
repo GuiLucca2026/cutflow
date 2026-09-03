@@ -22,7 +22,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "rounded-[var(--cf-radius-card)] border border-dashed border-cf-border text-center",
+        "border-y border-cf-border text-center",
         compact ? "px-6 py-8" : "px-8 py-16",
         className
       )}

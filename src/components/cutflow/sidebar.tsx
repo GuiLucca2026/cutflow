@@ -16,7 +16,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
       style={{ background: "var(--cf-side-bg)", borderRight: "1px solid var(--cf-side-border)" }}
     >
       <div className="px-5 pb-5 pt-6">
-        <BrandWordmark size="sm" dark />
+        <BrandWordmark size="sm" dark minimal />
       </div>
 
       <nav className="cf-scrollbar-thin flex-1 space-y-5 overflow-y-auto px-3 py-2">
@@ -36,7 +36,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-[6px] px-3 py-2 text-[13px] transition-colors duration-[var(--cf-dur-hover)]",
+                      "flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors duration-[var(--cf-dur-hover)]",
                       active
                         ? "cf-side-active font-medium text-cf-side-text-active"
                         : "text-cf-side-text hover:bg-white/[0.045] hover:text-white/[0.88]"

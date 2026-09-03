@@ -1,6 +1,7 @@
 import { listProjects, listClients } from "@/db/queries";
 import { isOverdue, isDone } from "@/lib/domain";
 import { ClientsExplorer } from "@/components/cutflow/clients-explorer";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,7 @@ export default async function ClientesPage() {
 
   return (
     <div className="cf-fade-in space-y-5 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Clientes</h1>
-        <p className="text-cf-text-dim text-sm">{clients.length} clientes</p>
-      </div>
+      <PageHeader eyebrow="MANAGE / CLIENTS" title="Clientes" subtitle={`${clients.length} clientes`} />
       <ClientsExplorer clients={light} />
     </div>
   );

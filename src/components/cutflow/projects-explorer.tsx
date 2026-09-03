@@ -75,7 +75,7 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
     <div className="space-y-7">
       <div className="border-y border-cf-border">
         <div className="flex flex-col gap-4 py-3.5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex items-center gap-5 overflow-x-auto cf-scrollbar-thin">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {SCOPES.map((item) => {
               const active = scope === item.value;
               return (
@@ -84,13 +84,12 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
                   type="button"
                   onClick={() => setScope(item.value)}
                   className={cn(
-                    "relative shrink-0 py-1 text-[12px] font-medium transition-colors",
-                    active ? "text-cf-text" : "text-cf-text-dim hover:text-cf-text"
+                    "relative shrink-0 border-b-2 py-1.5 text-[12px] font-medium transition-colors",
+                    active ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
                   )}
                 >
                   {item.label}
                   <span className="ml-1.5 font-editorial text-[15px]">{counts[item.value]}</span>
-                  {active && <span className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-cf-primary" />}
                 </button>
               );
             })}
@@ -150,7 +149,7 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
           description="Nenhum projeto corresponde aos filtros selecionados."
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((project, index) => (
             <ProjectCard key={project.id} project={project} index={index} />
           ))}

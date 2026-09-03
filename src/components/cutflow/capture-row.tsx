@@ -53,7 +53,7 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
   }
 
   return (
-    <div className="rounded-xl border border-cf-border bg-cf-surface p-3.5">
+    <div className="border-t border-cf-border py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -64,9 +64,7 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
             {capture.project ? `${capture.project.client?.name ?? "—"} · ${capture.project.name}` : "Sem projeto vinculado"}
           </div>
         </div>
-        <span className="text-[10px] uppercase tracking-wide shrink-0 rounded-full px-2 py-0.5" style={{ color: meta.color, backgroundColor: `${meta.color}1a` }}>
-          {meta.label}
-        </span>
+        <span className="cf-micro shrink-0" style={{ color: meta.color }}>● {meta.label}</span>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-xs text-cf-text-dim">
@@ -93,7 +91,7 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
           id={capture.id}
           value={capture.responsibleId}
           users={crew}
-          className="h-8 text-sm w-[190px]"
+          className="h-8 w-[190px] rounded-none border-0 bg-transparent px-0 py-0 text-sm shadow-none focus:ring-0"
         />
       </div>
 
@@ -107,7 +105,7 @@ export function CaptureRow({ capture, crew }: { capture: CaptureData; crew: { id
 
         <div className="flex items-center gap-1">
           {capture.status !== "CONCLUIDA" && (
-            <Button size="sm" variant="ghost" disabled={pending} onClick={() => setStatus("CONCLUIDA")} className={cn("gap-1 text-cf-lime")}>
+            <Button size="sm" variant="ghost" disabled={pending} onClick={() => setStatus("CONCLUIDA")} className={cn("gap-1 text-cf-primary")}>
               <CheckCircle2 className="h-3.5 w-3.5" /> Concluir
             </Button>
           )}

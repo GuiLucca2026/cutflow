@@ -60,7 +60,7 @@ export default async function ProjectDetailPage({
 
       <section
         className={cn(
-          "relative min-h-[430px] overflow-hidden rounded-[var(--cf-radius-poster)] border",
+          "relative min-h-[470px] overflow-hidden rounded-[var(--cf-radius-poster)] border",
           darkArtwork ? "border-white/[0.10] text-white" : "border-black/[0.10] text-[#171717]"
         )}
       >
@@ -74,7 +74,7 @@ export default async function ProjectDetailPage({
           }}
         />
 
-        <div className="relative z-10 flex min-h-[430px] flex-col justify-between p-6 md:p-8 lg:p-10">
+        <div className="relative z-10 flex min-h-[470px] flex-col justify-between p-6 md:p-9 lg:p-11">
           <div className="flex items-start justify-between gap-6">
             <div className="flex items-center gap-3">
               <ClientLogo
@@ -101,7 +101,7 @@ export default async function ProjectDetailPage({
               <ProjectTitle
                 id={project.id}
                 name={project.name}
-                className="max-w-[900px] text-[44px] font-semibold leading-[0.94] tracking-[-0.05em] md:text-[62px] lg:text-[74px]"
+                className="max-w-[920px] text-[42px] font-semibold leading-[0.95] tracking-[-0.052em] md:text-[58px] lg:text-[68px]"
                 editButtonClassName={darkArtwork ? "text-white/[0.55] hover:text-white" : "text-black/[0.45] hover:text-black"}
               />
               {project.description && (
@@ -131,29 +131,33 @@ export default async function ProjectDetailPage({
         </div>
       </section>
 
-      <section className="border-y border-cf-border py-4">
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
-            <div className="cf-micro mb-1.5 text-cf-text-dim">Cliente</div>
+      <section className="border-y border-cf-border py-5">
+        <div className="mb-4 flex items-baseline justify-between gap-4">
+          <div className="cf-micro text-cf-text-dim">PROJECT INFORMATION</div>
+          <div className="text-[11px] text-cf-text-dim">Clique nos campos editáveis para atualizar</div>
+        </div>
+        <div className="grid gap-x-7 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="min-w-0">
+            <div className="cf-micro mb-1 text-cf-text-dim">Cliente</div>
             <ClientSelect
               projectId={project.id}
               value={project.clientId}
               clients={clients.map((client) => ({ id: client.id, name: client.name }))}
-              className="h-9 bg-transparent"
+              className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm font-medium shadow-none focus:ring-0"
             />
           </div>
-          <div>
-            <div className="cf-micro mb-1.5 text-cf-text-dim">Responsável</div>
+          <div className="min-w-0">
+            <div className="cf-micro mb-1 text-cf-text-dim">Responsável</div>
             <ResponsibleSelect
               kind="project"
               id={project.id}
               value={project.producerId ?? null}
               users={users.map((user) => ({ id: user.id, name: user.name }))}
-              className="h-9 bg-transparent"
+              className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm font-medium shadow-none focus:ring-0"
             />
           </div>
           <Fact label="Editor líder" value={project.leadEditor?.name ?? "—"} />
-          <Fact label="Vídeos" value={String(project.videos.length)} />
+          <Fact label="Vídeos" value={String(project.videos.length).padStart(2, "0")} />
           <Fact label="Orçamento" value={project.budget ? fmtCurrency(project.budget) : "—"} />
         </div>
       </section>
@@ -174,7 +178,7 @@ function HeroFact({ label, value, dark }: { label: string; value: string; dark: 
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-h-14 flex-col justify-center">
+    <div className="flex min-h-12 flex-col justify-center">
       <div className="cf-micro text-cf-text-dim">{label}</div>
       <div className="mt-1 text-sm font-medium">{value}</div>
     </div>

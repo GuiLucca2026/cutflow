@@ -15,6 +15,7 @@ import { subDays, format, startOfMonth, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CheckCircle2, Repeat, Clock, Users2, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -82,13 +83,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="cf-fade-in space-y-6 pb-16">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-4xl tracking-wide">Analytics</h1>
-          <p className="text-cf-text-dim text-sm">KPIs de entrega, revisão, espera do cliente, utilização e carga concluída da equipe</p>
-        </div>
-        <AnalyticsFilters clients={clients.map((c) => ({ id: c.id, name: c.name }))} editors={users.map((u) => ({ id: u.id, name: u.name }))} period={period} clientId={clientId} editorId={editorId} />
-      </div>
+      <PageHeader
+        eyebrow="OVERVIEW / ANALYTICS"
+        title="Analytics"
+        subtitle="Entrega, revisão, espera do cliente, utilização e carga concluída — leitura de operação, não decoração."
+        actions={<AnalyticsFilters clients={clients.map((c) => ({ id: c.id, name: c.name }))} editors={users.map((u) => ({ id: u.id, name: u.name }))} period={period} clientId={clientId} editorId={editorId} />}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
         <KpiCard
@@ -237,23 +237,19 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
 
 function KpiCard({ label, value, detail, icon: Icon, tone = "default" }: { label: string; value: string; detail: string; icon: any; tone?: "default" | "danger" | "warn" | "good" }) {
   const toneMap = {
-    default: "text-cf-text border-cf-border",
-    danger: "text-red-600 border-red-500/30",
-    warn: "text-amber-600 border-amber-500/30",
-    good: "text-cf-success border-cf-success/30",
+    default: "text-cf-text",
+    danger: "text-red-600",
+    warn: "text-amber-700",
+    good: "text-cf-success",
   };
   return (
-    <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
-      <div className="flex items-center gap-3">
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg bg-cf-surface-2", toneMap[tone])}>
-          <Icon className="h-5 w-5" />
-        </div>
-        <div className="min-w-0">
-          <div className="font-display text-3xl leading-none">{value}</div>
-          <div className="text-xs text-cf-text-dim mt-0.5">{label}</div>
-        </div>
+    <div className="border-t border-cf-border py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className={cn("font-editorial text-[46px] leading-[0.82] tracking-[-0.035em]", toneMap[tone])}>{value}</div>
+        <Icon className={cn("h-4 w-4", tone === "default" ? "text-cf-text-dim" : toneMap[tone])} />
       </div>
-      <div className="text-[11px] text-cf-text-dim mt-2.5">{detail}</div>
+      <div className="cf-micro mt-3 text-cf-text-dim">{label}</div>
+      <div className="mt-2 text-[11px] leading-relaxed text-cf-text-dim">{detail}</div>
     </div>
   );
 }

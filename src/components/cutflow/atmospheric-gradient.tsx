@@ -7,31 +7,31 @@ const VARIANTS: AtmosphericVariant[] = ["sunset", "blueHour", "lavender", "signa
 
 const VARIANT_CONFIG: Record<
   AtmosphericVariant,
-  { base: string; colors: [string, string, string, string]; tone: AtmosphericTone }
+  { base: string; colors: string[]; tone: AtmosphericTone }
 > = {
   sunset: {
-    base: "#E9DFCC",
-    colors: ["var(--cf-cream)", "var(--cf-orange)", "var(--cf-coral)", "var(--cf-red)"],
+    base: "#E7D8C3",
+    colors: ["#F4E4C9", "#F2A04F", "#F15B3A", "#A82920", "#2B100D"],
     tone: "light",
   },
   blueHour: {
-    base: "#B7C8E2",
-    colors: ["var(--cf-sky)", "var(--cf-deep-blue)", "var(--cf-orange)", "var(--cf-cream)"],
+    base: "#AFC1DC",
+    colors: ["#BCD0EA", "#3158B1", "#101A60", "#ED9251", "#E9DCC8"],
     tone: "light",
   },
   lavender: {
-    base: "#DCD2E7",
-    colors: ["var(--cf-lavender)", "var(--cf-sky)", "var(--cf-cream)", "var(--cf-coral)"],
+    base: "#D8CCE4",
+    colors: ["#D7C4E8", "#9EB7DC", "#746BA8", "#F17A61", "#EFE3D0"],
     tone: "light",
   },
   signal: {
-    base: "#16236D",
-    colors: ["var(--cf-blue)", "var(--cf-orange)", "var(--cf-red)", "var(--cf-sky)"],
+    base: "#111A59",
+    colors: ["#0D174F", "#2447A6", "#EF9A50", "#D63A2C", "#321313"],
     tone: "dark",
   },
   midnight: {
-    base: "#10155A",
-    colors: ["var(--cf-deep-blue)", "var(--cf-blue)", "var(--cf-sky)", "var(--cf-orange)"],
+    base: "#090E3B",
+    colors: ["#06092A", "#111B67", "#284CB0", "#89A9D7", "#E9834D"],
     tone: "dark",
   },
 };
@@ -64,20 +64,24 @@ export function atmosphericVariantForSeed(seed: string): AtmosphericVariant {
   return VARIANTS[hashSeed(seed) % VARIANTS.length];
 }
 
+/** A mesma seed também recebe uma das composições editoriais dos posters. */
+export function atmosphericLayoutForSeed(seed: string): 0 | 1 | 2 {
+  return (hashSeed(`layout:${seed}`) % 3) as 0 | 1 | 2;
+}
+
 export function atmosphericTone(variant: AtmosphericVariant): AtmosphericTone {
   return VARIANT_CONFIG[variant].tone;
 }
 
 /**
  * Artwork atmosférico do G2 FLOW.
- * O blur pertence às manchas, enquanto o movimento acontece num filho separado:
- * isso evita a disputa entre `translate(-50%, -50%)` de posicionamento e a
- * animação de transform que existia na primeira versão do componente.
+ * A intenção é parecer luz fotografada fora de foco, não um gradiente SaaS:
+ * manchas grandes, zonas neutras, contraste cromático e movimento muito lento.
  */
 export function AtmosphericGradient({
   variant = "sunset",
   seed,
-  intensity = 0.92,
+  intensity = 0.94,
   animated = false,
   grain = true,
   className,
@@ -90,17 +94,17 @@ export function AtmosphericGradient({
   className?: string;
 }) {
   const config = VARIANT_CONFIG[variant];
-  const f = seedToFloats(`${variant}:${seed}`, 16);
+  const f = seedToFloats(`${variant}:${seed}`, config.colors.length * 4 + 8);
 
   const blobs = config.colors.map((color, i) => {
     const x = i * 4;
     return {
       color,
-      top: -5 + f[x] * 105,
-      left: -5 + f[x + 1] * 110,
-      width: 58 + f[x + 2] * 48,
-      height: 48 + f[x + 3] * 52,
-      opacity: [0.95, 0.86, 0.72, 0.58][i] * intensity,
+      top: -12 + f[x] * 124,
+      left: -12 + f[x + 1] * 124,
+      width: 64 + f[x + 2] * 58,
+      height: 58 + f[x + 3] * 60,
+      opacity: [0.98, 0.93, 0.82, 0.64, 0.42][i] * intensity,
     };
   });
 
@@ -119,7 +123,7 @@ export function AtmosphericGradient({
             left: `${blob.left}%`,
             width: `${blob.width}%`,
             height: `${blob.height}%`,
-            transform: `translate(-50%, -50%) rotate(${Math.round((f[i] - 0.5) * 28)}deg)`,
+            transform: `translate(-50%, -50%) rotate(${Math.round((f[i] - 0.5) * 34)}deg)`,
           }}
         >
           <div
@@ -128,22 +132,21 @@ export function AtmosphericGradient({
               animated && (i % 2 === 0 ? "cf-drift" : "cf-drift-alt")
             )}
             style={{
-              background: `radial-gradient(ellipse at 50% 50%, ${blob.color} 0%, ${blob.color} 42%, color-mix(in srgb, ${blob.color} 18%, transparent) 70%, transparent 100%)`,
+              background: `radial-gradient(ellipse at 50% 50%, ${blob.color} 0%, ${blob.color} 34%, color-mix(in srgb, ${blob.color} 58%, transparent) 55%, color-mix(in srgb, ${blob.color} 18%, transparent) 74%, transparent 100%)`,
               opacity: blob.opacity,
-              animationDelay: animated ? `${i * -5.75}s` : undefined,
+              animationDelay: animated ? `${i * -4.9}s` : undefined,
             }}
           />
         </div>
       ))}
 
-      {/* Uma lavagem muito leve une as manchas sem cair no "gradient SaaS". */}
       <div
         className="absolute inset-0"
         style={{
           background:
             config.tone === "dark"
-              ? "radial-gradient(circle at 20% 0%, rgba(255,255,255,.12), transparent 48%), linear-gradient(180deg, rgba(6,8,30,.02), rgba(6,8,30,.20))"
-              : "radial-gradient(circle at 15% 0%, rgba(255,255,255,.42), transparent 50%), linear-gradient(180deg, rgba(255,255,255,.02), rgba(21,21,21,.04))",
+              ? "radial-gradient(circle at 18% -8%, rgba(255,255,255,.16), transparent 40%), radial-gradient(circle at 92% 105%, rgba(0,0,0,.28), transparent 48%), linear-gradient(180deg, rgba(4,7,28,.02), rgba(4,7,28,.18))"
+              : "radial-gradient(circle at 14% -8%, rgba(255,255,255,.52), transparent 42%), radial-gradient(circle at 92% 110%, rgba(20,12,8,.13), transparent 48%), linear-gradient(180deg, rgba(255,255,255,.01), rgba(21,21,21,.055))",
         }}
       />
 
@@ -151,9 +154,9 @@ export function AtmosphericGradient({
         <div
           className="absolute inset-0 mix-blend-overlay"
           style={{
-            opacity: 0.022,
+            opacity: 0.026,
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.68'/%3E%3C/svg%3E\")",
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E\")",
           }}
         />
       )}

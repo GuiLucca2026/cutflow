@@ -8,6 +8,7 @@ import { format, addDays } from "date-fns";
 import { isDone, isProductionRole } from "@/lib/domain";
 import { fmtHours } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -68,10 +69,7 @@ export default async function EquipePage() {
 
   return (
     <div className="cf-fade-in space-y-6 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Equipe</h1>
-        <p className="text-cf-text-dim text-sm">Papéis, carga de trabalho e capacidade da equipe</p>
-      </div>
+      <PageHeader eyebrow="MANAGE / TEAM" title="Equipe" subtitle="Papéis, carga de trabalho e capacidade da equipe" />
 
       <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
         <div className="flex items-baseline gap-2 mb-3">

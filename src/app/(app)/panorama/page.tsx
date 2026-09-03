@@ -9,6 +9,7 @@ import { fmtHours } from "@/lib/format";
 import { subDays } from "date-fns";
 import { AlertTriangle, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -62,12 +63,7 @@ export default async function PanoramaPage() {
 
   return (
     <div className="cf-fade-in space-y-6 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Panorama</h1>
-        <p className="text-cf-text-dim text-sm">
-          Como está a produtora inteira, por pessoa — todo mundo vê tudo. Sua fila pessoal continua em Meu Dia.
-        </p>
-      </div>
+      <PageHeader eyebrow="OVERVIEW / STUDIO" title="Panorama" subtitle="Como está a produtora inteira, por pessoa — sua fila pessoal continua em Meu Dia." />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="Vídeos ativos" value={company.total} />
@@ -161,24 +157,24 @@ export default async function PanoramaPage() {
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string | number; tone?: "default" | "danger" | "warn" }) {
   return (
-    <div className="rounded-xl border border-cf-border bg-cf-surface p-4">
+    <div className="border-t border-cf-border py-4">
       <div
         className={cn(
-          "font-display text-3xl leading-none",
+          "font-editorial text-[46px] leading-[0.82] tracking-[-0.035em]",
           tone === "danger" && "text-red-600",
-          tone === "warn" && "text-amber-600"
+          tone === "warn" && "text-amber-700"
         )}
       >
         {value}
       </div>
-      <div className="text-xs text-cf-text-dim mt-1">{label}</div>
+      <div className="cf-micro mt-3 text-cf-text-dim">{label}</div>
     </div>
   );
 }
 
 function CardGrid({ videos }: { videos: any[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {videos.map((v) => (
         <VideoCard key={v.id} video={v} />
       ))}

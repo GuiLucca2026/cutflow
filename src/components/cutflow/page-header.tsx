@@ -1,36 +1,32 @@
 import { cn } from "@/lib/utils";
 
-// Consolida o cabeçalho que 15 páginas reescreviam à mão (mesmo
-// h1 + p sempre, ver REBRAND-AUDIT.md § design debt #2). Ainda não
-// aplicado a nenhuma página — isso é trabalho da Fase 3/4 (aplicar a
-// linguagem nova tela por tela, preservando o que já funciona); aqui só
-// o componente fica pronto.
 export function PageHeader({
   title,
   subtitle,
+  eyebrow = "G2 FLOW / WORKSPACE",
   actions,
   className,
 }: {
   title: string;
   subtitle?: string;
+  eyebrow?: string;
   actions?: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap items-start justify-between gap-3", className)}>
+    <header className={cn("flex flex-wrap items-end justify-between gap-5 border-b border-cf-border pb-6 pt-2", className)}>
       <div>
-        <h1 className="font-display text-4xl tracking-wide">{title}</h1>
-        {subtitle && <p className="text-cf-text-dim text-sm mt-1">{subtitle}</p>}
+        <div className="cf-micro text-cf-text-dim">{eyebrow}</div>
+        <h1 className="mt-3 text-[48px] font-semibold leading-[0.9] tracking-[-0.052em] md:text-[62px]">
+          {title}<span className="font-editorial font-normal">.</span>
+        </h1>
+        {subtitle && <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cf-text-dim">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
-    </div>
+      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+    </header>
   );
 }
 
-// Cabeçalho de seção — mesmo "título + contador" que Meu Dia/Entregas/
-// Revisões já reescreviam cada um do seu jeito (ver Section() em
-// hoje/page.tsx, por exemplo). Migração pra este componente compartilhado
-// também é Fase 3/4.
 export function SectionHeader({
   title,
   subtitle,
@@ -45,12 +41,12 @@ export function SectionHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-3", className)}>
+    <div className={cn("mb-3 border-b border-cf-border pb-2", className)}>
       <div className="flex items-baseline gap-2">
-        <h2 className={cn("font-display text-2xl tracking-wide", tone === "danger" && "text-red-600")}>{title}</h2>
-        {typeof count === "number" && <span className="text-cf-text-dim text-sm">{count}</span>}
+        <h2 className={cn("text-[24px] font-semibold tracking-[-0.03em]", tone === "danger" && "text-red-600")}>{title}</h2>
+        {typeof count === "number" && <span className="font-editorial text-xl text-cf-text-dim">{count}</span>}
       </div>
-      {subtitle && <p className="text-xs text-cf-text-dim mt-0.5">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-xs text-cf-text-dim">{subtitle}</p>}
     </div>
   );
 }

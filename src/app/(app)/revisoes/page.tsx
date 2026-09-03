@@ -1,6 +1,7 @@
 import { listVideos } from "@/db/queries";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { WaitingRow } from "@/components/cutflow/waiting-row";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,7 @@ export default async function RevisoesPage() {
 
   return (
     <div className="cf-fade-in space-y-8 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Revisões</h1>
-        <p className="text-cf-text-dim text-sm">Central de revisões internas, do cliente e alterações em andamento</p>
-      </div>
+      <PageHeader eyebrow="WORK / REVIEWS" title="Revisões" subtitle="Revisões internas, feedback do cliente e alterações em andamento." />
 
       {groups.every((g) => g.items.length === 0) && (
         <div className="rounded-xl border border-dashed border-cf-border px-6 py-10 text-center text-sm text-cf-text-dim">

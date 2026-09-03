@@ -1,5 +1,6 @@
 import { listDeletedVideos, listDeletedProjects } from "@/db/queries";
 import { TrashList } from "@/components/cutflow/trash-list";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +14,11 @@ export default async function LixeiraPage() {
 
   return (
     <div className="cf-fade-in space-y-8 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Lixeira</h1>
-        <p className="text-cf-text-dim text-sm">
-          {projects.length + videos.length === 0
-            ? "Vazia."
-            : `${projects.length} ${projects.length === 1 ? "projeto" : "projetos"} · ${videos.length} ${videos.length === 1 ? "vídeo" : "vídeos"}`}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="MANAGE / ARCHIVE"
+        title="Lixeira"
+        subtitle={projects.length + videos.length === 0 ? "Vazia." : `${projects.length} ${projects.length === 1 ? "projeto" : "projetos"} · ${videos.length} ${videos.length === 1 ? "vídeo" : "vídeos"}`}
+      />
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-cf-text-dim uppercase tracking-wide">Projetos</h2>

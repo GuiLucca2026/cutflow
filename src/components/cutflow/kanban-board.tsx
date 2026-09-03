@@ -14,12 +14,12 @@ import {
 } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { KANBAN_STATUSES, STATUS_META, computeClientWait, computeDeliveryRisk, isOverdue, isWaitingClient, CLIENT_WAIT_ACCENT_COLOR } from "@/lib/domain";
+import { KANBAN_STATUSES, STATUS_META, computeClientWait, isOverdue, isWaitingClient, CLIENT_WAIT_ACCENT_COLOR } from "@/lib/domain";
 import { fmtDateWeekday, fmtShortId } from "@/lib/format";
 import { updateVideoStatus } from "@/app/actions";
 import { toastStatusChange } from "@/lib/celebrate";
 import { useVideoDetail } from "@/components/cutflow/video-detail-context";
-import { StatusBadge, PriorityBadge, ClientWaitBadge } from "@/components/cutflow/badges";
+import { ClientWaitBadge } from "@/components/cutflow/badges";
 import { VideoContextMenu } from "@/components/cutflow/video-context-menu";
 import { TeamStrip } from "@/components/cutflow/team-strip";
 import { Avatar } from "@/components/ui/avatar";
@@ -94,20 +94,14 @@ function Column({ status, videos, onOpen }: { status: string; videos: VideoCardD
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-xl border bg-cf-surface transition-colors",
-        isOver ? "border-cf-lime/60 bg-cf-surface" : "border-cf-border"
+        "flex w-72 shrink-0 flex-col border border-cf-border bg-transparent transition-colors",
+        isOver ? "border-cf-primary/50" : "border-cf-border"
       )}
     >
-      <div className="flex items-center gap-2 px-2.5 py-2.5 sticky top-0">
-        <span
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white"
-          style={{ background: meta.color, boxShadow: `0 3px 8px -2px ${meta.color}80` }}
-        >
-          {meta.label}
-        </span>
-        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-cf-surface-2 px-1.5 text-[11px] font-semibold text-cf-text-dim">
-          {videos.length}
-        </span>
+      <div className="sticky top-0 flex items-baseline gap-2 border-b border-cf-border bg-cf-canvas px-3 py-3">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: meta.color }} />
+        <span className="cf-micro" style={{ color: meta.color }}>{meta.label}</span>
+        <span className="ml-auto font-editorial text-xl leading-none text-cf-text-dim">{videos.length}</span>
       </div>
       <div className="flex-1 space-y-2 p-2 min-h-[120px] max-h-[calc(100vh-260px)] overflow-y-auto cf-scrollbar-thin">
         {videos.map((v) => (
@@ -137,14 +131,14 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
         onClick={() => !isDragging && onOpen(video.id)}
         style={{
           ...(transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined),
-          ["--cf-card-tint" as any]: `${accent}1f`,
-          borderColor: `${accent}4d`,
+          borderColor: overdue ? `${accent}55` : "var(--cf-border)",
         }}
         className={cn(
-          "cursor-grab active:cursor-grabbing rounded-lg border bg-cf-surface p-2.5 text-left transition-colors hover:border-cf-lime/40",
+          "relative cursor-grab overflow-hidden active:cursor-grabbing rounded-[var(--cf-radius-card)] border bg-cf-surface p-3 text-left transition-colors hover:border-black/25",
           (isDragging || dragging) && "opacity-60 shadow-xl"
         )}
       >
+        <span className="absolute bottom-0 left-0 top-0 w-[2px]" style={{ backgroundColor: accent }} aria-hidden />
         {/* Mesma hierarquia Cliente → Projeto → Vídeo do VideoCard (ver
             esse arquivo pro motivo) — mantém os dois cards consistentes,
             já que o mesmo vídeo aparece em ambos os lugares. */}
@@ -172,7 +166,7 @@ function KanbanCard({ video, onOpen, dragging }: { video: VideoCardData; onOpen:
           </span>
         </div>
         <div className="flex items-center gap-1.5 mt-2">
-          <PriorityBadge priority={video.priority} className="text-[9px] px-1.5 py-0" />
+          {video.priority !== "NORMAL" && <span className="cf-micro text-cf-text-dim">{video.priority}</span>}
           {overdue && <AlertTriangle className="h-3 w-3 text-red-600" />}
           <span className={cn("ml-auto text-[11px]", overdue ? "text-red-600 font-semibold" : "text-cf-text-dim")}>
             {fmtDateWeekday(video.finalDeadline)}

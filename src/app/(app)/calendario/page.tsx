@@ -94,37 +94,38 @@ export default async function CalendarioPage({
 
   return (
     <div className="cf-fade-in space-y-4 pb-16">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-cf-border pb-6 pt-2">
         <div>
-          <h1 className="font-display text-4xl tracking-wide">Calendário</h1>
-          <p className="text-cf-text-dim text-sm">Prazos de edição, revisão e entrega — de todos os vídeos ativos.</p>
+          <div className="cf-micro text-cf-text-dim">PLANNING / DATES</div>
+          <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Calendário<span className="font-editorial font-normal">.</span></h1>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-cf-text-dim">Prazos de edição, revisão, captação e entrega em uma única leitura temporal.</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-cf-border bg-cf-surface p-1">
+        <div className="flex items-center gap-5">
           {VIEWS.map((v) => (
             <Link
               key={v.key}
               href={hrefFor(v.key, refDate)}
               className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                view === v.key ? "bg-cf-lime text-cf-on-accent" : "text-cf-text-dim hover:text-cf-text"
+                "border-b-2 py-1.5 text-xs font-medium transition-colors",
+                view === v.key ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
               )}
             >
               {v.label}
             </Link>
           ))}
         </div>
-      </div>
+      </header>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <Link href={hrefFor(view, prevDate)} className="rounded-lg border border-cf-border p-1.5 hover:bg-cf-surface-2">
+          <Link href={hrefFor(view, prevDate)} className="border border-cf-border p-1.5 hover:bg-cf-surface-2">
             <ChevronLeft className="h-4 w-4" />
           </Link>
           <h2 className="font-display text-xl tracking-wide capitalize min-w-[9rem]">{title}</h2>
-          <Link href={hrefFor(view, nextDate)} className="rounded-lg border border-cf-border p-1.5 hover:bg-cf-surface-2">
+          <Link href={hrefFor(view, nextDate)} className="border border-cf-border p-1.5 hover:bg-cf-surface-2">
             <ChevronRight className="h-4 w-4" />
           </Link>
-          <Link href={hrefFor(view, new Date())} className="rounded-lg border border-cf-border px-3 py-1.5 text-xs hover:bg-cf-surface-2">
+          <Link href={hrefFor(view, new Date())} className="border-b border-cf-primary px-1 py-1.5 text-xs text-cf-primary hover:text-cf-primary-hover">
             Hoje
           </Link>
         </div>
@@ -152,7 +153,7 @@ function MonthView({ refDate, byDay }: { refDate: Date; byDay: Map<string, CalEv
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
 
   return (
-    <div className="rounded-xl border border-cf-border overflow-hidden">
+    <div className="border border-cf-border overflow-hidden">
       <div className="grid grid-cols-7 bg-cf-surface-2/50 border-b border-cf-border">
         {WEEKDAY_LABELS.map((d) => (
           <div key={d} className="px-2 py-1.5 text-[11px] font-semibold text-cf-text-dim text-center">

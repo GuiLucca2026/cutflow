@@ -2,6 +2,7 @@ import { listVideos } from "@/db/queries";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { isDone, isOverdue } from "@/lib/domain";
 import { isToday, isTomorrow, differenceInCalendarDays } from "date-fns";
+import { PageHeader } from "@/components/cutflow/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -32,10 +33,7 @@ export default async function EntregasPage() {
 
   return (
     <div className="cf-fade-in space-y-8 pb-16">
-      <div>
-        <h1 className="font-display text-4xl tracking-wide">Entregas</h1>
-        <p className="text-cf-text-dim text-sm">Central de entregas — {videos.filter((v) => !isDone(v.status)).length} vídeos ativos</p>
-      </div>
+      <PageHeader eyebrow="WORK / DELIVERY" title="Entregas" subtitle={`Central de entrega — ${videos.filter((v) => !isDone(v.status)).length} vídeos ativos`} />
 
       {/* Grupo vazio some — antes cada um virava uma caixa tracejada "Nada
           aqui", e a página era mais caixa vazia do que vídeo. Se todos

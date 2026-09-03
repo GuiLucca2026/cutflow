@@ -29,18 +29,21 @@ export default async function ProjetosPage() {
 
   return (
     <div className="cf-fade-in pb-20">
-      <header className="mb-8 pt-1 md:mb-10">
+      <header className="mb-9 pt-2 md:mb-12">
         <div className="cf-micro text-cf-text-dim">WORK / PROJECTS</div>
-        <div className="mt-3 flex items-end justify-between gap-6 border-b border-cf-border pb-5">
+        <div className="mt-4 grid items-end gap-8 border-b border-cf-border pb-7 lg:grid-cols-[1fr_auto]">
           <div>
-            <h1 className="text-[46px] font-semibold leading-none tracking-[-0.045em] md:text-[62px]">Projetos</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-cf-text-dim">
-              Uma visão visual do que está em movimento agora — do primeiro corte até a entrega.
+            <h1 className="max-w-[780px] leading-[0.88] tracking-[-0.055em]">
+              <span className="block text-[54px] font-semibold md:text-[72px]">Projetos</span>
+              <span className="font-editorial block text-[58px] font-normal md:text-[78px]">em movimento.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-sm leading-relaxed text-cf-text-dim">
+              Do primeiro corte à entrega final — uma leitura visual do que está em fluxo agora.
             </p>
           </div>
-          <div className="hidden shrink-0 text-right sm:block">
-            <div className="font-editorial text-[58px] leading-[0.8] tracking-[-0.04em] md:text-[72px]">{projects.length}</div>
-            <div className="cf-micro mt-2 text-cf-text-dim">PROJECTS</div>
+          <div className="hidden min-w-[120px] text-right sm:block">
+            <div className="font-editorial text-[70px] leading-[0.72] tracking-[-0.045em] md:text-[86px]">{projects.length}</div>
+            <div className="cf-micro mt-3 text-cf-text-dim">PROJECTS / TOTAL</div>
           </div>
         </div>
       </header>
