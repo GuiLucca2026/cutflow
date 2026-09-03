@@ -69,28 +69,29 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-[54px] items-center gap-3 border-b border-cf-border bg-cf-canvas px-5 py-2">
-      <MobileNav progress={progress} />
-      {title && <h1 className="font-display text-2xl tracking-wide mr-2 hidden sm:block">{title}</h1>}
+    <header className="sticky top-0 z-30 border-b border-cf-border bg-cf-canvas">
+      <div className="cf-page-shell flex min-h-[54px] items-center gap-3 py-2">
+        <MobileNav progress={progress} />
+        {title && <h1 className="font-display mr-2 hidden text-2xl tracking-wide sm:block">{title}</h1>}
 
-      <button
-        onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-        className="flex max-w-sm flex-1 items-center gap-2 border-b border-transparent bg-transparent px-0 py-1.5 text-sm text-cf-text-dim transition-colors hover:border-cf-border hover:text-cf-text"
-      >
-        <Search className="h-4 w-4" />
-        <span className="flex-1 text-left">Pesquisar…</span>
-        <kbd className="text-[10px] px-1 py-0.5 text-cf-text-dim">⌘K</kbd>
-      </button>
+        <button
+          onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+          className="flex max-w-[330px] flex-1 items-center gap-2 border-b border-cf-border/80 bg-transparent px-0 py-1.5 text-sm text-cf-text-dim transition-colors hover:border-cf-text/30 hover:text-cf-text"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1 text-left">Pesquisar…</span>
+          <kbd className="px-1 py-0.5 text-[10px] text-cf-text-dim">⌘K</kbd>
+        </button>
 
-      <div className="flex-1" />
+        <div className="flex-1" />
 
-      <Button size="sm" className="gap-1.5 rounded-[7px] shadow-none" onClick={() => openCreate("video")}>
-        <Plus className="h-4 w-4" /> Criar
-      </Button>
+        <Button size="sm" className="gap-1.5 rounded-[7px] shadow-none" onClick={() => openCreate("video")}>
+          <Plus className="h-4 w-4" /> Criar
+        </Button>
 
-      <NotificationBell alerts={alerts} notifications={notifications} />
+        <NotificationBell alerts={alerts} notifications={notifications} />
 
-      <DropdownMenu>
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 rounded-lg pl-1 pr-2 py-1 hover:bg-cf-surface-2 transition-colors">
             <Avatar name={currentUser.name} color={currentUser.avatarColor} src={currentUser.avatarUrl} size={30} />
@@ -147,7 +148,8 @@ export function Topbar({
             </>
           )}
         </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownMenu>
+      </div>
 
       <CommandPalette onQuickAdd={openCreate} />
       <CreatePanel

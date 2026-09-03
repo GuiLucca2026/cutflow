@@ -1,5 +1,6 @@
 import { listVideos } from "@/db/queries";
 import { TimelineGantt, type TimelineProjectGroup } from "@/components/cutflow/timeline-gantt";
+import { EditorialMasthead } from "@/components/cutflow/editorial-masthead";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import { STATUS_META } from "@/lib/domain";
 
@@ -53,13 +54,12 @@ export default async function TimelinePage() {
 
   return (
     <div className="cf-fade-in space-y-6 pb-16">
-      <header className="border-b border-cf-border pb-6 pt-2">
-        <div className="cf-micro text-cf-text-dim">PLANNING / TIME</div>
-        <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Timeline<span className="font-editorial font-normal">.</span></h1>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cf-text-dim">
-          Navegue como numa timeline de edição: pan, zoom e arraste as barras para reagendar sem perder a relação entre os prazos.
-        </p>
-      </header>
+      <EditorialMasthead
+        eyebrow="PLANNING / TIME"
+        title="Timeline"
+        accentTitle="."
+        description="Navegue como numa timeline de edição: pan, zoom e arraste as barras para reagendar sem perder a relação entre os prazos."
+      />
 
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-cf-text-dim">
         <span className="cf-micro mr-1">STATUS KEY</span>

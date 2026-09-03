@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { addDays, addMonths, addWeeks, format, isSameMonth, isToday as isTodayFn, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { EditorialMasthead } from "@/components/cutflow/editorial-masthead";
 
 export const dynamic = "force-dynamic";
 
@@ -94,27 +95,28 @@ export default async function CalendarioPage({
 
   return (
     <div className="cf-fade-in space-y-4 pb-16">
-      <header className="flex flex-wrap items-end justify-between gap-5 border-b border-cf-border pb-6 pt-2">
-        <div>
-          <div className="cf-micro text-cf-text-dim">PLANNING / DATES</div>
-          <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Calendário<span className="font-editorial font-normal">.</span></h1>
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-cf-text-dim">Prazos de edição, revisão, captação e entrega em uma única leitura temporal.</p>
-        </div>
-        <div className="flex items-center gap-5">
-          {VIEWS.map((v) => (
-            <Link
-              key={v.key}
-              href={hrefFor(v.key, refDate)}
-              className={cn(
-                "border-b-2 py-1.5 text-xs font-medium transition-colors",
-                view === v.key ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
-              )}
-            >
-              {v.label}
-            </Link>
-          ))}
-        </div>
-      </header>
+      <EditorialMasthead
+        eyebrow="PLANNING / DATES"
+        title="Calendário"
+        accentTitle="."
+        description="Prazos de edição, revisão, captação e entrega em uma única leitura temporal."
+        actions={
+          <>
+            {VIEWS.map((v) => (
+              <Link
+                key={v.key}
+                href={hrefFor(v.key, refDate)}
+                className={cn(
+                  "border-b-2 py-1.5 text-xs font-medium transition-colors",
+                  view === v.key ? "border-cf-primary text-cf-text" : "border-transparent text-cf-text-dim hover:text-cf-text"
+                )}
+              >
+                {v.label}
+              </Link>
+            ))}
+          </>
+        }
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">

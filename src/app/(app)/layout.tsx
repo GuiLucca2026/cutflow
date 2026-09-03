@@ -68,7 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             notifications={notifications}
             progress={progress}
           />
-          <main className="flex-1 p-5 lg:p-7 max-w-[1600px] w-full mx-auto">{children}</main>
+          <main className="cf-page-shell flex-1 py-5 lg:py-7">{children}</main>
         </div>
         <VideoDetailSheetHost users={usersLite} projects={projectsLite} />
       </div>

@@ -58,7 +58,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
       <button
         onClick={() => open(video.id)}
         className={cn(
-          "group relative w-full overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface p-4 text-left transition-colors duration-[var(--cf-dur-hover)] hover:border-black/[0.22]",
+          "group relative flex h-full min-h-[224px] w-full flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface p-4 text-left transition-colors duration-[var(--cf-dur-hover)] hover:border-black/[0.22]",
           overdue && "border-red-500/25"
         )}
       >
@@ -95,7 +95,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 cf-micro">
+        <div className="mt-4 min-h-[28px] flex flex-wrap items-start gap-x-2 gap-y-1 cf-micro">
           <Hint text={statusMeta.hint}>
             <span style={{ color: statusMeta.color }}>{statusMeta.label}</span>
           </Hint>
@@ -111,7 +111,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-2 border-t border-cf-border pt-3">
+        <div className="mt-auto flex items-center gap-2 border-t border-cf-border pt-3">
           {video.editor ? (
             <>
               <Avatar name={video.editor.name} color={video.editor.avatarColor} size={18} />

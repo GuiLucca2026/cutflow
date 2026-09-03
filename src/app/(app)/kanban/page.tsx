@@ -1,5 +1,6 @@
 import { listVideos } from "@/db/queries";
 import { KanbanBoard } from "@/components/cutflow/kanban-board";
+import { EditorialMasthead } from "@/components/cutflow/editorial-masthead";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,13 @@ export default async function KanbanPage() {
 
   return (
     <div className="cf-fade-in flex h-full flex-col">
-      <header className="mb-7 border-b border-cf-border pb-6 pt-2">
-        <div className="cf-micro text-cf-text-dim">WORK / STATUS FLOW</div>
-        <h1 className="mt-3 text-[54px] font-semibold leading-[0.9] tracking-[-0.055em] md:text-[68px]">Kanban<span className="font-editorial font-normal">.</span></h1>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-cf-text-dim">Arraste os cortes entre estados. O movimento muda o status; o histórico continua registrando cada transição.</p>
-      </header>
+      <EditorialMasthead
+        eyebrow="WORK / STATUS FLOW"
+        title="Kanban"
+        accentTitle="."
+        description="Arraste os cortes entre estados. O movimento muda o status; o histórico continua registrando cada transição."
+        className="mb-7"
+      />
       <KanbanBoard initialVideos={light} />
     </div>
   );

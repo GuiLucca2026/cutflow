@@ -72,9 +72,9 @@ export function ProjectsExplorer({ projects }: { projects: ProjectPosterData[] }
   }
 
   return (
-    <div className="space-y-7">
-      <div className="border-y border-cf-border">
-        <div className="flex flex-col gap-4 py-3.5 xl:flex-row xl:items-center xl:justify-between">
+    <div className="space-y-6">
+      <div className="cf-filter-rail">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {SCOPES.map((item) => {
               const active = scope === item.value;

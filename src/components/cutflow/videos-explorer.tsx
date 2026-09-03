@@ -62,8 +62,8 @@ export function VideosExplorer({
   ];
 
   return (
-    <div className="space-y-7">
-      <div className="border-y border-cf-border py-3.5">
+    <div className="space-y-6">
+      <div className="cf-filter-rail">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {quickItems.map((item) => (

@@ -81,9 +81,9 @@ export function WeekPlanBoard({
 
             if (!day.isWorkDay) {
               return (
-                <div key={day.date} className="flex w-14 shrink-0 flex-col items-center justify-start border-r border-cf-border py-4 text-[10px] text-cf-text-dim/60" title={`${format(d, "EEEE", { locale: ptBR })} — folga`}>
-                  <span className="font-semibold uppercase">{format(d, "EEEEE", { locale: ptBR })}</span>
-                  <span className="mt-1 font-editorial text-lg">{format(d, "dd")}</span>
+                <div key={day.date} className="flex min-w-[132px] flex-1 flex-col items-start justify-start border-r border-cf-border px-3 py-4 text-[10px] text-cf-text-dim/60" title={`${format(d, "EEEE", { locale: ptBR })} — folga`}>
+                  <span className="cf-micro">{format(d, "EEE", { locale: ptBR }).toUpperCase()}</span>
+                  <span className="mt-1 font-editorial text-2xl leading-none">{format(d, "dd")}</span>
                 </div>
               );
             }

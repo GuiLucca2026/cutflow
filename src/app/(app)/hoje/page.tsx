@@ -93,10 +93,10 @@ export default async function HojePage() {
   const totalAllocated = planDays.reduce((acc, d) => acc + d.allocatedHours, 0);
 
   return (
-    <div className="space-y-10 cf-fade-in pb-16">
-      <header className="border-b border-cf-border pb-7 pt-2">
+    <div className="space-y-8 cf-fade-in pb-16">
+      <header className="border-b border-cf-border pb-7 pt-[18px]">
         <div className="cf-micro text-cf-text-dim">TODAY / {todayLabel}</div>
-        <Greeting firstName={firstName} className="font-editorial mt-3 text-[54px] leading-[0.92] tracking-[-0.035em] md:text-[72px]" />
+        <Greeting firstName={firstName} className="font-editorial mt-3 text-[52px] leading-[0.92] tracking-[-0.035em] md:text-[68px]" />
         <FlowMessage work={flowWork} className="mt-4 max-w-2xl" />
       </header>
 
@@ -108,7 +108,7 @@ export default async function HojePage() {
           pouco acionável). Trocado por "Horas hoje", que é o que o
           planejamento automático (faixa "Sua semana", no topo) sugere pra hoje
           especificamente. */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-cf-border pb-2 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-b border-cf-border pb-3 md:grid-cols-5">
         <StatCard
           label="Atrasados"
           value={overdueMine.length}
@@ -287,7 +287,7 @@ function Group({ title, videos, emptyText, tone }: { title: string; videos: any[
       {videos.length === 0 ? (
         <EmptyState text={emptyText ?? "Nada aqui."} />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {videos.map((v) => (
             <VideoCard key={v.id} video={v} />
           ))}
@@ -327,7 +327,7 @@ function GroupedByStatus({ title, videos, emptyText }: { title: string; videos: 
               <div className="text-xs font-semibold uppercase tracking-wide text-cf-text-dim mb-2">
                 {b.label} <span className="normal-case font-normal">· {b.items.length}</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {b.items.map((v) => (
                   <VideoCard key={v.id} video={v} />
                 ))}

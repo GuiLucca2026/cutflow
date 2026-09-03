@@ -18,7 +18,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="cf-fade-in space-y-8 pb-16">
-      <header className="border-b border-cf-border pb-7 pt-2">
+      <header className="border-b border-cf-border pb-7 pt-[18px]">
         <div className="cf-micro text-cf-text-dim">CLIENT / PROFILE</div>
         <div className="mt-4 flex flex-wrap items-end gap-5">
           <Avatar name={client.name} color={client.color} size={52} />
