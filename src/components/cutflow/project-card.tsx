@@ -10,74 +10,37 @@ import {
 import { ClientLogo } from "@/components/cutflow/client-logo";
 import { ProgressIndicator } from "@/components/cutflow/progress-indicator";
 import { ProjectContextMenu } from "@/components/cutflow/project-context-menu";
-import { PRIORITY_META, STATUS_META, isDone, isOverdue, projectProgress } from "@/lib/domain";
+import { PRIORITY_META, projectProgress } from "@/lib/domain";
+import {
+  formatProjectDateOnly,
+  nextProjectDeadline,
+  projectOverdueCount,
+  projectStage,
+  projectTeam,
+  type ProjectPresentationData,
+} from "@/lib/project-presentation";
 import { cn } from "@/lib/utils";
 
-export type ProjectPosterData = {
-  id: string;
-  name: string;
-  type: string;
-  priority: string;
-  status?: string;
-  client: { id: string; name: string; color: string; logoUrl?: string | null } | null;
-  producer?: { id?: string; name: string; avatarColor?: string } | null;
-  videos: {
-    status: string;
-    finalDeadline: string;
-    editorId: string | null;
-    editor: { name: string; avatarColor: string } | null;
-    alterationStartedAt?: string | null;
-  }[];
-};
-
-function formatDateOnly(date: string) {
-  const [year, month, day] = date.slice(0, 10).split("-");
-  if (!year || !month || !day) return date;
-  const months = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-  return `${day} ${months[Math.max(0, Number(month) - 1)]}`;
-}
-
-function projectStage(project: ProjectPosterData) {
-  const active = project.videos.filter((video) => !isDone(video.status));
-  if (active.length === 0) return "Concluído";
-  const mostAdvanced = [...active].sort(
-    (a, b) => (STATUS_META[b.status]?.order ?? 0) - (STATUS_META[a.status]?.order ?? 0)
-  )[0];
-  return STATUS_META[mostAdvanced.status]?.label ?? "Em andamento";
-}
-
-function nextDeadline(project: ProjectPosterData) {
-  const active = project.videos
-    .filter((video) => !isDone(video.status) && video.finalDeadline)
-    .sort((a, b) => a.finalDeadline.localeCompare(b.finalDeadline));
-  return active[0]?.finalDeadline ?? null;
-}
+export type ProjectPosterData = ProjectPresentationData;
 
 export function ProjectCard({ project, index }: { project: ProjectPosterData; index: number }) {
   const progress = projectProgress(project.videos);
   const variant = atmosphericVariantForSeed(project.id);
   const darkArtwork = atmosphericTone(variant) === "dark";
-  const active = project.videos.filter((video) => !isDone(video.status));
-  const overdue = active.filter((video) => isOverdue(video.finalDeadline, video.status, video.alterationStartedAt));
-  const deadline = nextDeadline(project);
+  const overdueCount = projectOverdueCount(project);
+  const deadline = nextProjectDeadline(project);
   const priority = PRIORITY_META[project.priority];
-  const editors = Array.from(
-    new Map(
-      project.videos
-        .filter((video) => video.editorId && video.editor)
-        .map((video) => [video.editorId as string, video.editor!.name])
-    ).values()
-  );
-  const team = [project.producer?.name, ...editors].filter(Boolean) as string[];
+  const team = projectTeam(project);
   const artworkMuted = darkArtwork ? "text-white/[0.68]" : "text-black/[0.58]";
 
   return (
     <ProjectContextMenu project={{ id: project.id, name: project.name }} href={`/projetos/${project.id}`}>
       <Link
         href={`/projetos/${project.id}`}
-        className="group relative flex min-h-[470px] flex-col overflow-hidden rounded-[var(--cf-radius-poster)] border border-cf-border bg-cf-surface text-cf-text transition-[border-color,transform] duration-300 hover:border-black/[0.22] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/[0.45] focus-visible:ring-offset-2 focus-visible:ring-offset-cf-black"
+        className="cf-project-poster cf-card-enter group relative flex min-h-[448px] flex-col overflow-hidden rounded-[var(--cf-radius-poster)] border border-cf-border bg-cf-surface text-cf-text transition-[border-color,background-color] duration-[var(--cf-dur-hover)] hover:border-black/[0.22] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/[0.45] focus-visible:ring-offset-2 focus-visible:ring-offset-cf-black"
+        style={{ animationDelay: `${Math.min(index, 8) * 42}ms` }}
       >
-        <div className="relative min-h-[225px] flex-[0_0_48%] overflow-hidden border-b border-black/[0.10]">
+        <div className="relative min-h-[208px] flex-[0_0_46%] overflow-hidden border-b border-black/[0.10]">
           <AtmosphericGradient
             variant={variant}
             seed={project.id}
@@ -89,13 +52,13 @@ export function ProjectCard({ project, index }: { project: ProjectPosterData; in
             className="absolute inset-0"
             style={{
               background: darkArtwork
-                ? "linear-gradient(180deg, rgba(6,8,28,.08) 0%, rgba(6,8,28,.02) 48%, rgba(6,8,28,.34) 100%)"
-                : "linear-gradient(180deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.02) 48%, rgba(250,247,240,.25) 100%)",
+                ? "linear-gradient(180deg, rgba(6,8,28,.10) 0%, rgba(6,8,28,.01) 50%, rgba(6,8,28,.28) 100%)"
+                : "linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.01) 52%, rgba(250,247,240,.16) 100%)",
             }}
           />
 
-          <div className="relative z-10 flex h-full flex-col justify-between p-5 md:p-6">
-            <div className="flex items-start justify-between gap-4">
+          <div className="relative z-10 flex h-full flex-col p-5 md:p-6">
+            <div className="flex min-h-[42px] items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 {project.client ? (
                   <ClientLogo
@@ -121,11 +84,11 @@ export function ProjectCard({ project, index }: { project: ProjectPosterData; in
               </div>
             </div>
 
-            <div className="max-w-[250px]">
+            <div className="mt-auto w-full pt-7">
               <ProgressIndicator
                 value={progress}
                 label="PROGRESSO"
-                size="lg"
+                size="md"
                 tone={darkArtwork ? "light" : "dark"}
               />
             </div>
@@ -133,29 +96,39 @@ export function ProjectCard({ project, index }: { project: ProjectPosterData; in
         </div>
 
         <div className="flex flex-1 flex-col p-5 md:p-6">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="cf-micro text-cf-text-dim">{projectStage(project)}</span>
-            {project.priority !== "NORMAL" && priority ? (
-              <><span className="text-cf-text-dim/45">·</span><span className="cf-micro" style={{ color: priority.color }}>{priority.label}</span></>
-            ) : null}
-            {overdue.length > 0 ? (
-              <><span className="text-cf-text-dim/45">·</span><span className="cf-micro text-red-600">● {overdue.length} ATRASADO{overdue.length > 1 ? "S" : ""}</span></>
-            ) : null}
+          <div className="min-h-[102px]">
+            <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="cf-micro text-cf-text-dim">{projectStage(project)}</span>
+              {project.priority !== "NORMAL" && priority ? (
+                <>
+                  <span className="text-cf-text-dim/45">·</span>
+                  <span className="cf-micro" style={{ color: priority.color }}>{priority.label}</span>
+                </>
+              ) : null}
+              {overdueCount > 0 ? (
+                <>
+                  <span className="text-cf-text-dim/45">·</span>
+                  <span className="cf-micro text-red-600">● {overdueCount} ATRASADO{overdueCount > 1 ? "S" : ""}</span>
+                </>
+              ) : null}
+            </div>
+
+            <h2 className="mt-3 line-clamp-2 min-h-[55px] text-[23px] font-semibold leading-[1.08] tracking-[-0.035em] md:text-[25px]">
+              {project.name}
+            </h2>
           </div>
 
-          <h2 className="mt-3 line-clamp-2 text-[24px] font-semibold leading-[1.02] tracking-[-0.04em] md:text-[27px]">
-            {project.name}
-          </h2>
-
-          <div className="mt-auto grid grid-cols-2 gap-x-5 gap-y-4 border-t border-cf-border pt-4 text-xs text-cf-text-dim">
-            <Meta icon={Film} label="Vídeos" value={String(project.videos.length).padStart(2, "0")} />
-            <Meta
-              icon={CalendarDays}
-              label="Próxima entrega"
-              value={deadline ? formatDateOnly(deadline) : "—"}
-              danger={overdue.length > 0}
-            />
-            <div className="col-span-2">
+          <div className="mt-auto border-t border-cf-border pt-4">
+            <div className="grid grid-cols-2 gap-x-5">
+              <Meta icon={Film} label="Vídeos" value={String(project.videos.length).padStart(2, "0")} />
+              <Meta
+                icon={CalendarDays}
+                label="Próxima entrega"
+                value={deadline ? formatProjectDateOnly(deadline) : "—"}
+                danger={overdueCount > 0}
+              />
+            </div>
+            <div className="mt-4 border-t border-cf-border/80 pt-3">
               <Meta icon={Users} label="Equipe" value={team.length > 0 ? team.slice(0, 3).join(" · ") : "A definir"} />
             </div>
           </div>
@@ -178,7 +151,7 @@ function Meta({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-cf-text-dim/80">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.085em] text-cf-text-dim/80">
         <Icon className="h-3 w-3" /> {label}
       </div>
       <div className={cn("mt-1 truncate text-[13px] font-medium text-cf-text", danger && "text-red-600")}>{value}</div>

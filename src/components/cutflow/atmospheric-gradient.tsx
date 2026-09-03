@@ -150,6 +150,16 @@ export function AtmosphericGradient({
         }}
       />
 
+      <div
+        className={cn("cf-atmosphere-veil absolute -inset-[24%]", animated && "cf-atmosphere-veil--animated")}
+        style={{
+          background:
+            config.tone === "dark"
+              ? "radial-gradient(ellipse at 38% 48%, rgba(255,255,255,.18), transparent 34%), radial-gradient(ellipse at 72% 42%, rgba(255,139,82,.12), transparent 32%)"
+              : "radial-gradient(ellipse at 36% 46%, rgba(255,255,255,.46), transparent 33%), radial-gradient(ellipse at 76% 58%, rgba(255,117,76,.10), transparent 30%)",
+        }}
+      />
+
       {grain && (
         <div
           className="absolute inset-0 mix-blend-overlay"

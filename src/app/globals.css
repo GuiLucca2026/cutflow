@@ -221,9 +221,9 @@ body {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.08em 0.18em;
-  font-size: clamp(46px, 4.6vw, 64px);
-  line-height: 0.94;
-  letter-spacing: -0.055em;
+  font-size: clamp(42px, 4vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.047em;
   font-weight: 600;
 }
 
@@ -310,6 +310,22 @@ body {
   animation: cf-fade-in var(--cf-dur-page) var(--cf-ease);
 }
 
+@keyframes cf-card-enter {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cf-card-enter {
+  animation: cf-card-enter 360ms var(--cf-ease) both;
+}
+
+@keyframes cf-tab-content-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cf-tab-content {
+  animation: cf-tab-content-enter 220ms var(--cf-ease) both;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--cf-sky) 45%, transparent);
   color: var(--cf-ink);
@@ -370,6 +386,20 @@ body {
   transform-origin: 50% 50%;
 }
 
+@keyframes cf-atmosphere-veil {
+  0%, 100% { transform: translate3d(-3%, 1%, 0) rotate(-3deg) scale(1.02); opacity: .66; }
+  48% { transform: translate3d(5%, -2%, 0) rotate(2deg) scale(1.08); opacity: .92; }
+}
+.cf-atmosphere-veil {
+  pointer-events: none;
+  opacity: .72;
+  mix-blend-mode: soft-light;
+}
+.cf-atmosphere-veil--animated {
+  animation: cf-atmosphere-veil 24s var(--cf-ease) infinite;
+  will-change: transform, opacity;
+}
+
 
 /* ============================================================
    Superfícies planas — cor comunica só status/prioridade/risco/categoria,
@@ -399,7 +429,10 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cf-drift,
   .cf-drift-alt,
+  .cf-atmosphere-veil--animated,
   .cf-fade-in,
+  .cf-card-enter,
+  .cf-tab-content,
   .cf-pulse-dot,
   .cf-celebrate-pop {
     animation: none !important;

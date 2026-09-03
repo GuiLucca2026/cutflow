@@ -1,10 +1,11 @@
-import { listVideos, listUsers, listWorkloadEntries, listCaptures, listNotifications, listMyTasks } from "@/db/queries";
+import { listVideos, listUsers, listWorkloadEntries, listCaptures, listNotifications, listMyTasks, listProjects } from "@/db/queries";
 import { getCurrentUser } from "@/lib/auth";
 import { VideoCard } from "@/components/cutflow/video-card";
 import { WaitingRow } from "@/components/cutflow/waiting-row";
 import { Greeting } from "@/components/cutflow/greeting";
 import { FlowMessage } from "@/components/cutflow/flow-message";
 import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
+import { ProjectStatusPreview } from "@/components/cutflow/project-status-preview";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
 import { isOverdue, isWaitingClient, isDone, isEditing } from "@/lib/domain";
@@ -29,12 +30,13 @@ export const dynamic = "force-dynamic";
 // qualquer um ver, só não é mais o que abre a tela.
 export default async function HojePage() {
   const user = await getCurrentUser();
-  const [videos, users, captures, notifications, myTasks] = await Promise.all([
+  const [videos, users, captures, notifications, myTasks, projects] = await Promise.all([
     listVideos(),
     listUsers(),
     listCaptures(),
     listNotifications(user.id).catch(() => []),
     listMyTasks(user.id).catch(() => []),
+    listProjects(),
   ]);
   const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const alerts = computeAlerts({ videos, workloadEntries, users });
@@ -91,6 +93,38 @@ export default async function HojePage() {
   }));
   const planDays = planWeek({ videos: planVideos, dailyCapacityHours: user.dailyCapacityHours, workDays: user.workDays, today: now, numDays: 7 });
   const totalAllocated = planDays.reduce((acc, d) => acc + d.allocatedHours, 0);
+
+  // Projetos em que o usuário tem trabalho ativo. É uma leitura de contexto,
+  // não uma segunda lista de tarefas: mostra avanço, etapa e próximo prazo do
+  // projeto inteiro sem obrigar a sair da Home para entender o cenário.
+  const projectPreviews = projects
+    .filter((project: any) => {
+      const hasActiveVideo = project.videos.some((video: any) => !isDone(video.status));
+      const isInEditingTeam = project.videos.some((video: any) => video.editorId === user.id && !isDone(video.status));
+      return hasActiveVideo && (project.producerId === user.id || isInEditingTeam);
+    })
+    .sort((a: any, b: any) => {
+      const deadlineA = a.videos.filter((video: any) => !isDone(video.status)).map((video: any) => video.finalDeadline).sort()[0] ?? "9999-12-31";
+      const deadlineB = b.videos.filter((video: any) => !isDone(video.status)).map((video: any) => video.finalDeadline).sort()[0] ?? "9999-12-31";
+      return deadlineA.localeCompare(deadlineB);
+    })
+    .slice(0, 3)
+    .map((project: any) => ({
+      id: project.id,
+      name: project.name,
+      type: project.type,
+      priority: project.priority,
+      status: project.status,
+      client: project.client ? { id: project.client.id, name: project.client.name, color: project.client.color } : null,
+      producer: project.producer ? { id: project.producer.id, name: project.producer.name, avatarColor: project.producer.avatarColor } : null,
+      videos: project.videos.map((video: any) => ({
+        status: video.status,
+        finalDeadline: video.finalDeadline,
+        editorId: video.editorId,
+        editor: video.editor ? { name: video.editor.name, avatarColor: video.editor.avatarColor } : null,
+        alterationStartedAt: video.alterationStartedAt,
+      })),
+    }));
 
   return (
     <div className="space-y-8 cf-fade-in pb-16">
@@ -152,6 +186,24 @@ export default async function HojePage() {
         totalHoursLeft={totalHoursLeftMine}
         dailyCapacityHours={user.dailyCapacityHours}
       />
+
+      {projectPreviews.length > 0 ? (
+        <section>
+          <div className="mb-4 flex items-end justify-between gap-4 border-b border-cf-border pb-3">
+            <div>
+              <div className="cf-micro text-cf-text-dim">PROJECT CONTEXT</div>
+              <h2 className="mt-1 text-[24px] font-semibold tracking-[-0.03em]">Projetos em movimento</h2>
+              <p className="mt-1 text-xs text-cf-text-dim">Uma leitura rápida do avanço dos projetos em que você está trabalhando.</p>
+            </div>
+            <Link href="/projetos" className="shrink-0 text-xs font-medium text-cf-primary hover:underline">Ver todos →</Link>
+          </div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {projectPreviews.map((project: any, index: number) => (
+              <ProjectStatusPreview key={project.id} project={project} index={index} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* Seções só aparecem quando têm conteúdo — os cards acima já dizem
           "0". Antes cada uma vazia virava uma caixa tracejada gigante com
