@@ -33,10 +33,10 @@ export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
       >
         <Menu className="h-4.5 w-4.5" />
       </button>
-      <SheetContent side="left" className="w-72 sm:max-w-xs p-0 text-cf-side-text" style={{ background: "var(--cf-side-bg)", borderColor: "var(--cf-side-border)" }}>
+      <SheetContent side="left" className="w-72 sm:max-w-xs border-cf-side-border bg-cf-side-bg p-0 text-cf-side-text">
         <SheetTitle className="sr-only">Menu</SheetTitle>
         <SheetDescription className="sr-only">Navegação principal do {BRAND_NAME}</SheetDescription>
-        <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--cf-side-border)" }}>
+        <div className="border-b border-cf-side-border px-5 py-5">
           <BrandWordmark size="sm" dark />
         </div>
         <nav className="flex-1 overflow-y-auto cf-scrollbar-thin px-3 py-3 space-y-4">
@@ -67,7 +67,7 @@ export function MobileNav({ progress }: { progress?: PersonalMonthProgress }) {
             </div>
           ))}
         </nav>
-        <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
+        <div className="border-t border-cf-side-border p-3">
           <PersonalProgressWidget progress={progress} />
         </div>
       </SheetContent>

@@ -69,7 +69,7 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-cf-border bg-cf-canvas">
+    <header className="cf-glass-canvas sticky top-0 z-30 border-b border-cf-border">
       <div className="cf-page-shell flex min-h-[54px] items-center gap-2 py-2 sm:gap-3">
         <MobileNav progress={progress} />
         {title && <h1 className="font-display mr-2 hidden text-2xl tracking-wide sm:block">{title}</h1>}

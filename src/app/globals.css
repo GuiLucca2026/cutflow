@@ -470,6 +470,28 @@ body {
   .cf-skeleton::after { animation: none !important; display: none; }
 }
 
+/* "Liquid glass": material translúcido pra superfícies que ficam por cima
+   de conteúdo que se move por baixo (topbar sticky, dialogs/menus de
+   criação) — não é o mesmo tell de "glassmorphism genérico" que tiramos
+   dos overlays de modal: aqui o vidro tem propósito (deixar o conteúdo
+   por trás legível e contínuo enquanto rola/abre), não é decoração
+   flutuando por cima de tudo. Duas variantes só porque a cor de base do
+   material muda (canvas por trás do topbar, surface por trás dos
+   dialogs) — a receita (blur + saturate + leve realce no topo) é a mesma.
+   `-webkit-` porque Safari (iOS, onde esse efeito mais importa) ainda
+   exige o prefixo pra backdrop-filter. */
+.cf-glass-canvas {
+  background: color-mix(in srgb, var(--cf-canvas) 74%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+.cf-glass-surface {
+  background: color-mix(in srgb, var(--cf-surface) 72%, transparent);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
 /* ============================================================
    Product UX final pass — responsive + interaction discipline.
    The visual language stays expressive in project context, while controls

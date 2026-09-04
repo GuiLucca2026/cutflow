@@ -33,7 +33,7 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 grid max-h-[92dvh] w-full gap-4 overflow-y-auto rounded-t-[18px] border border-b-0 border-cf-border bg-cf-surface p-5 shadow-[0_-18px_60px_rgba(8,10,14,.22)] duration-[var(--cf-dur-panel)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 focus:outline-none cf-scrollbar-thin sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[86vh] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[16px] sm:border sm:p-6 sm:shadow-[0_24px_80px_rgba(8,10,14,.22)] sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
+          "cf-glass-surface fixed inset-x-0 bottom-0 z-50 grid max-h-[92dvh] w-full gap-4 overflow-y-auto rounded-t-[18px] border border-b-0 border-cf-border p-5 shadow-[0_-18px_60px_rgba(8,10,14,.22)] duration-[var(--cf-dur-panel)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:slide-in-from-bottom-4 focus:outline-none cf-scrollbar-thin sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-h-[86vh] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[16px] sm:border sm:p-6 sm:shadow-[0_24px_80px_rgba(8,10,14,.22)] sm:data-[state=closed]:fade-out-0 sm:data-[state=open]:fade-in-0 sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95",
           className
         )}
         {...props}

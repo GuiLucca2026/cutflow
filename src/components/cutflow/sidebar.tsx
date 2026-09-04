@@ -11,10 +11,7 @@ import type { PersonalMonthProgress } from "@/lib/domain";
 export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
   const pathname = usePathname();
   return (
-    <aside
-      className="hidden h-screen w-[232px] shrink-0 flex-col lg:sticky lg:top-0 lg:flex text-cf-side-text"
-      style={{ background: "var(--cf-side-bg)", borderRight: "1px solid var(--cf-side-border)" }}
-    >
+    <aside className="hidden h-screen w-[232px] shrink-0 flex-col border-r border-cf-side-border bg-cf-side-bg text-cf-side-text lg:sticky lg:top-0 lg:flex">
       <div className="px-5 pb-5 pt-6">
         <BrandWordmark size="sm" dark minimal />
       </div>
@@ -52,7 +49,7 @@ export function Sidebar({ progress }: { progress?: PersonalMonthProgress }) {
         ))}
       </nav>
 
-      <div className="p-3" style={{ borderTop: "1px solid var(--cf-side-border)" }}>
+      <div className="border-t border-cf-side-border p-3">
         <PersonalProgressWidget progress={progress} />
       </div>
     </aside>
