@@ -20,7 +20,11 @@ import {
 import { fmtDateWeekday, fmtHours, fmtShortId } from "@/lib/format";
 import { AlertTriangle, Bell, CalendarDays, Clock3, UserX } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { projectAccentForSeed } from "@/components/cutflow/atmospheric-gradient";
+import {
+  AtmosphericGradient,
+  atmosphericTone,
+  atmosphericVariantForSeed,
+} from "@/components/cutflow/atmospheric-gradient";
 
 export type VideoCardData = {
   id: string;
@@ -54,7 +58,9 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
   const waitMeta = clientWait ? CLIENT_WAIT_META[clientWait.kind] : null;
   const accent = overdue ? "#C93128" : isWaitingClient(video.status) ? CLIENT_WAIT_ACCENT_COLOR : statusMeta.color;
   const projectSeed = video.projectId ?? video.project?.name ?? video.id;
-  const projectAccent = projectAccentForSeed(projectSeed);
+  const variant = atmosphericVariantForSeed(projectSeed);
+  const darkArtwork = atmosphericTone(variant) === "dark";
+  const artworkMuted = darkArtwork ? "text-white/[0.72]" : "text-black/[0.60]";
 
   let attention: { label: string; color: string; hint?: string } | null = null;
   if (overdue) attention = { label: "ATRASADO", color: "#C93128", hint: "Passou da data de entrega final e o vídeo ainda não foi entregue." };
@@ -66,45 +72,57 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
       <button
         onClick={() => open(video.id)}
         className={cn(
-          "group relative flex h-full min-h-[210px] w-full flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface text-left transition-[border-color,background-color] duration-[var(--cf-dur-hover)] hover:border-black/[0.22] hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-cf-canvas",
+          "group relative flex h-full min-h-[258px] w-full flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface text-left transition-[border-color,background-color] duration-[var(--cf-dur-hover)] hover:border-black/[0.22] hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cf-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-cf-canvas",
           overdue && "border-red-500/30"
         )}
       >
-        <span className="absolute inset-x-0 top-0 h-[3px] opacity-80" style={{ backgroundColor: projectAccent }} aria-hidden />
-        <span className="absolute bottom-0 left-0 top-[3px] w-[3px]" style={{ backgroundColor: accent }} aria-hidden />
-
-        <div className="px-4 pb-3 pt-[18px]">
-          <div className="flex items-start justify-between gap-4">
+        <div className="relative isolate h-[64px] shrink-0 overflow-hidden border-b border-black/[0.10]">
+          <AtmosphericGradient
+            variant={variant}
+            seed={projectSeed}
+            className="absolute inset-0 transition-transform duration-[1400ms] ease-[var(--cf-ease)] group-hover:scale-[1.02]"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: darkArtwork
+                ? "linear-gradient(180deg, rgba(6,8,28,.04) 0%, rgba(6,8,28,.34) 100%)"
+                : "linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(250,247,240,.30) 100%)",
+            }}
+          />
+          <div className="relative z-10 flex h-full items-center justify-between px-4">
             <div className="min-w-0">
               {video.project ? (
-                <div className="flex min-w-0 items-center gap-2">
-                  {video.project.client?.color ? <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: video.project.client.color }} /> : null}
-                  <span className="cf-micro truncate text-cf-text-dim">{video.project.client?.name ?? "SEM CLIENTE"}</span>
-                </div>
+                <span className={cn("cf-micro truncate block", artworkMuted)}>{video.project.client?.name ?? "SEM CLIENTE"}</span>
               ) : (
-                <span className="cf-micro text-amber-700">AVULSO / SEM PROJETO</span>
+                <span className={cn("cf-micro", darkArtwork ? "text-amber-200" : "text-amber-800")}>AVULSO / SEM PROJETO</span>
               )}
-              {video.project ? <div className="mt-1 truncate text-[12px] text-cf-text-dim">{video.project.name}</div> : null}
             </div>
 
-            <div className="shrink-0 text-right">
-              <div className="font-mono text-[10px] tracking-[0.1em] text-cf-text-dim/65">CUT / {fmtShortId(video.id).toUpperCase()}</div>
+            <div className="flex shrink-0 items-center gap-2.5">
               {!!video.pendingCount && (
                 <Hint text={`${video.pendingCount} ${video.pendingCount === 1 ? "notificação não lida" : "notificações não lidas"} neste vídeo`}>
-                  <span className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-cf-primary">
+                  <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold", darkArtwork ? "text-white" : "text-black/70")}>
                     <Bell className="h-3 w-3" /> {video.pendingCount}
                   </span>
                 </Hint>
               )}
+              <span className={cn("font-mono text-[10px] tracking-[0.1em]", artworkMuted)}>CUT / {fmtShortId(video.id).toUpperCase()}</span>
             </div>
           </div>
-
-          <h3 className="mt-4 line-clamp-2 min-h-[42px] text-[16px] font-semibold leading-[1.18] tracking-[-0.025em] text-cf-text group-hover:text-cf-primary">
-            {video.name}
-          </h3>
         </div>
 
-        <div className="border-y border-cf-border bg-cf-surface-2/55 px-4 py-2.5">
+        <div className="relative flex flex-1 flex-col overflow-hidden">
+          <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: accent }} aria-hidden />
+
+          <div className="px-4 pb-3 pt-[14px]">
+            {video.project ? <div className="truncate text-[12px] text-cf-text-dim">{video.project.name}</div> : null}
+            <h3 className="mt-1.5 line-clamp-2 min-h-[42px] text-[16px] font-semibold leading-[1.18] tracking-[-0.025em] text-cf-text group-hover:text-cf-primary">
+              {video.name}
+            </h3>
+          </div>
+
+          <div className="border-y border-cf-border bg-cf-surface-2/55 px-4 py-2.5">
           <div className="flex min-h-5 flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
             <Hint text={statusMeta.hint}>
               <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text">
@@ -160,6 +178,7 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
               </div>
             </div>
           )}
+        </div>
         </div>
       </button>
     </VideoContextMenu>

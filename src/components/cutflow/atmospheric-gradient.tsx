@@ -74,8 +74,13 @@ export function atmosphericTone(variant: AtmosphericVariant): AtmosphericTone {
 }
 
 /** Cor sólida derivada da mesma seed do artwork.
- * Use fora de Project Cards quando for útil carregar contexto de projeto
- * sem espalhar gradientes decorativos pelo produto.
+ * Uso: superfícies densas/repetidas onde o gradiente completo pesaria
+ * demais (ex: KanbanCard, uma coluna cheia de itens compactos) — ali a
+ * identidade vira só um traço/pill sólido. Onde o card tem espaço pra
+ * respirar (ProjectCard, ClientsExplorer, VideoCard) o gradiente completo
+ * é usado direto via <AtmosphericGradient>: gradiente marca "isto é uma
+ * identidade" (projeto, cliente, ou o projeto por trás de um vídeo) — não
+ * é decoração solta, por isso ainda vale restringir a esses três lugares.
  */
 export function projectAccentForSeed(seed: string) {
   const variant = atmosphericVariantForSeed(seed);

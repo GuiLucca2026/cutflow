@@ -4,6 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { ClientLogo } from "@/components/cutflow/client-logo";
+import {
+  AtmosphericGradient,
+  atmosphericTone,
+  atmosphericVariantForSeed,
+} from "@/components/cutflow/atmospheric-gradient";
 import { EmptyState } from "@/components/cutflow/empty-state";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,31 +60,53 @@ export function ClientsExplorer({ clients }: { clients: ClientLite[] }) {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((c, index) => {
             const subtitle = c.tradeName || c.company;
+            const variant = atmosphericVariantForSeed(c.id);
+            const darkArtwork = atmosphericTone(variant) === "dark";
+            const artworkMuted = darkArtwork ? "text-white/[0.72]" : "text-black/[0.60]";
+
             return (
               <Link
                 key={c.id}
                 href={`/clientes/${c.id}`}
-                className="group relative flex flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface p-5 transition-[transform,border-color] duration-[var(--cf-dur-hover)] hover:-translate-y-0.5 hover:border-black/15"
+                className="group relative flex flex-col overflow-hidden rounded-[var(--cf-radius-card)] border border-cf-border bg-cf-surface transition-[transform,border-color] duration-[var(--cf-dur-hover)] hover:-translate-y-0.5 hover:border-black/15"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <ClientLogo name={c.name} color={c.color} size={40} />
-                    <div className="min-w-0">
-                      <div className="truncate text-[17px] font-semibold tracking-[-0.025em] text-cf-text group-hover:text-cf-primary">
-                        {c.name}
-                      </div>
-                      {subtitle ? (
-                        <div className="mt-0.5 truncate text-xs text-cf-text-dim">{subtitle}</div>
-                      ) : null}
+                <div className="relative min-h-[110px] overflow-hidden border-b border-black/[0.10]">
+                  <AtmosphericGradient
+                    variant={variant}
+                    seed={c.id}
+                    className="absolute inset-0 transition-transform duration-[1400ms] ease-[var(--cf-ease)] group-hover:scale-[1.02]"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: darkArtwork
+                        ? "linear-gradient(180deg, rgba(6,8,28,.06) 0%, rgba(6,8,28,.32) 100%)"
+                        : "linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(250,247,240,.28) 100%)",
+                    }}
+                  />
+                  <div className="relative z-10 flex h-full items-start justify-between p-4">
+                    <ClientLogo name={c.name} color={c.color} size={38} onDark={darkArtwork} variant="poster" />
+                    <div className={cn("cf-micro shrink-0", artworkMuted)}>
+                      CLIENT / {String(index + 1).padStart(2, "0")}
                     </div>
                   </div>
-                  <div className="cf-micro shrink-0 text-cf-text-dim">CLIENT / {String(index + 1).padStart(2, "0")}</div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-3 border-t border-cf-border pt-4">
-                  <Stat label="Projetos" value={c.projectCount} />
-                  <Stat label="Ativos" value={c.activeVideoCount} />
-                  <Stat label="Atrasados" value={c.overdueCount} tone={c.overdueCount > 0 ? "danger" : undefined} />
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="min-w-0">
+                    <div className="truncate text-[17px] font-semibold tracking-[-0.025em] text-cf-text group-hover:text-cf-primary">
+                      {c.name}
+                    </div>
+                    {subtitle ? (
+                      <div className="mt-0.5 truncate text-xs text-cf-text-dim">{subtitle}</div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-auto grid grid-cols-3 gap-3 border-t border-cf-border pt-4">
+                    <Stat label="Projetos" value={c.projectCount} />
+                    <Stat label="Ativos" value={c.activeVideoCount} />
+                    <Stat label="Atrasados" value={c.overdueCount} tone={c.overdueCount > 0 ? "danger" : undefined} />
+                  </div>
                 </div>
               </Link>
             );
