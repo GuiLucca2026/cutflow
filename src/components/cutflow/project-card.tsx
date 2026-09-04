@@ -48,14 +48,6 @@ export function ProjectCard({ project, index }: { project: ProjectPosterData; in
             grain
             className="absolute inset-0 transition-transform duration-[1400ms] ease-[var(--cf-ease)] group-hover:scale-[1.012]"
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: darkArtwork
-                ? "linear-gradient(180deg, rgba(6,8,28,.10) 0%, rgba(6,8,28,.01) 50%, rgba(6,8,28,.28) 100%)"
-                : "linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.01) 52%, rgba(250,247,240,.16) 100%)",
-            }}
-          />
 
           <div className="relative z-10 flex h-full flex-col p-5 md:p-6">
             <div className="flex min-h-[42px] items-start justify-between gap-4">

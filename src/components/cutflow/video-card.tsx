@@ -82,14 +82,6 @@ export function VideoCard({ video, showRisk = true, compact = false }: { video: 
             seed={projectSeed}
             className="absolute inset-0 transition-transform duration-[1400ms] ease-[var(--cf-ease)] group-hover:scale-[1.02]"
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: darkArtwork
-                ? "linear-gradient(180deg, rgba(6,8,28,.04) 0%, rgba(6,8,28,.34) 100%)"
-                : "linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(250,247,240,.30) 100%)",
-            }}
-          />
           <div className="relative z-10 flex h-full items-center justify-between px-4">
             <div className="min-w-0">
               {video.project ? (

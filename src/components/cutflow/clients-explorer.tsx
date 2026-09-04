@@ -76,14 +76,6 @@ export function ClientsExplorer({ clients }: { clients: ClientLite[] }) {
                     seed={c.id}
                     className="absolute inset-0 transition-transform duration-[1400ms] ease-[var(--cf-ease)] group-hover:scale-[1.02]"
                   />
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: darkArtwork
-                        ? "linear-gradient(180deg, rgba(6,8,28,.06) 0%, rgba(6,8,28,.32) 100%)"
-                        : "linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(250,247,240,.28) 100%)",
-                    }}
-                  />
                   <div className="relative z-10 flex h-full items-start justify-between p-4">
                     <ClientLogo name={c.name} color={c.color} size={38} onDark={darkArtwork} variant="poster" />
                     <div className={cn("cf-micro shrink-0", artworkMuted)}>

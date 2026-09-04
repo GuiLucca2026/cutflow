@@ -200,23 +200,3 @@ export function AtmosphericGradient({
     </div>
   );
 }
-
-/**
- * Versão "menor" do artwork atmosférico — pra superfícies de ESTADO, não de
- * identidade (KPI hero, card de dia da semana): a cor vem de fora (o accent
- * que já representa "atrasado"/"hoje"/"cheio"/"livre" etc.), não de uma seed
- * própria. Um único glow radial no canto, sem blobs múltiplos, sem grain —
- * dá a mesma sensação de luz colorida sem competir com o sinal de estado
- * que a cor já carrega.
- */
-export function AccentWash({ color, className }: { color: string; className?: string }) {
-  return (
-    <div
-      aria-hidden
-      className={cn("pointer-events-none absolute", className)}
-      style={{
-        background: `radial-gradient(130% 150% at 12% -25%, color-mix(in srgb, ${color} 30%, transparent) 0%, color-mix(in srgb, ${color} 12%, transparent) 40%, transparent 70%)`,
-      }}
-    />
-  );
-}
