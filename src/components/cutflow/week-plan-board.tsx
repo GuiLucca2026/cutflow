@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Check, CalendarCheck2, Coffee, Flame, Sparkles } from "lucide-react";
 import { Hint } from "@/components/ui/tooltip";
+import { AccentWash } from "@/components/cutflow/atmospheric-gradient";
 import { cn } from "@/lib/utils";
 import { applyWeekPlan } from "@/app/actions";
 import { fmtHours } from "@/lib/format";
@@ -92,6 +93,7 @@ export function WeekPlanBoard({
                 )}
                 title={`${format(d, "EEEE", { locale: ptBR })}`}
               >
+                <AccentWash color={meta.accent} className="inset-0" />
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: meta.accent }} />
 
                 <div className="relative flex h-full min-h-[190px] flex-col">

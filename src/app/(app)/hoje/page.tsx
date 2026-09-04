@@ -12,6 +12,7 @@ import { isOverdue, isWaitingClient, isDone, isEditing } from "@/lib/domain";
 import { fmtDateFull, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
 import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock, type LucideIcon } from "lucide-react";
+import { AccentWash } from "@/components/cutflow/atmospheric-gradient";
 import { Hint } from "@/components/ui/tooltip";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -327,14 +328,15 @@ function HeroStat({
           background: `color-mix(in srgb, ${accent} 7%, var(--cf-surface))`,
         }}
       >
+        <AccentWash color={accent} className="inset-0" />
         <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accent }} />
-        <div className="flex items-center justify-between gap-3">
+        <div className="relative flex items-center justify-between gap-3">
           <Icon className="h-4 w-4" style={{ color: accent }} />
           <div className="text-[44px] font-semibold tabular-nums leading-none tracking-[-0.045em]" style={{ color: accent }}>
             {value}
           </div>
         </div>
-        <div className="mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
+        <div className="relative mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">{label}</div>
       </div>
     </Hint>
   );
