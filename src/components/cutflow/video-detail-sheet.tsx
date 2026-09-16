@@ -569,6 +569,16 @@ function VideoDetailBody({
                   </SelectContent>
                 </Select>
               </div>
+              {/* col-span-2: é o campo mais importante do card (a data de
+                  entrega em si), por isso ocupa a linha inteira em vez de
+                  dividir coluna — e é o único ponto editável desse valor
+                  na ficha (a seção "Datas" mais abaixo mostra o mesmo
+                  valor, mas só como histórico/leitura, ao lado dos outros
+                  prazos do vídeo). */}
+              <div className="col-span-2 min-w-0">
+                <div className="truncate text-[11px] uppercase tracking-wide text-cf-text-dim mb-0.5">Prazo de entrega</div>
+                <EditableDeadlineFact videoId={video.id} value={video.finalDeadline} onMutate={onMutate} />
+              </div>
             </div>
           </SidebarSection>
 
@@ -583,7 +593,7 @@ function VideoDetailBody({
               <DateRow label="Prazo interno" value={video.internalDeadline} />
               <DateRow label="Prazo de revisão" value={video.reviewDeadline} />
               <DateRow label="Prazo do cliente" value={video.clientDeadline} />
-              <EditableDeadlineRow videoId={video.id} value={video.finalDeadline} onMutate={onMutate} />
+              <DateRow label="Prazo final" value={video.finalDeadline} highlight />
               {video.originalFinalDeadline !== video.finalDeadline && (
                 <div className="text-xs text-amber-600/90 pt-1 border-t border-cf-border mt-1">
                   Prazo original: {fmtDateFull(video.originalFinalDeadline)}
@@ -826,12 +836,15 @@ function DateRow({ label, value, highlight }: { label: string; value: string | n
   );
 }
 
-// "Prazo final" (data de entrega) é a única data editável aqui — é a fonte
-// única de prazo do produto (o projeto não tem prazo próprio, só o que os
-// vídeos têm). O DatePicker devolve "yyyy-MM-dd"; updateVideoField espera
-// ISO completo pra finalDeadline (mesmo formato que createVideo já grava),
-// por isso o new Date(...).toISOString() antes de mandar pro backend.
-function EditableDeadlineRow({ videoId, value, onMutate }: { videoId: string; value: string; onMutate: () => void }) {
+// Prazo de entrega (finalDeadline) é a única data editável na ficha — é a
+// fonte única de prazo do produto (o projeto não tem prazo próprio, só o
+// que os vídeos têm). Fica no card "Detalhes", junto dos outros campos
+// editáveis (Horas, Complexidade), pra não depender de rolar até a seção
+// "Datas" mais abaixo (que continua só leitura/histórico). O DatePicker
+// devolve "yyyy-MM-dd"; updateVideoField espera ISO completo pra
+// finalDeadline (mesmo formato que createVideo já grava), por isso o
+// new Date(...).toISOString() antes de mandar pro backend.
+function EditableDeadlineFact({ videoId, value, onMutate }: { videoId: string; value: string; onMutate: () => void }) {
   const [pending, startTransition] = React.useTransition();
   const dateOnly = value ? value.slice(0, 10) : "";
 
@@ -840,23 +853,20 @@ function EditableDeadlineRow({ videoId, value, onMutate }: { videoId: string; va
     const iso = new Date(`${next}T00:00:00`).toISOString();
     startTransition(async () => {
       await updateVideoField(videoId, "finalDeadline", iso);
-      toast.success("Prazo final atualizado.");
+      toast.success("Prazo de entrega atualizado.");
       onMutate();
     });
   }
 
   return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-cf-text-dim">Prazo final</span>
-      <DatePicker
-        value={dateOnly}
-        onChange={handleChange}
-        disabled={pending}
-        placeholder="Definir prazo"
-        fromToday
-        className="h-8 w-auto shrink-0 px-2.5 text-sm font-semibold text-cf-text"
-      />
-    </div>
+    <DatePicker
+      value={dateOnly}
+      onChange={handleChange}
+      disabled={pending}
+      placeholder="Definir prazo"
+      fromToday
+      className="h-8 text-sm font-medium"
+    />
   );
 }
 
