@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { StatusBadge, PriorityBadge, RiskBadge, ClientWaitBadge } from "@/components/cutflow/badges";
 import { TaskList } from "@/components/cutflow/task-list";
 import { RenameDialog } from "@/components/cutflow/rename-dialog";
@@ -582,7 +583,7 @@ function VideoDetailBody({
               <DateRow label="Prazo interno" value={video.internalDeadline} />
               <DateRow label="Prazo de revisão" value={video.reviewDeadline} />
               <DateRow label="Prazo do cliente" value={video.clientDeadline} />
-              <DateRow label="Prazo final" value={video.finalDeadline} highlight />
+              <EditableDeadlineRow videoId={video.id} value={video.finalDeadline} onMutate={onMutate} />
               {video.originalFinalDeadline !== video.finalDeadline && (
                 <div className="text-xs text-amber-600/90 pt-1 border-t border-cf-border mt-1">
                   Prazo original: {fmtDateFull(video.originalFinalDeadline)}
@@ -821,6 +822,40 @@ function DateRow({ label, value, highlight }: { label: string; value: string | n
     <div className="flex items-center justify-between text-sm">
       <span className="text-cf-text-dim">{label}</span>
       <span className={highlight ? "font-semibold text-cf-text" : "text-cf-text"}>{value ? fmtDateFull(value) : "—"}</span>
+    </div>
+  );
+}
+
+// "Prazo final" (data de entrega) é a única data editável aqui — é a fonte
+// única de prazo do produto (o projeto não tem prazo próprio, só o que os
+// vídeos têm). O DatePicker devolve "yyyy-MM-dd"; updateVideoField espera
+// ISO completo pra finalDeadline (mesmo formato que createVideo já grava),
+// por isso o new Date(...).toISOString() antes de mandar pro backend.
+function EditableDeadlineRow({ videoId, value, onMutate }: { videoId: string; value: string; onMutate: () => void }) {
+  const [pending, startTransition] = React.useTransition();
+  const dateOnly = value ? value.slice(0, 10) : "";
+
+  function handleChange(next: string) {
+    if (!next || next === dateOnly) return;
+    const iso = new Date(`${next}T00:00:00`).toISOString();
+    startTransition(async () => {
+      await updateVideoField(videoId, "finalDeadline", iso);
+      toast.success("Prazo final atualizado.");
+      onMutate();
+    });
+  }
+
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-cf-text-dim">Prazo final</span>
+      <DatePicker
+        value={dateOnly}
+        onChange={handleChange}
+        disabled={pending}
+        placeholder="Definir prazo"
+        fromToday
+        className="h-8 w-auto shrink-0 px-2.5 text-sm font-semibold text-cf-text"
+      />
     </div>
   );
 }
