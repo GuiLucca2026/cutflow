@@ -8,7 +8,8 @@ import { WeekPlanBoard } from "@/components/cutflow/week-plan-board";
 import { ProjectStatusPreview } from "@/components/cutflow/project-status-preview";
 import { planWeek } from "@/lib/planning";
 import { computeAlerts } from "@/lib/alerts";
-import { isOverdue, isWaitingClient, isDone, isEditing } from "@/lib/domain";
+import { isOverdue, isWaitingClient, isDone, isEditing, RISK_META } from "@/lib/domain";
+import type { Alert, AlertSeverity } from "@/lib/alerts";
 import { fmtDateFull, fmtHours } from "@/lib/format";
 import { isToday, differenceInCalendarDays, addDays, format } from "date-fns";
 import { AlertTriangle, TriangleAlert, Info, Clock, Send, Scissors, CalendarClock, type LucideIcon } from "lucide-react";
@@ -242,30 +243,7 @@ export default async function HojePage() {
 
       {alerts.length > 0 && (
         <Section title="Conflitos & Riscos" subtitle="Detectado automaticamente — colisões de agenda, sobrecarga e risco de prazo (produtora inteira)" count={alerts.length} tone="danger">
-          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            {alerts.map((a) => (
-              <Link
-                key={a.id}
-                href={a.href}
-                className={cn(
-                  "flex gap-2.5 rounded-xl border bg-cf-surface px-3.5 py-3 hover:border-cf-primary/40 transition-colors",
-                  a.severity === "CRITICO" ? "border-red-500/30" : a.severity === "ALTO" ? "border-amber-500/30" : "border-cf-border"
-                )}
-              >
-                {a.severity === "CRITICO" ? (
-                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-red-600" />
-                ) : a.severity === "ALTO" ? (
-                  <TriangleAlert className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
-                ) : (
-                  <Info className="h-4 w-4 shrink-0 mt-0.5 text-cf-text-dim" />
-                )}
-                <div className="min-w-0">
-                  <div className="text-sm font-medium leading-snug">{a.title}</div>
-                  <div className="mt-0.5 text-xs leading-snug text-cf-text-dim">{a.detail}</div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <AlertGroups alerts={alerts} />
         </Section>
       )}
 
@@ -349,6 +327,54 @@ function Section({ title, subtitle, count, tone, children }: { title: string; su
       {subtitle && <p className="-mt-2 mb-3 text-xs text-cf-text-dim">{subtitle}</p>}
       {children}
     </section>
+  );
+}
+
+// Antes, os 9 alertas caíam numa única grade uniforme, todos com a mesma
+// aparência (só o ícone trocava de cor) — difícil de escanear "quantos
+// são realmente críticos vs. só um lembrete". Agrupar por severidade com
+// um cabeçalho próprio (cor + label + contagem, reaproveitando o
+// vocabulário de RISK_META já usado no RiskBadge da ficha do vídeo) deixa
+// a prioridade óbvia de cara, e a barra de cor à esquerda de cada card
+// substitui o ícone repetido em cada item (o ícone agora vive uma vez só,
+// no cabeçalho do grupo).
+const ALERT_GROUP_ORDER: AlertSeverity[] = ["CRITICO", "ALTO", "MODERADO"];
+const ALERT_GROUP_ICON: Record<AlertSeverity, LucideIcon> = { CRITICO: AlertTriangle, ALTO: TriangleAlert, MODERADO: Info };
+
+function AlertGroups({ alerts }: { alerts: Alert[] }) {
+  return (
+    <div className="space-y-5">
+      {ALERT_GROUP_ORDER.map((sev) => {
+        const items = alerts.filter((a) => a.severity === sev);
+        if (items.length === 0) return null;
+        const meta = RISK_META[sev];
+        const Icon = ALERT_GROUP_ICON[sev];
+        return (
+          <div key={sev}>
+            <div className="mb-2 flex items-center gap-1.5">
+              <Icon className="h-3.5 w-3.5" style={{ color: meta.color }} />
+              <span className="text-xs font-semibold uppercase tracking-[0.08em]" style={{ color: meta.color }}>{meta.label}</span>
+              <span className="text-xs font-medium tabular-nums text-cf-text-dim">{items.length}</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+              {items.map((a) => (
+                <Link
+                  key={a.id}
+                  href={a.href}
+                  className="rounded-[10px] border border-cf-border border-l-[3px] bg-cf-surface px-3.5 py-2.5 transition-[transform,background-color,box-shadow] duration-[var(--cf-dur-hover)] ease-[var(--cf-ease)] hover:-translate-y-0.5 hover:bg-white/70 hover:shadow-sm"
+                  style={{ borderLeftColor: meta.color }}
+                >
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium leading-snug text-cf-text">{a.title}</div>
+                    <div className="mt-0.5 text-xs leading-snug text-cf-text-dim">{a.detail}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
