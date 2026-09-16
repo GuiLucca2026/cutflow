@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { applyWeekPlan } from "@/app/actions";
 import { fmtHours } from "@/lib/format";
 import type { PlanDay } from "@/lib/planning";
+import { useVideoDetail } from "@/components/cutflow/video-detail-context";
 
 export function WeekPlanBoard({
   days,
@@ -24,6 +25,7 @@ export function WeekPlanBoard({
 }) {
   const [pending, setPending] = React.useState(false);
   const [applied, setApplied] = React.useState(false);
+  const { open } = useVideoDetail();
 
   function apply() {
     const entries = days.flatMap((d) => d.items.map((it) => ({ videoId: it.videoId, date: d.date, hours: it.hours })));
@@ -137,13 +139,18 @@ export function WeekPlanBoard({
                       </div>
                     ) : (
                       day.items.slice(0, 3).map((it, i) => (
-                        <div key={i} className="rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5">
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => open(it.videoId)}
+                          className="w-full rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5 text-left transition-colors hover:border-black/10 hover:bg-white"
+                        >
                           <div className="line-clamp-2 text-[12px] font-medium leading-[1.25] text-cf-text">{it.name}</div>
                           <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-cf-text-dim">
                             <span className="truncate">{it.projectName}</span>
                             <span className="shrink-0 tabular-nums">{fmtHours(it.hours)}</span>
                           </div>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
