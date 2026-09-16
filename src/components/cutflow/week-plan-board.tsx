@@ -143,7 +143,7 @@ export function WeekPlanBoard({
                           key={i}
                           type="button"
                           onClick={() => open(it.videoId)}
-                          className="w-full rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5 text-left transition-colors hover:border-black/10 hover:bg-white"
+                          className="w-full rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5 text-left transition-[transform,border-color,background-color,box-shadow] duration-[var(--cf-dur-hover)] ease-[var(--cf-ease)] hover:-translate-y-0.5 hover:border-cf-primary/35 hover:bg-white hover:shadow-sm"
                         >
                           <div className="line-clamp-2 text-[12px] font-medium leading-[1.25] text-cf-text">{it.name}</div>
                           <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-cf-text-dim">
