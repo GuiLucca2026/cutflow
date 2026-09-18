@@ -82,7 +82,8 @@ export function WeekPlanBoard({
             const today = index === 0;
             const intense = pct >= 85 && !over;
             const isEmpty = day.items.length === 0;
-            const meta = describeDay(day, { today, over, intense, isEmpty });
+            const hasItems = !isEmpty;
+            const meta = describeDay(day, { today, over, intense, isEmpty, hasItems });
 
             return (
               <div
@@ -110,8 +111,8 @@ export function WeekPlanBoard({
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-cf-text-dim">
-                    <span>{day.isWorkDay ? "Carga" : "Status"}</span>
-                    <span className={cn("tabular-nums", over ? "text-red-600" : intense ? "text-amber-700" : "text-cf-text-dim")}>{day.isWorkDay ? `${fmtHours(day.allocatedHours)}/${fmtHours(day.capacityHours)}` : "Folga"}</span>
+                    <span>{day.isWorkDay || hasItems ? "Carga" : "Status"}</span>
+                    <span className={cn("tabular-nums", over ? "text-red-600" : intense ? "text-amber-700" : "text-cf-text-dim")}>{day.isWorkDay || hasItems ? `${fmtHours(day.allocatedHours)}/${fmtHours(day.capacityHours)}` : "Folga"}</span>
                   </div>
 
                   <div
@@ -120,16 +121,16 @@ export function WeekPlanBoard({
                     aria-label={`Carga de ${format(d, "EEEE", { locale: ptBR })}`}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-valuenow={day.isWorkDay ? pct : 0}
+                    aria-valuenow={day.isWorkDay || hasItems ? pct : 0}
                   >
                     <div
                       className="h-full rounded-full transition-[width] duration-[var(--cf-dur-progress)] ease-[var(--cf-ease)]"
-                      style={{ width: `${day.isWorkDay ? Math.max(pct, isEmpty ? 8 : 14) : 20}%`, backgroundColor: meta.accent }}
+                      style={{ width: `${day.isWorkDay || hasItems ? Math.max(pct, isEmpty ? 8 : 14) : 20}%`, backgroundColor: meta.accent }}
                     />
                   </div>
 
                   <div className="mt-4 flex-1 space-y-2">
-                    {!day.isWorkDay ? (
+                    {!day.isWorkDay && isEmpty ? (
                       <div className="rounded-[10px] border border-black/5 bg-white/55 px-3 py-3 text-[12px] text-cf-text-dim">
                         Sem alocação. Dia fora da sua semana de trabalho.
                       </div>
@@ -143,19 +144,29 @@ export function WeekPlanBoard({
                           key={i}
                           type="button"
                           onClick={() => open(it.videoId)}
-                          className="w-full rounded-[10px] border border-black/5 bg-white/82 px-3 py-2.5 text-left transition-[transform,border-color,background-color,box-shadow] duration-[var(--cf-dur-hover)] ease-[var(--cf-ease)] hover:-translate-y-0.5 hover:border-cf-primary/35 hover:bg-white hover:shadow-sm"
+                          className={cn(
+                            "w-full rounded-[10px] border bg-white/82 px-3 py-2.5 text-left transition-[transform,border-color,background-color,box-shadow] duration-[var(--cf-dur-hover)] ease-[var(--cf-ease)] hover:-translate-y-0.5 hover:border-cf-primary/35 hover:bg-white hover:shadow-sm",
+                            it.overdue ? "border-red-500/25 bg-red-500/[0.03]" : "border-black/5"
+                          )}
                         >
-                          <div className="line-clamp-2 text-[12px] font-medium leading-[1.25] text-cf-text">{it.name}</div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="line-clamp-2 text-[12px] font-medium leading-[1.25] text-cf-text">{it.name}</div>
+                            {it.overdue && (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-red-600">
+                                <Flame className="h-2.5 w-2.5" /> Atrasado
+                              </span>
+                            )}
+                          </div>
                           <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-cf-text-dim">
                             <span className="truncate">{it.projectName}</span>
                             <span className="shrink-0 tabular-nums">{fmtHours(it.hours)}</span>
                           </div>
                         </button>
                       ))
-                    )}
+                    }
                   </div>
 
-                  {day.isWorkDay && day.items.length > 3 ? (
+                  {(day.isWorkDay || hasItems) && day.items.length > 3 ? (
                     <div className="mt-2 text-[11px] font-medium text-cf-text-dim">+{day.items.length - 3} itens</div>
                   ) : null}
                 </div>
@@ -170,9 +181,13 @@ export function WeekPlanBoard({
 
 function describeDay(
   day: PlanDay,
-  { today, over, intense, isEmpty }: { today: boolean; over: boolean; intense: boolean; isEmpty: boolean }
+  { today, over, intense, isEmpty, hasItems }: { today: boolean; over: boolean; intense: boolean; isEmpty: boolean; hasItems: boolean }
 ) {
-  if (!day.isWorkDay) {
+  // Um dia de folga só usa o visual neutro quando está de fato vazio. Se
+  // ele carrega itens forçados (vídeo atrasado que não tinha pra onde ir
+  // além de hoje), isso precisa aparecer com o mesmo destaque de urgência
+  // dos outros dias — nunca com a cara tranquila de "Folga".
+  if (!day.isWorkDay && !hasItems) {
     return {
       wrapper: "border-cf-border",
       surface: "bg-cf-surface-2/55",
