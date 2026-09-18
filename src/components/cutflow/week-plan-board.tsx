@@ -163,7 +163,7 @@ export function WeekPlanBoard({
                           </div>
                         </button>
                       ))
-                    }
+                    )}
                   </div>
 
                   {(day.isWorkDay || hasItems) && day.items.length > 3 ? (
