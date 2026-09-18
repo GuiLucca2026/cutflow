@@ -13,7 +13,7 @@ export type PlanVideo = {
   hoursRemaining: number;
 };
 
-export type PlanDayItem = { videoId: string; name: string; projectName: string; hours: number };
+export type PlanDayItem = { videoId: string; name: string; projectName: string; hours: number; overdue?: boolean };
 
 export type PlanDay = {
   date: string; // yyyy-MM-dd
@@ -55,7 +55,37 @@ export function planWeek(opts: {
   // planning": work due soonest claims capacity before work with slack.
   const sorted = [...videos].sort((a, b) => new Date(a.finalDeadline).getTime() - new Date(b.finalDeadline).getTime());
 
+  // Anything whose deadline is today or already in the past can't be
+  // scheduled "backward" anymore — there's no future day left before it's
+  // due. The old loop below would just `break` on day zero for these and
+  // silently drop them from the whole week. Instead, they get pinned onto
+  // today, in order of how overdue they are (oldest deadline first), and
+  // they're allowed to blow past the daily capacity: a video that's late
+  // — or due right now — must never simply vanish from the plan, even if
+  // that means today shows more than `dailyCapacityHours` of work.
+  const forcedToday: PlanVideo[] = [];
+  const scheduledNormally: PlanVideo[] = [];
   for (const v of sorted) {
+    const deadline = startOfDay(new Date(v.finalDeadline));
+    if (deadline.getTime() <= start.getTime()) forcedToday.push(v);
+    else scheduledNormally.push(v);
+  }
+
+  const todayColumn = days[0];
+  for (const v of forcedToday) {
+    if (v.hoursRemaining <= 0) continue;
+    const deadline = startOfDay(new Date(v.finalDeadline));
+    todayColumn.items.push({
+      videoId: v.id,
+      name: v.name,
+      projectName: v.projectName,
+      hours: Math.round(v.hoursRemaining * 10) / 10,
+      overdue: deadline.getTime() < start.getTime(),
+    });
+    todayColumn.allocatedHours += v.hoursRemaining;
+  }
+
+  for (const v of scheduledNormally) {
     let remaining = v.hoursRemaining;
     if (remaining <= 0) continue;
     const deadline = startOfDay(new Date(v.finalDeadline));
