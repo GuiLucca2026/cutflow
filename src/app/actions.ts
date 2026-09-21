@@ -401,6 +401,29 @@ export async function toggleChecklistItem(
   // causa da lentidão ao marcar um item.
 }
 
+// Marcar/desmarcar o checklist inteiro de uma vez — um UPDATE só no banco
+// (filtrado por video_id) e um único registro de atividade por entidade,
+// em vez de N cliques × 3 escritas cada. Mesma regra de completedBy/
+// completedAt do toggleChecklistItem acima.
+export async function setChecklistAll(
+  videoId: string,
+  done: boolean,
+  ctx: { videoName: string; projectId: string | null; total: number }
+) {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  const action = done ? "Checklist concluído por completo" : "Checklist reaberto por completo";
+  const detail = `${ctx.total} ${ctx.total === 1 ? "item" : "itens"}`;
+  await Promise.all([
+    supabase
+      .from(TABLES.checklistItems)
+      .update(toRow({ done, completedById: done ? user.id : null, completedAt: done ? nowISO() : null }))
+      .eq("video_id", videoId),
+    logActivity("VIDEO", videoId, action, detail),
+    ctx.projectId ? logActivity("PROJECT", ctx.projectId, action, `${ctx.videoName} — ${detail}`) : null,
+  ]);
+}
+
 // ---------------------------------------------------------------------------
 // Equipe do vídeo (Fase 8) — colaboradores extras além do Editor
 // responsável (editorId), cada um com uma função (Motion, Colorização,

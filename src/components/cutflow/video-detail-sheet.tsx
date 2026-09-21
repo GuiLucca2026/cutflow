@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -36,6 +35,7 @@ import { fmtDateFull, fmtDateTime, fmtRelative, fmtWaitingSince, fmtHours } from
 import {
   updateVideoStatus,
   toggleChecklistItem,
+  setChecklistAll,
   addComment,
   addRevision,
   addVideoVersion,
@@ -80,7 +80,6 @@ export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; 
   const { openVideoId, close, bump, refresh } = useVideoDetail();
   const [data, setData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
-  const router = useRouter();
 
   React.useEffect(() => {
     if (!openVideoId) {
@@ -94,23 +93,24 @@ export function VideoDetailSheetHost({ users, projects = [] }: { users: User[]; 
       .finally(() => setLoading(false));
   }, [openVideoId, bump]);
 
-  // Duas velocidades de "atualizar depois de uma ação", de propósito.
-  // `refresh()` só re-busca os dados DESTE vídeo (uma chamada leve à
-  // /api/videos/[id]) — suficiente pra checklist, comentário, versão nova
-  // ou resolver uma alteração, já que nada disso aparece fora da própria
-  // aba. `router.refresh()` já é bem mais caro: refaz TODO o layout (usuário
-  // atual, todos os usuários, clientes, projetos, todos os vídeos, carga de
-  // trabalho, alertas) mais a página de fundo inteira. Antes disso rodava
-  // em toda ação — inclusive marcar um item do checklist — e cada clique
-  // esperava por ~7 idas ao banco que não tinham nada a ver com o que foi
-  // clicado. Só troca de status (e outros campos que entram na fórmula de
-  // risco/aparecem nos cards fora daqui) precisa da versão cara.
+  // `refresh()` re-busca só os dados DESTE vídeo (uma chamada leve à
+  // /api/videos/[id]) — é o que a ficha precisa depois de qualquer ação.
+  // A atualização das telas de fora (Kanban, Hoje, cards) não é
+  // responsabilidade daqui: as actions que mexem em campo compartilhado já
+  // chamam revalidatePath no servidor, e o Next devolve o RSC novo da rota
+  // atual junto com a resposta da própria action.
   function refreshLight() {
     refresh();
   }
   function refreshAfterStatusChange() {
+    // Só o refetch leve daqui. O router.refresh() que existia aqui era
+    // redundante: as actions que mexem em campo "pesado" (updateVideoStatus,
+    // updateVideoField) já chamam revalidatePath no servidor, e o Next já
+    // devolve o RSC novo da rota atual junto com a resposta da action — ou
+    // seja, a página de trás já se atualiza sozinha. Chamar router.refresh()
+    // por cima fazia a MESMA página re-renderizar uma segunda vez (7 idas ao
+    // banco) a cada clique, e é isso que fazia o clique parecer travado.
     refresh();
-    router.refresh();
   }
 
   return (
@@ -174,11 +174,53 @@ function VideoDetailBody({
   // Checklist otimista: marcar/desmarcar responde na hora, sem esperar a
   // ida ao servidor + o refetch depois — a demora de rede (que ainda
   // existe, Supabase é um serviço remoto) fica invisível pro usuário. Se a
-  // ação falhar, desfaz. Reseta pro estado real sempre que `video` mudar
-  // de referência (chega dado novo do servidor), o que também corrige
-  // sozinho qualquer divergência (ex: completedBy/completedAt reais).
-  const [checklist, setChecklist] = React.useState(video.checklist);
-  React.useEffect(() => setChecklist(video.checklist), [video.checklist]);
+  // ação falhar, desfaz. Quando chega dado novo do servidor, ele assume o
+  // lugar do estado local (corrigindo sozinho divergências de
+  // completedBy/completedAt) — exceto nos itens com escrita em voo, ver
+  // inFlight logo abaixo.
+  const [checklist, setChecklist] = React.useState<ChecklistRow[]>(video.checklist);
+  // Itens com escrita ainda em voo. Antes, cada clique disparava um refetch
+  // da ficha inteira e, quando esse refetch voltava, sobrescrevia o estado
+  // local — inclusive os cliques feitos NO MEIO TEMPO, que ainda não tinham
+  // chegado ao banco. Resultado: item marcado "voltava" sozinho e reaparecia
+  // marcado segundos depois ("fica atrasado"). Agora o estado do servidor só
+  // substitui o local nos itens que NÃO têm escrita pendente.
+  const inFlight = React.useRef<Set<string>>(new Set());
+  React.useEffect(() => {
+    setChecklist((prev) => {
+      if (inFlight.current.size === 0) return video.checklist;
+      const localDone = new Map(prev.map((c) => [c.id, c.done]));
+      return (video.checklist as ChecklistRow[]).map((c) =>
+        inFlight.current.has(c.id) ? { ...c, done: localDone.get(c.id) ?? c.done } : c
+      );
+    });
+  }, [video.checklist]);
+  // Um refetch só por rajada de cliques (quando a última escrita terminar),
+  // em vez de um refetch por clique.
+  const finishWrite = React.useCallback(
+    (id: string) => {
+      inFlight.current.delete(id);
+      if (inFlight.current.size === 0) onMutate();
+    },
+    [onMutate]
+  );
+  const toggleAllPending = React.useRef(false);
+  function setAll(next: boolean) {
+    if (toggleAllPending.current) return;
+    toggleAllPending.current = true;
+    const ids = checklist.map((c) => c.id);
+    ids.forEach((id: string) => inFlight.current.add(id));
+    setChecklist((prev) => prev.map((c) => ({ ...c, done: next })));
+    setChecklistAll(video.id, next, { videoName: video.name, projectId: video.projectId ?? null, total: ids.length })
+      .catch(() => {
+        setChecklist(video.checklist);
+        toast.error("Não foi possível atualizar o checklist.");
+      })
+      .finally(() => {
+        toggleAllPending.current = false;
+        ids.forEach((id: string) => finishWrite(id));
+      });
+  }
 
   const risk = computeDeliveryRisk(video);
   const clientWait = computeClientWait(video);
@@ -291,6 +333,18 @@ function VideoDetailBody({
             </div>
 
             <TabsContent value="checklist" className="space-y-1">
+              {checklist.length > 0 && (
+                <div className="flex items-center justify-between px-2 pb-2">
+                  <span className="text-[11px] uppercase tracking-[0.08em] text-cf-text-dim">{checklistDone} de {checklist.length} concluídos</span>
+                  <button
+                    type="button"
+                    onClick={() => setAll(checklistDone < checklist.length)}
+                    className="text-xs font-semibold text-cf-primary transition-colors hover:text-cf-primary-hover"
+                  >
+                    {checklistDone < checklist.length ? "Marcar todos" : "Desmarcar todos"}
+                  </button>
+                </div>
+              )}
               {checklist.map((item: any) => (
                 <div key={item.id} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-cf-surface-2">
                   <label className="flex flex-1 min-w-0 items-center gap-2.5 cursor-pointer">
@@ -298,21 +352,22 @@ function VideoDetailBody({
                       checked={item.done}
                       onCheckedChange={(v) => {
                         const next = !!v;
-                        setChecklist((prev: any[]) => prev.map((c) => (c.id === item.id ? { ...c, done: next } : c)));
-                        startTransition(async () => {
-                          try {
-                            await toggleChecklistItem(item.id, next, {
-                              videoId: video.id,
-                              videoName: video.name,
-                              projectId: video.projectId ?? null,
-                              label: item.label,
-                            });
-                            onMutate();
-                          } catch {
-                            setChecklist((prev: any[]) => prev.map((c) => (c.id === item.id ? { ...c, done: !next } : c)));
+                        inFlight.current.add(item.id);
+                        setChecklist((prev) => prev.map((c) => (c.id === item.id ? { ...c, done: next } : c)));
+                        // Sem startTransition aqui: transição é "baixa
+                        // prioridade" pro React e atrasava a resposta do
+                        // clique quando a ficha estava re-renderizando.
+                        toggleChecklistItem(item.id, next, {
+                          videoId: video.id,
+                          videoName: video.name,
+                          projectId: video.projectId ?? null,
+                          label: item.label,
+                        })
+                          .catch(() => {
+                            setChecklist((prev) => prev.map((c) => (c.id === item.id ? { ...c, done: !next } : c)));
                             toast.error("Não foi possível atualizar o checklist.");
-                          }
-                        });
+                          })
+                          .finally(() => finishWrite(item.id));
                       }}
                     />
                     <span className={item.done ? "text-cf-text-dim line-through truncate" : "text-cf-text truncate"}>{item.label}</span>
@@ -826,6 +881,11 @@ function Fact({ label, value, avatar }: { label: string; value: string; avatar?:
     </div>
   );
 }
+
+// Só o que esta tela precisa saber de um item pra fazer o update otimista;
+// o resto dos campos (label, estimatedLoadHours, completedBy...) segue
+// vindo junto e é lido direto no JSX.
+type ChecklistRow = { id: string; done: boolean } & Record<string, unknown>;
 
 function DateRow({ label, value, highlight }: { label: string; value: string | null; highlight?: boolean }) {
   return (
