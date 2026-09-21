@@ -21,15 +21,20 @@ export const dynamic = "force-dynamic";
 
 export default async function HojePage() {
   const user = await getCurrentUser();
-  const [videos, users, captures, notifications, myTasks, projects] = await Promise.all([
+  // workloadEntries entrou no Promise.all: estava sendo awaitada depois
+  // dele, somando um tempo de ida e volta em série a cada renderização da
+  // página (que acontece a cada action que revalida). As listas repetidas
+  // entre esta página e o layout não custam nada agora — são memoizadas
+  // por requisição com cache() (ver db/queries.ts).
+  const [videos, users, captures, notifications, myTasks, projects, workloadEntries] = await Promise.all([
     listVideos(),
     listUsers(),
     listCaptures(),
     listNotifications(user.id).catch(() => []),
     listMyTasks(user.id).catch(() => []),
     listProjects(),
+    listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd")),
   ]);
-  const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const alerts = computeAlerts({ videos, workloadEntries, users });
 
   const now = new Date();

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getSupabase } from "@/db";
 import { TABLES } from "@/db/schema";
 import {
@@ -13,12 +14,22 @@ import {
   mapNotification,
 } from "@/db/mappers";
 
-export async function listClients() {
+// As listas abaixo são memoizadas por REQUISIÇÃO com o cache() do React
+// (não é cache entre requisições — dado novo continua chegando a cada
+// request). O motivo: o layout de /(app) e cada página buscam as MESMAS
+// listas de forma independente — listVideos, listProjects, listUsers,
+// listNotifications e listWorkloadEntries eram consultadas duas vezes em
+// toda renderização, e listVideos é a mais cara de todas (todos os vídeos
+// com os joins de projeto/cliente/editor). Como toda action que revalida
+// faz o layout + a página renderizarem de novo, isso dobrava o custo de
+// cada clique. Nenhuma action lê daqui (elas falam com o supabase direto),
+// então não existe risco de servir dado de antes de uma escrita.
+export const listClients = cache(async function listClients() {
   const supabase = await getSupabase();
   const { data, error } = await supabase.from(TABLES.clients).select("*").order("name");
   if (error) throw error;
   return data.map((r) => mapClient(r)!);
-}
+});
 
 export async function getClient(id: string) {
   const supabase = await getSupabase();
@@ -27,12 +38,12 @@ export async function getClient(id: string) {
   return mapClient(data);
 }
 
-export async function listUsers() {
+export const listUsers = cache(async function listUsers() {
   const supabase = await getSupabase();
   const { data, error } = await supabase.from(TABLES.users).select("*").order("name");
   if (error) throw error;
   return data.map((r) => mapUser(r)!);
-}
+});
 
 export async function getUser(id: string) {
   const supabase = await getSupabase();
@@ -61,7 +72,7 @@ function stripDeletedVideos(project: any): any {
   return project;
 }
 
-export async function listProjects() {
+export const listProjects = cache(async function listProjects() {
   const supabase = await getSupabase();
   // Projeto não tem mais prazo próprio (ver video.finalDeadline), então
   // não faz mais sentido ordenar por deadline — mais recente criado
@@ -73,7 +84,7 @@ export async function listProjects() {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data.map((r) => stripDeletedVideos(mapProject(r)!));
-}
+});
 
 export async function getProject(id: string) {
   const supabase = await getSupabase();
@@ -136,12 +147,12 @@ export async function getProjectActivity(projectId: string) {
 const VIDEO_SELECT =
   "*, project:cutflow_projects(*, client:cutflow_clients(*)), editor:cutflow_users!editor_id(*), approver:cutflow_users!approver_id(*), team:cutflow_video_team(*, user:cutflow_users!user_id(*))";
 
-export async function listVideos() {
+export const listVideos = cache(async function listVideos() {
   const supabase = await getSupabase();
   const { data, error } = await supabase.from(TABLES.videos).select(VIDEO_SELECT).is("deleted_at", null).order("final_deadline");
   if (error) throw error;
   return data.map((r) => mapVideo(r)!);
-}
+});
 
 // Lixeira — só vídeos excluídos, mais recente primeiro.
 export async function listDeletedVideos() {
@@ -193,7 +204,7 @@ export async function getVideoActivity(videoId: string) {
 // ---------------------------------------------------------------------------
 // Workload
 // ---------------------------------------------------------------------------
-export async function listWorkloadEntries(fromISO: string, toISO: string) {
+export const listWorkloadEntries = cache(async function listWorkloadEntries(fromISO: string, toISO: string) {
   const supabase = await getSupabase();
   const select =
     "*, editor:cutflow_users!editor_id(*), video:cutflow_videos(*, project:cutflow_projects(*, client:cutflow_clients(*)))";
@@ -204,18 +215,18 @@ export async function listWorkloadEntries(fromISO: string, toISO: string) {
     .lte("date", toISO);
   if (error) throw error;
   return data.map((r) => mapWorkloadEntry(r)!);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Captures (Fase 4 — shoot/capture sessions, separate from video editing)
 // ---------------------------------------------------------------------------
-export async function listCaptures() {
+export const listCaptures = cache(async function listCaptures() {
   const supabase = await getSupabase();
   const select = "*, project:cutflow_projects(*, client:cutflow_clients(*)), responsible:cutflow_users!responsible_id(*)";
   const { data, error } = await supabase.from(TABLES.captures).select(select).order("date");
   if (error) throw error;
   return data.map((r) => mapCapture(r)!);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Invites (real email/senha login pra quem não é admin da G2)
@@ -278,7 +289,7 @@ export async function listCompletedChecklistLoad(fromISO: string, toISO: string)
 // TODAS as tarefas atribuídas a alguém, de qualquer projeto/vídeo — dentro
 // da ficha de um vídeo/projeto específico, getVideo/getProject acima já
 // embutem as tarefas daquele item só.
-export async function listMyTasks(userId: string) {
+export const listMyTasks = cache(async function listMyTasks(userId: string) {
   const supabase = await getSupabase();
   const select =
     "*, video:cutflow_videos(id, name, project_id), project:cutflow_projects(id, name)";
@@ -290,14 +301,14 @@ export async function listMyTasks(userId: string) {
     .order("due_at", { ascending: true, nullsFirst: false });
   if (error) throw error;
   return (data as any[]).map((r) => mapTask(r)!);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Notificações (Fase 12) — @menção (comentário ou tarefa) e atribuição de
 // tarefa. Uma chamada só alimenta tanto a aba "Atividade" do sino (lista
 // completa) quanto o indicador por card (agrupando por entityId no lado
 // de quem chama) — ver NotificationBell/VideoCard.
-export async function listNotifications(userId: string) {
+export const listNotifications = cache(async function listNotifications(userId: string) {
   const supabase = await getSupabase();
   const { data, error } = await supabase
     .from(TABLES.notifications)
@@ -307,7 +318,7 @@ export async function listNotifications(userId: string) {
     .limit(50);
   if (error) throw error;
   return data.map((r) => mapNotification(r)!);
-}
+});
 
 export type VideoWithRelations = Awaited<ReturnType<typeof listVideos>>[number];
 export type ProjectWithRelations = Awaited<ReturnType<typeof listProjects>>[number];

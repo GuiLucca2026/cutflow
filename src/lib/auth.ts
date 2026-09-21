@@ -45,12 +45,21 @@ export const getCurrentUser = cache(async function getCurrentUser() {
 // gives every G2 admin their own separate CUTFLOW profile automatically.
 // Returns null (never throws) when there's no session or Supabase isn't
 // configured, so local dev without SSO keeps working unchanged.
+// auth.getUser() é uma ida REAL à rede pro servidor de Auth do Supabase a
+// cada chamada. O layout de /(app) chamava isso duas vezes por render: uma
+// em hasSupabaseSession() (só pra saber se existe sessão) e outra aqui
+// dentro. cache() do React deduplica as duas na mesma requisição.
+export const getAuthUser = cache(async function getAuthUser() {
+  const authClient = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await authClient.auth.getUser();
+  return user ?? null;
+});
+
 async function getLinkedUser() {
   try {
-    const authClient = await createSupabaseServerClient();
-    const {
-      data: { user: supaUser },
-    } = await authClient.auth.getUser();
+    const supaUser = await getAuthUser();
     if (!supaUser) return null;
 
     const supabase = await getSupabase();

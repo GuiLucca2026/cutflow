@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/cutflow/sidebar";
 import { Topbar } from "@/components/cutflow/topbar";
-import { getCurrentUser, getAllUsers } from "@/lib/auth";
+import { getCurrentUser, getAllUsers, getAuthUser } from "@/lib/auth";
 import { listClients, listProjects, listVideos, listWorkloadEntries, listNotifications } from "@/db/queries";
 import { computeAlerts } from "@/lib/alerts";
 import { computePersonalMonthProgress } from "@/lib/domain";
 import { VideoDetailProvider } from "@/components/cutflow/video-detail-context";
 import { VideoDetailSheetHost } from "@/components/cutflow/video-detail-sheet";
-import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { addDays, format } from "date-fns";
 import { BrandWordmark } from "@/components/cutflow/brand-mark";
 import { BRAND_NAME, HAS_ADMIN_SSO } from "@/lib/brand";
@@ -23,21 +22,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return <NoSessionScreen />;
   }
 
-  const [currentUser, users, clients, projects, videos] = await Promise.all([
-    getCurrentUser(),
+  // listNotifications e listWorkloadEntries dependem do currentUser, então
+  // ele é resolvido primeiro; o resto vai tudo junto num Promise.all só.
+  // Antes, essas duas eram awaitadas UMA DEPOIS DA OUTRA depois do
+  // Promise.all, somando dois tempos de ida e volta em série a cada
+  // renderização do layout — e o layout re-renderiza a cada action que
+  // revalida.
+  const currentUser = await getCurrentUser();
+  const [users, clients, projects, videos, notifications, workloadEntries] = await Promise.all([
     getAllUsers(),
     listClients(),
     listProjects(),
     listVideos(),
+    listNotifications(currentUser.id),
+    listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd")),
   ]);
-  // Fase 12 — notificações reais (menção @, tarefa atribuída). Uma lista só
-  // alimenta a aba "Atividade" do sino aqui em cima; a página Meu Dia faz
-  // sua própria busca pra derivar o indicador por card, sem precisar
-  // passar isso pela árvore de props do layout até lá.
-  const notifications = await listNotifications(currentUser.id);
-  // Same window used by the Equipe capacity view — plenty of runway to
-  // catch overload alerts a few weeks out without over-fetching.
-  const workloadEntries = await listWorkloadEntries(format(new Date(), "yyyy-MM-dd"), format(addDays(new Date(), 30), "yyyy-MM-dd"));
+  // notifications: Fase 12 (menção @, tarefa atribuída) — alimenta a aba
+  // "Atividade" do sino. workloadEntries: mesma janela da capacidade em
+  // Equipe, runway suficiente pros alertas de sobrecarga.
   const alerts = computeAlerts({ videos, workloadEntries, users });
   // Rodapé da Sidebar/menu mobile (Fase 15) — ver computePersonalMonthProgress
   // em lib/domain.ts pro porquê do escopo ser "mês corrente".
@@ -78,11 +80,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
 async function hasSupabaseSession() {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return !!user;
+    // getAuthUser() é memoizado por requisição (ver lib/auth.ts), então
+    // este check e o getCurrentUser() logo abaixo dividem a MESMA ida ao
+    // servidor de Auth em vez de fazer duas.
+    return !!(await getAuthUser());
   } catch {
     // NEXT_PUBLIC_SUPABASE_URL/KEY not set, or the check itself failed —
     // treat as "no session" rather than crashing the page.
