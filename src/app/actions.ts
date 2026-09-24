@@ -131,9 +131,18 @@ export async function updateVideoStatus(videoId: string, newStatus: string) {
   const nowAltering = isInAlteration(newStatus);
   const alterationStartedAt = nowAltering && !wasAltering ? nowISO() : !nowAltering && wasAltering ? null : undefined;
 
+  // Data real da entrega (não confundir com finalDeadline, que é o prazo
+  // planejado). Só ENTREGUE conta — ARQUIVADO e CANCELADO também são
+  // isDone(), mas não são entrega. Se o vídeo voltar atrás (cliente pediu
+  // alteração depois de entregue), a data é limpa e regravada na próxima
+  // entrega, que passa a ser a que vale.
+  const wasDelivered = oldStatus === "ENTREGUE";
+  const nowDelivered = newStatus === "ENTREGUE";
+  const deliveredAt = nowDelivered && !wasDelivered ? nowISO() : !nowDelivered && wasDelivered ? null : undefined;
+
   await supabase
     .from(TABLES.videos)
-    .update(toRow({ status: newStatus, clientSentAt, alterationStartedAt, updatedAt: nowISO() }))
+    .update(toRow({ status: newStatus, clientSentAt, alterationStartedAt, deliveredAt, updatedAt: nowISO() }))
     .eq("id", videoId);
 
   const oldLabel = STATUS_META[oldStatus]?.label ?? oldStatus;

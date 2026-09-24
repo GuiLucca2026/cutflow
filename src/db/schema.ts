@@ -244,6 +244,14 @@ export type Video = {
   // antes do vídeo voltar a contar como atrasado (ver
   // ALTERATION_GRACE_BUSINESS_DAYS em lib/domain.ts).
   alterationStartedAt: string | null;
+  // Quando o vídeo foi de fato ENTREGUE — gravado por updateVideoStatus ao
+  // entrar em ENTREGUE e limpo se ele voltar pra qualquer status anterior
+  // (mesmo padrão do clientSentAt/alterationStartedAt acima). Existe porque
+  // o status sozinho só diz "está entregue agora", não QUANDO — e o painel
+  // do G2 Admin precisa da data real pra contar entregas por mês/ano.
+  // updatedAt não serviria: qualquer edição posterior no vídeo moveria a
+  // data e jogaria a entrega pro mês errado.
+  deliveredAt: string | null;
   // Lixeira (soft delete) — ver o mesmo campo em Project acima.
   deletedAt: string | null;
 };
